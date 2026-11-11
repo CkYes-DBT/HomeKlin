@@ -30,6 +30,7 @@ import {
   cleanerPhotos,
   demoJobs,
   faqEntries,
+  PAYOUT_PERCENT_DEFAULT,
   seedAreas,
   seedServices,
   slotPattern,
@@ -584,6 +585,218 @@ export async function seedFaq({ client }) {
   return { entries: faqEntries.length };
 }
 
+/**
+ * Seeds 90 days of completed historical orders, their order_fees rows, and 12 weekly payouts
+ * (11 paid, 1 pending). Fees from orders completed after the last full Sunday remain unassigned
+ * ("Menunggu dibayarkan"). Safe to run again: all inserts are upserts with deterministic keys.
+ *
+ * @param {{ client: import("@supabase/supabase-js").SupabaseClient, agencyIds: Record<string, string>, cleanerIds: Record<string, string>, customerId: string, now?: Date }} options
+ * @returns {Promise<{ ordersAdded: number, feesAdded: number, payoutsCreated: number }>}
+ */
+export async function seedPayouts({ client, agencyIds, cleanerIds, customerId, now = new Date() }) {
+  const dayMs = 24 * 60 * 60 * 1000;
+  const jakartaOffsetHours = 7;
+
+  // Set payout_percent = 70 for both demo agencies
+  for (const id of Object.values(agencyIds)) {
+    await must("agency payout_percent", client.from("agencies").update({ payout_percent: PAYOUT_PERCENT_DEFAULT }).eq("id", id));
+  }
+
+  // Find last Sunday (most recent Sunday on or before today in UTC)
+  const todayUtcMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const dowToday = new Date(todayUtcMs).getUTCDay(); // 0=Sun, 1=Mon...6=Sat
+  const lastSundayMs = todayUtcMs - dowToday * dayMs;
+
+  // 12 weekly periods (Mon-Sun):
+  //   Weeks 1-11 (paid)   : lastSunday - 83 days (Mon) to lastSunday - 7 days (Sun)
+  //   Week 12 (pending)   : lastSunday - 6 days (Mon) to lastSunday (Sun)
+  //   After lastSunday    : unassigned fees (the current, incomplete week)
+  const week1StartMs = lastSundayMs - 83 * dayMs;
+
+  // Agency configs: each agency's areas and cleaners
+  const agencyConfigs = [
+    {
+      key: "kilau-teratai",
+      id: agencyIds["kilau-teratai"],
+      areas: agencyAreas["kilau-teratai"],
+      cleanerIds: ["petugas.yuliana", "petugas.teguh"].map((lp) => cleanerIds[lp]),
+      agencyIndex: 0,
+    },
+    {
+      key: "cemara-rapi",
+      id: agencyIds["cemara-rapi"],
+      areas: agencyAreas["cemara-rapi"],
+      cleanerIds: ["petugas.ratna", "petugas.dimas"].map((lp) => cleanerIds[lp]),
+      agencyIndex: 1,
+    },
+  ];
+
+  // Track fee totals per (week, agency) in memory to avoid a re-query when creating payouts
+  /** @type {Record<string, { totalFeeIdr: number, count: number, orderIds: string[] }>} */
+  const weekStats = {};
+  for (let w = 1; w <= 12; w++) {
+    for (const ag of agencyConfigs) weekStats[`${w}|${ag.key}`] = { totalFeeIdr: 0, count: 0, orderIds: [] };
+  }
+
+  let ordersAdded = 0;
+  let feesAdded = 0;
+
+  // Generate one order per weekday per agency from week1Start through yesterday
+  const endMs = todayUtcMs - dayMs;
+  for (const agency of agencyConfigs) {
+    let idx = 0;
+    for (let dayStartMs = week1StartMs; dayStartMs <= endMs; dayStartMs += dayMs) {
+      const dow = new Date(dayStartMs).getUTCDay(); // 0=Sun
+      if (dow === 0) continue; // agencies do not work on Sundays
+
+      const service = seedServices[idx % seedServices.length];
+      const area = agency.areas[idx % agency.areas.length];
+      const cleanerId = agency.cleanerIds[idx % agency.cleanerIds.length];
+
+      // 08:00–10:00 Jakarta window; completed at 11:00 Jakarta
+      const startsAt = new Date(dayStartMs + (8 - jakartaOffsetHours) * 3_600_000);
+      const endsAt = new Date(dayStartMs + (10 - jakartaOffsetHours) * 3_600_000);
+      const completedAt = new Date(dayStartMs + (11 - jakartaOffsetHours) * 3_600_000);
+
+      // Fixed UUID: a1b0c1e2-{NNNN}-4000-8000-000000000000 (agencyIndex*1000 + orderIndex per agency)
+      const orderNum = agency.agencyIndex * 1000 + idx;
+      const orderId = `a1b0c1e2-${orderNum.toString(16).padStart(4, "0")}-4000-8000-000000000000`;
+
+      const slot = await must(
+        `historical slot ${orderId}`,
+        client
+          .from("availability_slots")
+          .upsert(
+            { agency_id: agency.id, area_id: area, starts_at: startsAt.toISOString(), ends_at: endsAt.toISOString(), capacity: 2, booked: 1 },
+            { onConflict: "agency_id,area_id,starts_at" },
+          )
+          .select("id")
+          .single(),
+      );
+
+      await must(
+        `historical order ${orderId}`,
+        client.from("orders").upsert(
+          {
+            id: orderId,
+            customer_id: customerId,
+            service_id: service.id,
+            area_id: area,
+            agency_id: agency.id,
+            slot_id: slot.id,
+            starts_at: startsAt.toISOString(),
+            ends_at: endsAt.toISOString(),
+            address: demoJobAddress,
+            contact_phone: demoJobPhone,
+            price_idr: service.priceIdr,
+            stream_consent: true,
+            status: "paid",
+            payment_result_at: startsAt.toISOString(),
+            cleaner_id: cleanerId,
+            checked_in_at: startsAt.toISOString(),
+            check_in_lat: demoJobLocation.lat,
+            check_in_lng: demoJobLocation.lng,
+            completed_at: completedAt.toISOString(),
+          },
+          { onConflict: "id" },
+        ),
+      );
+
+      const feeIdr = Math.round((service.priceIdr * PAYOUT_PERCENT_DEFAULT) / 100);
+      await must(
+        `historical fee ${orderId}`,
+        client.from("order_fees").upsert(
+          { order_id: orderId, agency_id: agency.id, price_idr: service.priceIdr, percent: PAYOUT_PERCENT_DEFAULT, fee_idr: feeIdr },
+          { onConflict: "order_id" },
+        ),
+      );
+
+      ordersAdded++;
+      feesAdded++;
+
+      // Record which week this order belongs to (days after lastSunday are unassigned)
+      if (dayStartMs > lastSundayMs) {
+        // Current (incomplete) week: fees remain unassigned
+      } else {
+        for (let w = 1; w <= 12; w++) {
+          const periodEndMs = lastSundayMs - (12 - w) * 7 * dayMs;
+          const periodStartMs = periodEndMs - 6 * dayMs;
+          if (dayStartMs >= periodStartMs && dayStartMs <= periodEndMs) {
+            weekStats[`${w}|${agency.key}`].totalFeeIdr += feeIdr;
+            weekStats[`${w}|${agency.key}`].count++;
+            weekStats[`${w}|${agency.key}`].orderIds.push(orderId);
+            break;
+          }
+        }
+      }
+
+      idx++;
+    }
+  }
+
+  // Create weekly payouts and link fees
+  const toIsoDate = (ms) => new Date(ms).toISOString().slice(0, 10);
+  let payoutsCreated = 0;
+
+  for (const agency of agencyConfigs) {
+    for (let w = 1; w <= 12; w++) {
+      const stats = weekStats[`${w}|${agency.key}`];
+      if (stats.count === 0) continue;
+
+      const periodEndMs = lastSundayMs - (12 - w) * 7 * dayMs;
+      const periodStartMs = periodEndMs - 6 * dayMs;
+      const isLastWeek = w === 12;
+
+      // Upsert the payout; leave existing rows untouched (ignoreDuplicates) to preserve any
+      // manual mark_payout_paid calls between seed runs
+      await must(
+        `payout week ${w} ${agency.key}`,
+        client.from("payouts").upsert(
+          {
+            agency_id: agency.id,
+            period_start: toIsoDate(periodStartMs),
+            period_end: toIsoDate(periodEndMs),
+            amount_idr: stats.totalFeeIdr,
+            jobs_count: stats.count,
+            status: isLastWeek ? "pending" : "paid",
+            payout_date: toIsoDate(periodEndMs + dayMs),
+            paid_at: isLastWeek ? null : now.toISOString(),
+          },
+          { onConflict: "agency_id,period_start,period_end", ignoreDuplicates: true },
+        ),
+      );
+      payoutsCreated++;
+
+      // Get the payout's id (created above or already existing)
+      const payoutRow = await must(
+        `payout id week ${w} ${agency.key}`,
+        client.from("payouts").select("id, paid_reference").eq("agency_id", agency.id).eq("period_start", toIsoDate(periodStartMs)).eq("period_end", toIsoDate(periodEndMs)).single(),
+      );
+
+      // Set paid_reference on first run only (is null until set here)
+      if (!isLastWeek && !payoutRow.paid_reference) {
+        await must(
+          `payout reference week ${w} ${agency.key}`,
+          client
+            .from("payouts")
+            .update({ paid_reference: `DEMO-${payoutRow.id.slice(0, 8).toUpperCase()}` })
+            .eq("id", payoutRow.id),
+        );
+      }
+
+      // Link fees to payout (idempotent: .is("payout_id", null) skips already-linked rows)
+      if (stats.orderIds.length > 0) {
+        await must(
+          `link fees week ${w} ${agency.key}`,
+          client.from("order_fees").update({ payout_id: payoutRow.id }).in("order_id", stats.orderIds).is("payout_id", null),
+        );
+      }
+    }
+  }
+
+  return { ordersAdded, feesAdded, payoutsCreated };
+}
+
 /** The clips in the local, git-ignored clips folder, ready for uploadClips. */
 function localClips() {
   if (!existsSync(clipsDirectory)) return [];
@@ -650,6 +863,16 @@ async function main() {
   const faq = await seedFaq({ client });
   console.log(`FAQ: ${faq.entries} entries up to date.`);
   console.log(`Cleaners: ${cleaners.length} linked to their agencies.`);
+
+  const agencyIds = { "kilau-teratai": agencyIdOf("kilau-teratai"), "cemara-rapi": agencyIdOf("cemara-rapi") };
+  const cleanerIdMap = {
+    "petugas.yuliana": cleanerIdOf("petugas.yuliana"),
+    "petugas.teguh": cleanerIdOf("petugas.teguh"),
+    "petugas.ratna": cleanerIdOf("petugas.ratna"),
+    "petugas.dimas": cleanerIdOf("petugas.dimas"),
+  };
+  const payoutsResult = await seedPayouts({ client, agencyIds, cleanerIds: cleanerIdMap, customerId: customer.id });
+  console.log(`Payouts: ${payoutsResult.ordersAdded} historical orders, ${payoutsResult.feesAdded} fees, ${payoutsResult.payoutsCreated} payouts created or kept.`);
 
   const jobs = demoJobs.map(({ agency, cleaner, ...job }) => ({ ...job, agencyId: agencyIdOf(agency), cleanerId: cleanerIdOf(cleaner) }));
   const completed = await seedCompletedJobs({ client, customerId: customer.id, jobs });
