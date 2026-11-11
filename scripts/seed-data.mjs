@@ -182,6 +182,20 @@ export const cleanerPhotos = { "petugas.yuliana": "/images/cleaner-portrait.jpg"
 export const demoJobAddress = "Jl. Melati Contoh No. 12, Jakarta";
 export const demoJobPhone = "+6281200000000";
 
+/** Default payout percentage for new agencies (T40). Agency keeps this share of each completed order. */
+export const PAYOUT_PERCENT_DEFAULT = 70;
+
+/**
+ * Pattern for seeding historical completed orders and payouts (T42).
+ * seedPayouts() uses this to generate 90 days of data for the payout summary screens.
+ */
+export const historicalJobPattern = {
+  daysBack: 90,
+  paidWeeks: 11,
+  pendingWeeks: 1,
+  unassignedDays: 7,
+};
+
 /**
  * HomeKlin's FAQ (T19), in both languages. Fixed ids: the seed brings these entries up to date and
  * leaves entries admin added alone. It speaks as HomeKlin only, never naming a partner agency.
