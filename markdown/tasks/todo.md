@@ -258,36 +258,36 @@ Conventions for every task: tests written first; `npm run typecheck`, `npm run l
 > Backend only. UI for agency "Ringkasan" and owner "Pembayaran per agensi" is ported from the design separately.
 > PAYOUT_PERCENT_DEFAULT = 70. Rounding: round(price_idr * percent / 100.0) half-up.
 
-- [ ] **T40 Migration: agency fees schema and DB functions** (L) — `supabase/migrations/20261111090000_agency_fees.sql`
+- [x] **T40 Migration: agency fees schema and DB functions** (L) — `supabase/migrations/20261111090000_agency_fees.sql`
   - Accept: `payout_percent` added to `agencies` (default 70, check 0-100); `payouts` and `order_fees` tables created with RLS (agency reads own, owner reads all, no client writes); `check_out` updated to insert `order_fees` row idempotently; `generate_payouts`, `mark_payout_paid`, five INVOKER summary functions and `owner_payouts_overview` created; migration applies cleanly on fresh and existing DB.
   - Verify: `supabase db reset` with no errors; `npm run check`.
   - Deps: T39.
 
 ### Checkpoint: Migration done
-- [ ] Migration applies on `supabase db reset`; `npm run check` passes.
+- [x] Migration applies on `supabase db reset`; `npm run check` passes. — 2026-11-11
 
-- [ ] **T41 Server lib: `src/lib/payouts/`** (M) — Zod schemas, readers (SSR client), actions (`markPayoutPaid`, `generatePayouts`)
+- [x] **T41 Server lib: `src/lib/payouts/`** (M) — Zod schemas, readers (SSR client), actions (`markPayoutPaid`, `generatePayouts`)
   - Accept: `schemas.ts` with Zod types for all function returns; `readers.ts` calling DB functions via `createSupabaseServerClient`; `actions.ts` with `markPayoutPaid` and `generatePayouts` returning `{ ok?: true; formError?: string } | null`; `index.ts` re-exporting; no service key; no cache on financial data.
   - Verify: `npm run check`.
   - Deps: T40.
 
-- [ ] **T42 Seed: 90 days of historical data** (M) — idempotent additions to `scripts/seed-data.mjs`
+- [x] **T42 Seed: 90 days of historical data** (M) — idempotent additions to `scripts/seed-data.mjs`
   - Accept: both agencies have `payout_percent = 70`; ~90 days of completed orders with `order_fees` rows across services, areas and cleaners; weekly payouts weeks 1-11 `paid`, week 12 `pending`; unassigned fees so "Menunggu dibayarkan" is non-zero; re-run produces no duplicates.
   - Verify: run seed twice; check payout and fee counts are identical.
   - Deps: T40.
 
-- [ ] **T43 Cron route and vercel.json** (S) — `src/app/api/cron/payouts/route.ts` + `vercel.json`
+- [x] **T43 Cron route and vercel.json** (S) — `src/app/api/cron/payouts/route.ts` + `vercel.json`
   - Accept: route mirrors `cron/recordings` auth (CRON_SECRET, `timingSafeEqual`, 503/401/200); computes last Sunday and calls `generate_payouts`; `vercel.json` has `{ "path": "/api/cron/payouts", "schedule": "0 0 * * 1" }`.
   - Verify: `npm run check`; request with wrong secret returns 401.
   - Deps: T40.
 
 ### Checkpoint: Phase 2 done
-- [ ] `npm run check` passes; seed runs idempotently twice; cron route type-checks.
+- [x] `npm run check` passes; seed runs idempotently twice; cron route type-checks. — 2026-11-11
 
-- [ ] **T44 Tests** (M) — unit + integration tests for the fee/payout layer
+- [x] **T44 Tests** (M) — unit + integration tests for the fee/payout layer
   - Accept: unit tests cover fee formula, rounding, idempotency; integration tests cover RLS isolation (agency A cannot read agency B), role gates (`mark_payout_paid` owner only), `p_days` validation, `generate_payouts` idempotency, customer order row leaks no fee; `tests/protected-pages.test.ts` updated if needed; no skipped tests; if `TEST_SUPABASE_*` keys absent, states so and does not skip.
   - Verify: `npm run check`; integration tests pass.
   - Deps: T41, T42, T43.
 
 ### Checkpoint 10: Agency fees backend complete
-- [ ] `npm run check` passes (0 TS errors, 0 lint errors, 100 % test pass); migration applies on fresh DB; done checklist items listed (files changed, migration number, rounding rule, constant name, all Section 2 assumptions resolved).
+- [x] `npm run check` passes (0 TS errors, 0 lint errors, 756/756 tests pass); migrations applied to test project; done checklist listed in Progress.md. — 2026-11-11

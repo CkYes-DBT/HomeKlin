@@ -71,7 +71,21 @@ Last updated: 2026-11-03. Written so that a **brand-new Claude session with no m
 | Interview (what the user actually wants) | done | summarised below |
 | Spec | done, approved | `markdown/SPEC.md` |
 | Plan and task list (41 tasks, 12 phases; T29b and T29c added 2026-11-03) | done, approved | `markdown/tasks/plan.md`, `markdown/tasks/todo.md` |
-| Build | **2026-11-05: every buildable task is done; T32 and T33 closed without building (no real stream, user decision). Left: T35 (real devices and people), T36 (after the redesign), T39 (day-of steps), the Checkpoint reviews** | `markdown/tasks/todo.md` |
+| Build | **2026-11-05: every buildable task is done; T32 and T33 closed without building (no real stream, user decision). Left: T35 (real devices and people), T36 (after the redesign), T39 (day-of steps), the Checkpoint reviews.** **2026-11-11: T40–T44 done (agency fees, payouts, summaries backend); see done checklist below.** | `markdown/tasks/todo.md` |
+
+## T40–T44 done checklist (2026-11-11)
+- **Migration numbers:** `20261111090000_agency_fees.sql`, `20261111090001_fix_order_fees_rls.sql` (RLS fix: use `my_agency_id()` instead of direct subquery)
+- **Rounding rule:** `round(price_idr * percent / 100.0)` — PostgreSQL `round()` rounds half away from zero (half-up for positive integers)
+- **Default percentage constant:** `PAYOUT_PERCENT_DEFAULT = 70` (documented in migration comment; TypeScript schemas export `VALID_DAYS`)
+- **Section 2 assumptions resolved:**
+  1. Agency share 70 %, HomeKlin keeps 30 % — column default 70, owner may change per agency
+  2. Payout period weekly Monday–Sunday; `generate_payouts` takes a `period_end date` parameter; cron Monday 00:00 UTC
+  3. Fees only for `completed_at IS NOT NULL` (status=paid, cleaner checked out) ✓
+  4. Fee snapshot copied at completion inside `check_out()`, idempotent via `ON CONFLICT DO NOTHING` ✓
+- **Files changed:** `supabase/migrations/20261111090000_agency_fees.sql`, `supabase/migrations/20261111090001_fix_order_fees_rls.sql`, `src/lib/payouts/schemas.ts`, `src/lib/payouts/readers.ts`, `src/lib/payouts/actions.ts`, `src/lib/payouts/index.ts`, `src/app/api/cron/payouts/route.ts`, `vercel.json`, `scripts/seed-data.mjs`, `scripts/seed.mjs`, `tests/payout-actions.test.ts`, `tests/integration/payouts.test.ts`, `markdown/tasks/todo.md`
+- **Test results:** 756/756 unit + integration tests pass; 0 TS errors; 2 pre-existing lint warnings (unused `_previous` param in server actions, project-wide pattern)
+- **Applied to:** test project (both migrations via `npm run supabase -- migrate test`); live project still needs `npm run supabase -- migrate live` before the UI port
+- **Screens that will use this backend:** agency "Ringkasan" → `agency_summary`, `agency_fees_daily`, `agency_fees_by_cleaner`, `agency_fees_by_service`, `agency_payouts_list`; owner "Pembayaran per agensi" → `owner_payouts_overview`, `markPayoutPaid` action
 
 ## Decisions made (do not re-ask these)
 - **Platform:** a website, not the Android app the Contract names. The client agreed, but it should still be written as a Contract addendum (Pasal 8).
