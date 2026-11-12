@@ -2,9 +2,9 @@
 
 /*
  * HomeKlin design tokens: the single source for colour, type, spacing, radii, elevation,
- * layering and motion. The apps still use the T3b tokens (their old doc is in git history, commit
- * 96335bf); the redesign (T3c) is in markdown/design.md and is live on the landing page through
- * `.theme-forest` (see below).
+ * layering and motion. Most apps still use the T3b tokens (their old doc is in git history, commit
+ * 96335bf); the redesign (T3c) is in markdown/design.md and is live on the landing page and the admin
+ * console through `.theme-forest` (see below).
  *
  * Tailwind's default palette, radii, shadows, font sizes and fonts are cleared below, so a
  * component can only use these tokens (a stray `text-zinc-600` simply does not exist).
@@ -258,10 +258,12 @@
 
 /*
  * The redesign (markdown/design.md, 2026-10-19), scoped. A page opts in with class `theme-forest` on
- * its outer wrapper (the landing page does, in src/app/[locale]/(marketing)/layout.tsx). Inside it, the token
- * names the redesign shares with T3b take their new values, so `bg-canvas` is cream and `rounded-xl`
- * is 28 px there, while the customer, cleaner, agency and admin pages keep the T3b look until their
- * own migration (design.md "Migration notes"). After that, these values move into @theme above.
+ * its outer wrapper, together with the redesign's fonts (src/app/fonts-forest.ts): the landing page
+ * does, in src/app/[locale]/(marketing)/layout.tsx, and so does the admin console (Phase 13), in
+ * src/app/[locale]/(admin)/layout.tsx. Inside it, the token names the redesign shares with T3b take
+ * their new values, so `bg-canvas` is cream and `rounded-xl` is 28 px there, while the customer,
+ * cleaner, agency and owner pages keep the T3b look until their own migration (design.md "Migration
+ * notes"). After that, these values move into @theme above.
  */
 .theme-forest {
   --color-canvas: #f3f2ea; /* warm cream page */
@@ -273,6 +275,14 @@
   --color-focus: var(--color-primary); /* 10.7:1 on canvas; dark bands set it to lime */
   --color-success: #276b49;
   --color-success-surface: #e4f3ea;
+  /* Feedback, design.md colors.error / warning / info and their -container: text 5:1 or better on
+     its own surface, so status pills and form errors pass on cream and white alike. */
+  --color-danger: #b5381f; /* 5.1:1 on danger-surface, 5.9:1 on white */
+  --color-danger-surface: #fbeae6;
+  --color-warning: #8a5a00; /* 5.4:1 on warning-surface */
+  --color-warning-surface: #fff3d6;
+  --color-info: #185a85; /* 6.4:1 on info-surface */
+  --color-info-surface: #e3f0f8;
   --color-live: var(--color-success); /* 5.6:1 on live-surface */
   --color-live-surface: var(--color-success-surface);
   --color-live-dot: var(--color-mint-bright);

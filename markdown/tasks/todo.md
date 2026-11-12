@@ -297,7 +297,7 @@ Conventions for every task: tests written first; `npm run typecheck`, `npm run l
 > Ports the redesign (markdown/design.md) to the admin group only, through the scoped `theme-forest` class (no rename codemod). Customer, cleaner, agency and owner pages stay on T3b. First screen: "Layanan dan harga" from the user's mock (screenshots; the reference HTML is not in the repo). No schema change. Built by `homeklin-frontend`, one task at a time; reviewed by `code-reviewer` at Checkpoint B.
 > Decisions (user, 2026-11-12): the row's on/off switch is removed (option a): `service-switch.tsx`, `setServiceActive` and their unit tests go, and the e2e switch steps are rewritten to use the panel checkbox. Card radius `lg` (design.md tables). The create panel keeps the ID field and both panels keep Urutan. Admin menu items keep their current names except "Layanan dan harga".
 
-- [ ] **R1 Admin theme scope** (S): shared font file for Inter, Inter Tight and Instrument Serif (landing imports it, unchanged look); `(admin)` layout wrapped in `theme-forest` + fonts; warning, danger and info redesign values added to `.theme-forest`
+- [x] **R1 Admin theme scope** (S) — done 2026-11-12 (`src/app/fonts-forest.ts`, e2e `admin-theme.desktop.spec.ts`; 756 unit, 381 e2e pass): shared font file for Inter, Inter Tight and Instrument Serif (landing imports it, unchanged look); `(admin)` layout wrapped in `theme-forest` + fonts; warning, danger and info redesign values added to `.theme-forest`
   - Accept: admin pages use Inter on cream; agency, owner, customer and landing render as before.
   - Verify: `npm run check`; `npm run test:e2e`; e2e asserts admin font is Inter and agency is not.
   - Skills: `frontend-ui-engineering`, `source-driven-development` (next/font).

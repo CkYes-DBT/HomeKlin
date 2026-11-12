@@ -10,7 +10,7 @@ redesign: see "What not to change" below.
 | Every page (one file per address) | `src/app/[locale]/` |
 | All page components (screens, forms, cards) | `src/components/<area>/` |
 | Colours, spacing, radii, shadows, motion (design tokens) | `src/app/globals.css` (`@theme`) |
-| Fonts | `src/app/fonts.ts` (apps), `src/app/[locale]/(marketing)/layout.tsx` (landing page) |
+| Fonts | `src/app/fonts.ts` (apps, T3b), `src/app/fonts-forest.ts` (redesign: landing page and admin console, loaded by their layouts) |
 | All visible text, both languages | `src/messages/id.json` and `src/messages/en.json` |
 | Images | `public/images/` (credits in `markdown/image-sources.md`) |
 | Design rules and brand | `markdown/design.md`, `markdown/PRODUCT.md` |
