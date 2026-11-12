@@ -53,7 +53,8 @@ role check (`RoleGate`) and one content component.
 | `/agency/recordings` live and replay | `(agency)/agency/recordings/page.tsx` | `agency/`: recordings-content, live-tile, live-video, agency-recording-player |
 | `/admin` (no page of its own) | `(admin)/admin/page.tsx` | redirects to `/admin/monitor` inside its RoleGate (R2b) |
 | `/admin/monitor` Pemantauan langsung, live grid (start page) | `(admin)/admin/monitor/page.tsx` | `back-office/`: feed-tile, feed-video, feed-status |
-| `/admin/services`, `/new`, `/edit` Layanan dan harga | `(admin)/admin/services/...` | `admin/`: services-list (R3; rows open with native details), service-form, service-switch (no longer rendered; R6 removes it) |
+| `/admin/services` Layanan dan harga (one page: rows edit in place, `?new` opens the create panel) | `(admin)/admin/services/page.tsx` | `admin/`: services-list (rows are native details), service-panel (edit and create panels), service-form (the `useServiceForm` hook and save button), form-fields |
+| `/admin/services/new`, `/edit` (retired, R6) | `(admin)/admin/services/new/page.tsx`, `edit/page.tsx` | redirect inside their RoleGate: `/new` to `/admin/services?new`, `/edit?id=...` to `/admin/services` |
 | `/admin/tickets` Obrolan bantuan, inbox and chat | `(admin)/admin/tickets/page.tsx` | `admin/`: ticket-inbox, inbox-live, close-ticket; `support/ticket-chat` |
 | `/admin/faq` Pertanyaan umum | `(admin)/admin/faq/page.tsx` | placeholder |
 | `/admin/recordings` Rekaman, replay | `(admin)/admin/recordings/page.tsx` | `back-office/`: recordings-table, admin-recording-player |

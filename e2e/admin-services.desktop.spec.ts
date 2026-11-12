@@ -3,8 +3,9 @@ import { randomUUID } from "node:crypto";
 import { adminClient, visitorClient } from "../tests/integration/test-project";
 import { signedInAs } from "./setup/auth-state";
 
-// T7b on a desk (R4 and R5: the edit and create forms sit in the list's panels): admin manages HomeKlin's services and the one price list at /admin/services, and only
-// admin may. Runs against the separate Supabase test project (playwright.config.ts).
+// T7b on a desk: admin manages HomeKlin's services and the one price list at /admin/services, and only
+// admin may. The edit and create forms sit in the list's panels (R4, R5); the old /new and /edit pages
+// are gone and their addresses lead back to the list (R6). Runs against the separate Supabase test project (playwright.config.ts).
 // Test data: other specs read the same catalog at the same time, so this file never changes the seven
 // seeded services. It adds its own, with a unique id (uji-<random>), placed last (order 999), and keeps
 // it switched off except while it checks switching on; afterAll deletes what it added.
@@ -29,7 +30,7 @@ async function visitorSees(id: string): Promise<{ price_idr: number } | undefine
   return (data as { id: string; price_idr: number }[]).find((service) => service.id === id);
 }
 
-/** Fills a create form (R5: the "Layanan baru" panel; the /new page has the same labels until R6). */
+/** Fills the "Layanan baru" create panel (R5). */
 async function fillNewService(scope: Page | Locator, service: { id: string; nameId: string; nameEn: string }) {
   await scope.getByLabel("ID layanan").fill(service.id);
   await scope.getByLabel("Jenis", { exact: true }).selectOption({ label: "Kain & kasur" });
@@ -286,45 +287,72 @@ test.describe("an admin", () => {
   });
 
   test("is told what to fix, per field and in the page's language, and nothing is saved", async ({ page }) => {
-    await page.goto("/admin/services/new");
-    await page.getByRole("button", { name: "Simpan layanan" }).click();
+    await page.goto("/admin/services?new");
+    const panel = createPanel(page);
+    // The cursor in the first field says the page's script runs (saving needs it, R5).
+    await expect(panel.getByLabel("Nama layanan (Bahasa Indonesia)")).toBeFocused();
+    await panel.getByRole("button", { name: "Simpan layanan" }).click();
 
-    await expect(page.getByLabel("ID layanan")).toHaveAttribute("aria-invalid", "true");
-    await expect(page.getByLabel("ID layanan")).toBeFocused();
-    await expect(page.getByText("Masukkan ID layanan.")).toBeVisible();
-    await expect(page.getByText("Pilih jenis layanan.")).toBeVisible();
-    await expect(page.getByText("Masukkan harga.")).toBeVisible();
-    await expect(page.getByRole("main").getByRole("alert")).toContainText("Periksa 8 kolom yang ditandai.");
-    await expect(page).toHaveURL("/admin/services/new");
+    await expect(panel.getByLabel("ID layanan")).toHaveAttribute("aria-invalid", "true");
+    // The cursor goes to the first field to fix, in the panel's order: the Indonesian name.
+    await expect(panel.getByLabel("Nama layanan (Bahasa Indonesia)")).toBeFocused();
+    await expect(panel.getByText("Masukkan ID layanan.")).toBeVisible();
+    await expect(panel.getByText("Pilih jenis layanan.")).toBeVisible();
+    await expect(panel.getByText("Masukkan harga.")).toBeVisible();
+    await expect(panel.getByRole("alert")).toContainText("Periksa 8 kolom yang ditandai.");
+    await expect(page).toHaveURL("/admin/services?new");
 
-    await page.goto("/en/admin/services/new");
-    await page.getByLabel("Service ID").fill("Bad ID!");
-    await page.getByLabel("Full price (Rp)").fill("85,5");
-    await page.getByRole("button", { name: "Save service" }).click();
-    await expect(page.getByText("Use only lowercase letters, numbers and hyphens")).toBeVisible();
-    await expect(page.getByText("Write the price in whole rupiah, for example 85000 or 85.000.")).toBeVisible();
-    // What was typed stays in the form.
-    await expect(page.getByLabel("Full price (Rp)")).toHaveValue("85,5");
+    await page.goto("/en/admin/services?new");
+    const english = createPanel(page);
+    await expect(english.getByLabel("Service name (Indonesian)")).toBeFocused();
+    await english.getByLabel("Service ID").fill("Bad ID!");
+    await english.getByLabel("Full price (Rp)").fill("85,5");
+    await english.getByRole("button", { name: "Save service" }).click();
+    await expect(english.getByText("Use only lowercase letters, numbers and hyphens")).toBeVisible();
+    await expect(english.getByText("Write the price in whole rupiah, for example 85000 or 85.000.")).toBeVisible();
+    // What was typed stays in the form, and the panel stays open.
+    await expect(english.getByLabel("Full price (Rp)")).toHaveValue("85,5");
+    await expect(english).toHaveAttribute("open", "");
   });
 
   test("cannot take an id that is already in use", async ({ page }) => {
     const service = testService();
-    await page.goto("/admin/services/new");
-    await fillNewService(page, { ...service, id: "regular" });
-    await page.getByRole("button", { name: "Simpan layanan" }).click();
+    await page.goto("/admin/services?new");
+    const panel = createPanel(page);
+    await expect(panel.getByLabel("Nama layanan (Bahasa Indonesia)")).toBeFocused();
+    await fillNewService(panel, { ...service, id: "regular" });
+    await panel.getByRole("button", { name: "Simpan layanan" }).click();
 
-    await expect(page.getByText("ID ini sudah dipakai layanan lain. Pilih ID lain.")).toBeVisible();
-    await expect(page).toHaveURL("/admin/services/new");
+    await expect(panel.getByText("ID ini sudah dipakai layanan lain. Pilih ID lain.")).toBeVisible();
+    await expect(panel.getByLabel("ID layanan")).toHaveAttribute("aria-invalid", "true");
+    await expect(page).toHaveURL("/admin/services?new");
     // The seeded service is unchanged.
     const { data } = await adminClient().from("services").select("name_id").eq("id", "regular").single();
     expect(data?.name_id).toBe("Pembersihan Rutin");
   });
 
-  test("is told plainly when a service does not exist", async ({ page }) => {
+  // R6: the pages of their own are gone. A bookmark of one, even for a service that does not exist,
+  // leads to the list in the same language, never to a dead end.
+  test("an old address to add or change a service leads to the list, in the same language", async ({ page }) => {
+    // Indonesian first: opening an English page remembers English (the language cookie), after which
+    // an address without /en opens in English too.
     await page.goto("/admin/services/edit?id=tidak-ada-layanan-ini");
-    await expect(page.getByRole("heading", { name: "Layanan tidak ditemukan" })).toBeVisible();
-    await page.getByRole("link", { name: "Kembali ke daftar layanan" }).click();
     await expect(page).toHaveURL("/admin/services");
+    await expect(page.getByRole("heading", { level: 1, name: "Layanan dan harga" })).toBeVisible();
+    await expect(rowOf(page, "Pembersihan Rutin")).toBeVisible();
+
+    // The old "add" page opens the create panel instead.
+    await page.goto("/admin/services/new");
+    await expect(page).toHaveURL("/admin/services?new");
+    await expect(createPanel(page)).toHaveAttribute("open", "");
+
+    await page.goto("/en/admin/services/edit?id=regular");
+    await expect(page).toHaveURL("/en/admin/services");
+    await expect(page.getByRole("heading", { level: 1, name: "Services and prices" })).toBeVisible();
+
+    await page.goto("/en/admin/services/new");
+    await expect(page).toHaveURL("/en/admin/services?new");
+    await expect(createPanel(page).getByRole("button", { name: "Save service" })).toBeVisible();
   });
 });
 
@@ -334,10 +362,14 @@ test.describe("a signed-in customer", () => {
   test("is sent to their own home, and never gets the admin's list or form", async ({ page }) => {
     const html = await (await page.request.get("/admin/services")).text();
     expect(html).not.toContain("Tambah layanan");
-    const form = await (await page.request.get("/admin/services/new")).text();
+    const form = await (await page.request.get("/admin/services?new")).text();
     expect(form).not.toContain("Simpan layanan");
+    expect(form).not.toContain("Layanan baru");
 
     await page.goto("/admin/services");
+    await expect(page).toHaveURL("/home");
+    // The old address to add a service checks the role before it sends anyone on (R6).
+    await page.goto("/admin/services/new");
     await expect(page).toHaveURL("/home");
   });
 });

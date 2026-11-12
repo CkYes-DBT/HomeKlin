@@ -1138,26 +1138,7 @@
       "description": "Isi kedua bahasa. Layanan baru tersimpan sebagai Draf sampai Anda mencentang Tampilkan di situs pelanggan."
     }
   },
-  "AdminServiceSwitch": {
-    "label": "Tampilkan {name} di katalog pelanggan",
-    "active": "Aktif",
-    "inactive": "Nonaktif",
-    "nowActive": "{name} sekarang tampil di katalog pelanggan.",
-    "nowInactive": "{name} tidak tampil lagi di katalog pelanggan.",
-    "errors": {
-      "forbidden": "Hanya admin yang dapat mengubah layanan.",
-      "notFound": "Layanan ini tidak ditemukan lagi. Muat ulang halaman ini.",
-      "unavailable": "Status belum dapat diubah. Coba lagi sebentar lagi."
-    }
-  },
   "AdminServiceForm": {
-    "sections": {
-      "basics": "Layanan",
-      "texts": "Nama dan deskripsi",
-      "pricing": "Harga dan durasi",
-      "visibility": "Di katalog pelanggan"
-    },
-    "textsHint": "Isi kedua bahasa. Pelanggan membaca teks dalam bahasa yang mereka pilih.",
     "fields": {
       "id": "ID layanan",
       "idHint": "Huruf kecil, angka, dan tanda hubung, misalnya cuci-kasur. Tidak dapat diubah setelah disimpan.",
@@ -1207,17 +1188,6 @@
       "notFound": "Layanan ini tidak ditemukan lagi. Buka daftar layanan, lalu coba lagi.",
       "unavailable": "Perubahan belum dapat disimpan. Coba lagi sebentar lagi."
     }
-  },
-  "AdminServiceNewPage": {
-    "title": "Tambah layanan",
-    "description": "Isi data layanan dalam dua bahasa. Layanan baru belum tampil ke pelanggan sampai Anda mengaktifkannya."
-  },
-  "AdminServiceEditPage": {
-    "title": "Ubah layanan",
-    "description": "Selama layanan ini aktif, pelanggan melihat perubahan harga dan teks segera setelah Anda menyimpannya.",
-    "notFoundTitle": "Layanan tidak ditemukan",
-    "notFoundBody": "Tidak ada layanan dengan alamat ini. Pilih layanan dari daftar Layanan dan harga.",
-    "back": "Kembali ke daftar layanan"
   },
   "AdminFaqPage": {
     "title": "Pertanyaan umum",

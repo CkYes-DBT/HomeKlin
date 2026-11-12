@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   parseServiceForm,
   parseServiceId,
-  parseServiceSwitch,
   serviceFormValues,
   serviceToFormValues,
 } from "@/lib/validation/service";
@@ -222,25 +221,6 @@ describe("parseServiceId", () => {
     expect(parseServiceId("a".repeat(41))).toBeNull();
     expect(parseServiceId(undefined)).toBeNull();
     expect(parseServiceId(["regular"])).toBeNull();
-  });
-});
-
-describe("parseServiceSwitch", () => {
-  it("reads which service to switch and whether it should be on", () => {
-    expect(parseServiceSwitch(form({ id: "regular", isActive: "true" }))).toEqual({
-      ok: true,
-      data: { id: "regular", isActive: true },
-    });
-    expect(parseServiceSwitch(form({ id: "regular", isActive: "false" }))).toEqual({
-      ok: true,
-      data: { id: "regular", isActive: false },
-    });
-  });
-
-  it("refuses a missing or unclear target state instead of guessing", () => {
-    expect(parseServiceSwitch(form({ id: "regular" }))).toEqual({ ok: false });
-    expect(parseServiceSwitch(form({ id: "regular", isActive: "yes" }))).toEqual({ ok: false });
-    expect(parseServiceSwitch(form({ id: "../x", isActive: "true" }))).toEqual({ ok: false });
   });
 });
 

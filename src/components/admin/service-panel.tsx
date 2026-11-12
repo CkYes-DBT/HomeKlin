@@ -19,8 +19,8 @@ type PanelProps = {
 
 // A service's row in admin's list (R4) and the "Layanan baru" panel above it (R5): a native <details>
 // whose <summary> is the row and whose panel is the service's form, so the row opens and closes with
-// no script at all. Each panel is ONE form posting to the same Server Actions as the /new and /edit
-// pages (useServiceForm), with the same field names and hidden fields.
+// no script at all. Each panel is ONE form posting to createService or updateService
+// (useServiceForm), which check the role and every field on the server.
 //
 // Who decides whether a panel is open: the browser does, as the row is clicked, Enter or Space. React
 // only says "open" when the last save was refused, so the messages are in view; it never says
@@ -28,7 +28,7 @@ type PanelProps = {
 // A form sent as a plain post (before the page's script has loaded) is still checked on the server and
 // nothing invalid is saved, but the page comes back as it was, rows closed and without the messages:
 // the role-checked list streams in behind Suspense, and React does not hand that post's answer back
-// to the form there (the /new and /edit pages behave the same way).
+// to the form there.
 
 /**
  * A stored service's row with its edit form. "Batal" closes the row and starts the form over from the
@@ -190,7 +190,7 @@ function PanelForm({ mode, idPrefix, initial, categories, service, cancel }: Pan
             error={errorOf("id")}
           />
         ) : (
-          <FixedField look="panel" id={id("id")} label={t("fields.id")} value={initial.id} hint={t("fields.idFixed")} />
+          <FixedField id={id("id")} label={t("fields.id")} value={initial.id} hint={t("fields.idFixed")} />
         )}
       </div>
 
@@ -257,7 +257,6 @@ function PanelForm({ mode, idPrefix, initial, categories, service, cancel }: Pan
       </div>
 
       <CheckboxField
-        look="panel"
         id={id("active")}
         name="isActive"
         label={t("fields.active")}
@@ -269,7 +268,6 @@ function PanelForm({ mode, idPrefix, initial, categories, service, cancel }: Pan
         <FormAlert message={formMessage} tone="danger" resultKey={resultKey} />
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <SaveButton
-            look="panel"
             pending={pending}
             label={t(mode === "create" ? "submitCreate" : "submitEdit")}
             pendingLabel={t("pending")}

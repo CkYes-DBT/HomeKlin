@@ -1138,26 +1138,7 @@
       "description": "Fill in both languages. A new service is saved as a Draft until you tick Show on the customer site."
     }
   },
-  "AdminServiceSwitch": {
-    "label": "Show {name} in the customer catalog",
-    "active": "Active",
-    "inactive": "Inactive",
-    "nowActive": "{name} now appears in the customer catalog.",
-    "nowInactive": "{name} no longer appears in the customer catalog.",
-    "errors": {
-      "forbidden": "Only an admin can change services.",
-      "notFound": "This service could not be found any more. Reload this page.",
-      "unavailable": "The status could not be changed. Try again in a moment."
-    }
-  },
   "AdminServiceForm": {
-    "sections": {
-      "basics": "Service",
-      "texts": "Name and description",
-      "pricing": "Price and duration",
-      "visibility": "In the customer catalog"
-    },
-    "textsHint": "Fill in both languages. Customers read the text in the language they choose.",
     "fields": {
       "id": "Service ID",
       "idHint": "Lowercase letters, numbers and hyphens, for example mattress-wash. It cannot be changed once saved.",
@@ -1207,17 +1188,6 @@
       "notFound": "This service could not be found any more. Open the list of services, then try again.",
       "unavailable": "The changes could not be saved. Try again in a moment."
     }
-  },
-  "AdminServiceNewPage": {
-    "title": "Add service",
-    "description": "Fill in the service in both languages. A new service is not shown to customers until you make it active."
-  },
-  "AdminServiceEditPage": {
-    "title": "Edit service",
-    "description": "While this service is active, customers see changes to its price and text as soon as you save them.",
-    "notFoundTitle": "Service not found",
-    "notFoundBody": "There is no service at this address. Choose a service from the Services and prices list.",
-    "back": "Back to the list of services"
   },
   "AdminFaqPage": {
     "title": "FAQ",

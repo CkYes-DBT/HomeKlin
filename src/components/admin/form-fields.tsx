@@ -8,12 +8,13 @@ import { panelLook } from "@/components/auth/form-controls";
 // multi-line text field, a checkbox and a value that cannot be changed. They look like its TextField
 // (T3b app look: 16 px text so phones never zoom, a border-control edge, a danger edge and fill on an
 // error) and tie their hint and error to the control with aria-describedby, so a screen reader reads
-// the problem together with the field. look="panel" gives each the redesign's back-office input
-// instead (markdown/design.md, Forms), for admin's in-list panels (R4).
+// the problem together with the field. look="panel" gives the select and the text area the redesign's
+// back-office input instead (markdown/design.md, Forms). The checkbox and the fixed value are used only
+// by admin's in-list service panels (R4), so they have the panel look alone.
 
 type Notes = { hint?: string; error?: string };
 
-/** app: the T3b look of the /new and /edit pages; panel: the redesign (R4). */
+/** app: the T3b look (agency slots, reviews); panel: the redesign (admin service panels, R4). */
 type Look = "app" | "panel";
 
 const appLook = {
@@ -139,33 +140,17 @@ export function TextAreaField({ id, label, hint, error, rows = 3, look = "app", 
   );
 }
 
-type CheckboxFieldProps = { id: string; name: string; label: string; hint?: string; defaultChecked: boolean; look?: Look };
+type CheckboxFieldProps = { id: string; name: string; label: string; hint?: string; defaultChecked: boolean };
 
-const checkboxLooks = {
-  app: {
-    row: "hover:bg-surface-sunken",
-    box: "bg-surface group-hover:border-brand-600 checked:border-brand-600 checked:bg-brand-600",
-    tick: "text-on-brand",
-    text: "text-base font-medium text-ink",
-  },
-  // The box sits on the panel's fill, so it is white; ticked, it is forest green.
-  panel: {
-    row: "hover:bg-sunken",
-    box: "bg-card group-hover:border-primary checked:border-primary checked:bg-primary",
-    tick: "text-on-primary",
-    text: "text-sm font-semibold text-ink",
-  },
-};
-
-// A 24 px box inside a label that is at least 44 px tall, so the whole line is the target.
-export function CheckboxField({ id, name, label, hint, defaultChecked, look = "app" }: CheckboxFieldProps) {
+// A 24 px box inside a label that is at least 44 px tall, so the whole line is the target. The box sits
+// on the panel's fill, so it is white; ticked, it is forest green.
+export function CheckboxField({ id, name, label, hint, defaultChecked }: CheckboxFieldProps) {
   const { describedBy } = notesFor(id, { hint });
-  const styles = checkboxLooks[look];
   return (
     <div className="flex flex-col gap-1">
       <label
         htmlFor={id}
-        className={`group flex min-h-touch w-fit cursor-pointer items-center gap-3 rounded-full py-1 pr-4 pl-1 transition-colors duration-150 ease-out-quart ${styles.row}`}
+        className="group flex min-h-touch w-fit cursor-pointer items-center gap-3 rounded-full py-1 pr-4 pl-1 transition-colors duration-150 ease-out-quart hover:bg-sunken"
       >
         <span className="relative flex size-6 shrink-0 items-center justify-center">
           <input
@@ -174,37 +159,33 @@ export function CheckboxField({ id, name, label, hint, defaultChecked, look = "a
             type="checkbox"
             defaultChecked={defaultChecked}
             aria-describedby={describedBy}
-            className={`peer size-6 cursor-pointer appearance-none rounded-sm border border-border-control transition-colors duration-150 ease-out-quart ${styles.box}`}
+            className="peer size-6 cursor-pointer appearance-none rounded-sm border border-border-control bg-card transition-colors duration-150 ease-out-quart group-hover:border-primary checked:border-primary checked:bg-primary"
           />
           <Check
-            className={`pointer-events-none absolute size-4 opacity-0 peer-checked:opacity-100 ${styles.tick}`}
+            className="pointer-events-none absolute size-4 text-on-primary opacity-0 peer-checked:opacity-100"
             strokeWidth={3}
             aria-hidden="true"
           />
         </span>
-        <span className={styles.text}>{label}</span>
+        <span className="text-sm font-semibold text-ink">{label}</span>
       </label>
-      <FieldNotes id={id} hint={hint} look={look} />
+      <FieldNotes id={id} hint={hint} look="panel" />
     </div>
   );
 }
 
-type FixedFieldProps = { id: string; label: string; value: string; hint: string; look?: Look };
+type FixedFieldProps = { id: string; label: string; value: string; hint: string };
 
 /**
  * A value that cannot be changed (the id of a saved service): a read-only field, so it keeps its label
  * and a screen reader says it is read-only. It has no name, so it is not sent; the form carries the
  * value in a hidden field of its own.
  */
-export function FixedField({ id, label, value, hint, look = "app" }: FixedFieldProps) {
+export function FixedField({ id, label, value, hint }: FixedFieldProps) {
   const { describedBy } = notesFor(id, { hint });
-  const shape =
-    look === "panel"
-      ? "h-11 rounded-sm border border-border bg-sunken px-3.5"
-      : "h-12 rounded-full border border-border bg-surface-sunken px-5";
   return (
-    <div className={looks[look].field}>
-      <Label htmlFor={id} look={look}>
+    <div className={panelLook.field}>
+      <Label htmlFor={id} look="panel">
         {label}
       </Label>
       <input
@@ -213,28 +194,10 @@ export function FixedField({ id, label, value, hint, look = "app" }: FixedFieldP
         readOnly
         value={value}
         aria-describedby={describedBy}
-        className={`w-full cursor-default font-mono text-sm text-ink ${shape}`}
+        className="h-11 w-full cursor-default rounded-sm border border-border bg-sunken px-3.5 font-mono text-sm text-ink"
       />
-      <FieldNotes id={id} hint={hint} look={look} />
+      <FieldNotes id={id} hint={hint} look="panel" />
     </div>
-  );
-}
-
-type FormSectionProps = { legend: string; description?: string; children: ReactNode };
-
-/**
- * A group of fields with its name, separated from the group above by a line. The legend floats, which
- * takes it out of the fieldset's border (where browsers draw a legend) and lets it sit like a heading.
- */
-export function FormSection({ legend, description, children }: FormSectionProps) {
-  return (
-    <fieldset className="min-w-0 border-t border-border px-5 py-6 first-of-type:border-t-0 md:px-8">
-      <legend className="float-left w-full font-display text-lg font-semibold text-ink">{legend}</legend>
-      <div className={`clear-both flex flex-col gap-5 ${description ? "pt-1" : "pt-4"}`}>
-        {description ? <p className="max-w-prose text-sm text-ink-muted">{description}</p> : null}
-        {children}
-      </div>
-    </fieldset>
   );
 }
 

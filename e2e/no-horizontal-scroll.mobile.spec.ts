@@ -19,15 +19,14 @@ const pageGroups = [
   {
     who: "an admin",
     session: signedInAs.admin,
-    // /admin is not a page of its own any more: it leads to /admin/monitor (R2b).
+    // /admin is not a page of its own any more: it leads to /admin/monitor (R2b). /admin/services/new
+    // and /edit lead to the list (R6), whose panels are checked through /admin/services?new.
     paths: [
       "/admin/monitor",
       "/admin/tickets",
       "/admin/recordings",
       "/admin/services",
       "/admin/services?new",
-      "/admin/services/new",
-      "/admin/services/edit?id=regular",
       "/admin/faq",
     ],
   },

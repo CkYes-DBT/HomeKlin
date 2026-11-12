@@ -90,7 +90,9 @@ function CreateSummary() {
   const t = useTranslations("AdminServicesPage.create");
   return (
     <summary className="flex cursor-pointer list-none items-center gap-3 py-3 pr-2 pl-4 transition-colors duration-150 ease-out-quart group-open:bg-field hover:bg-field focus-visible:rounded-lg focus-visible:-outline-offset-2 active:bg-sunken md:gap-4 md:px-5 [&::-webkit-details-marker]:hidden">
-      <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-sm bg-lime text-on-lime">
+      {/* An icon well on a light surface (lime-wash): the header's "Tambah layanan" pill is the one full
+          lime action on screen (markdown/design.md). */}
+      <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-sm bg-lime-wash text-on-lime-wash">
         <Plus className="size-5" strokeWidth={2.5} />
       </span>
       <span className="flex min-w-0 flex-1 flex-col">

@@ -182,17 +182,6 @@ export function parseServiceId(value: unknown): string | null {
   return result.success ? result.data : null;
 }
 
-const switchSchema = z.object({
-  id,
-  isActive: z.enum(["true", "false"]).transform((value) => value === "true"),
-});
-
-/** The switch in the list: which service, and whether it should be on. */
-export function parseServiceSwitch(formData: FormData): { ok: true; data: { id: string; isActive: boolean } } | { ok: false } {
-  const result = switchSchema.safeParse({ id: formData.get("id"), isActive: formData.get("isActive") });
-  return result.success ? { ok: true, data: result.data } : { ok: false };
-}
-
 /** Longest value sent back to refill the form; the real limits are far below it. */
 const maxEcho = 400;
 

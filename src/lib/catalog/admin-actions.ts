@@ -7,7 +7,6 @@ import { catalogCacheTag } from "@/lib/catalog/catalog";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   parseServiceForm,
-  parseServiceSwitch,
   serviceFormValues,
   type ServiceErrorKey,
   type ServiceField,
@@ -42,8 +41,6 @@ export type ServiceFormState = {
   /** What admin typed, to refill the form after an error. */
   values?: ServiceFormValues;
 } | null;
-
-export type ServiceSwitchState = { ok: true; isActive: boolean } | { ok: false; formError: ServiceFailureKey } | null;
 
 type DatabaseError = { code?: string };
 
@@ -111,22 +108,4 @@ export async function updateService(_previous: ServiceFormState, formData: FormD
 
   updateTag(catalogCacheTag);
   return redirect({ href: { pathname: "/admin/services", query: { saved: service.id } }, locale: parsed.locale });
-}
-
-/** The switch in the list: shows a service in the customer catalog, or takes it out. */
-export async function setServiceActive(_previous: ServiceSwitchState, formData: FormData): Promise<ServiceSwitchState> {
-  if (!(await authorize(["admin"]))) return { ok: false, formError: "forbidden" };
-
-  // The list builds this form itself, so a request it cannot read was not sent by the page.
-  const parsed = parseServiceSwitch(formData);
-  if (!parsed.ok) return { ok: false, formError: "unavailable" };
-
-  const { id, isActive } = parsed.data;
-  const supabase = await createSupabaseServerClient({ writeCookies: true });
-  const { data, error } = await supabase.from("services").update({ is_active: isActive }).eq("id", id).select("id");
-  if (error) return { ok: false, formError: failureOf(error) };
-  if (!data || data.length === 0) return { ok: false, formError: "notFound" };
-
-  updateTag(catalogCacheTag);
-  return { ok: true, isActive };
 }

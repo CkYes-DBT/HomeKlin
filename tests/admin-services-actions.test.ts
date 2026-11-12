@@ -26,7 +26,7 @@ vi.mock("@/lib/supabase/server", () => ({ createSupabaseServerClient: createClie
 vi.mock("next/cache", () => ({ updateTag: updateTagMock }));
 vi.mock("@/i18n/navigation", () => ({ redirect: redirectMock }));
 
-const { createService, updateService, setServiceActive } = await import("@/lib/catalog/admin-actions");
+const { createService, updateService } = await import("@/lib/catalog/admin-actions");
 
 const admin = { id: "admin-1", role: "admin", fullName: "Uji Admin" };
 
@@ -199,59 +199,6 @@ describe("updateService", () => {
     updateResult = { data: null, error: { code: "23514", message: "violates check constraint" } };
 
     expect(await updateService(null, form(fields))).toMatchObject({ formError: "unavailable" });
-    expect(updateTagMock).not.toHaveBeenCalled();
-  });
-});
-
-describe("setServiceActive", () => {
-  const switchForm = (id: string, isActive: string) => form({ id, isActive });
-
-  it("refuses anyone who is not an admin before touching the database", async () => {
-    authorizeMock.mockResolvedValue(null);
-
-    expect(await setServiceActive(null, switchForm("uji-kasur", "true"))).toEqual({
-      ok: false,
-      formError: "forbidden",
-    });
-    expect(createClientMock).not.toHaveBeenCalled();
-    expectNoWrite();
-  });
-
-  it("refuses a crafted request it cannot read, without touching the database", async () => {
-    expect(await setServiceActive(null, switchForm("uji-kasur", "maybe"))).toEqual({
-      ok: false,
-      formError: "unavailable",
-    });
-    expectNoWrite();
-  });
-
-  it("switches the service on or off, refreshes the catalog and stays on the page", async () => {
-    const state = await setServiceActive(null, switchForm("uji-kasur", "false"));
-
-    expect(updateMock).toHaveBeenCalledWith({ is_active: false });
-    expect(eqMock).toHaveBeenCalledWith("id", "uji-kasur");
-    expect(updateTagMock).toHaveBeenCalledWith("catalog");
-    expect(redirectMock).not.toHaveBeenCalled();
-    expect(state).toEqual({ ok: true, isActive: false });
-  });
-
-  it("says the service was not found when no row changed, and keeps the cache", async () => {
-    updateResult = { data: [], error: null };
-
-    expect(await setServiceActive(null, switchForm("uji-kasur", "true"))).toEqual({
-      ok: false,
-      formError: "notFound",
-    });
-    expect(updateTagMock).not.toHaveBeenCalled();
-  });
-
-  it("reports a database problem in plain words and keeps the cache", async () => {
-    updateResult = { data: null, error: { code: "42501", message: "permission denied" } };
-
-    expect(await setServiceActive(null, switchForm("uji-kasur", "true"))).toEqual({
-      ok: false,
-      formError: "forbidden",
-    });
     expect(updateTagMock).not.toHaveBeenCalled();
   });
 });

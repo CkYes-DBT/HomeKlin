@@ -5,6 +5,9 @@ import { adminClient } from "../../tests/integration/test-project";
 // T7b review screenshots: admin's list of services and prices, the form that adds a service (empty and
 // with its error state, in both languages) and the form that changes one, at the two desktop widths;
 // plus the list and the form on a narrow screen, to show they stay usable without sideways scrolling.
+// Historical: the T7b pictures in docs/screenshots/t7b/ show the pages of their own that R6 retired.
+// Since R6 the "new" and "edit" shots show the list's create panel (?new) and an open row's panel
+// instead, and the old not-found shot shows where an old edit address now leads (the list).
 // Saved to docs/screenshots/t7b/ as <surface>-<width>.png (the whole page, with the sidebar where it
 // really sits) and, on phones, <surface>-<width>-fold.png (the first screen as it opens).
 // Each device type signs in once through the form (Supabase limits sign-ins per address) and reuses that
@@ -75,7 +78,8 @@ async function signedInPage(browser: Browser, device: Device) {
     reducedMotion: "reduce",
   });
   const page = await context.newPage();
-  await page.goto("/login");
+  // Staff sign in with a password (T9b): the password form is at ?cara=sandi.
+  await page.goto("/login?cara=sandi");
   await page.getByLabel("Email", { exact: true }).fill(account.email);
   await page.getByLabel("Kata sandi", { exact: true }).fill(account.password);
   await page.getByRole("button", { name: "Masuk", exact: true }).click();
@@ -112,8 +116,19 @@ async function shoot(page: Page, name: string, width: number, mobile: boolean) {
   await page.setViewportSize({ width, height: heights[width] });
 }
 
+/** Opens the extra service's row, so its edit panel is in the picture (R4). */
+async function openRow(page: Page, name: string) {
+  await ready(page);
+  const details = page.locator("details").filter({ has: page.locator("summary", { hasText: name }) });
+  await details.locator("summary").click();
+  await expect(details).toHaveAttribute("open", "");
+  return details;
+}
+
 /** Sends the empty form, then takes the cursor out of the first field so the picture shows the resting error state. */
 async function submitEmpty(page: Page, submit: string, errors: number) {
+  // The create panel puts the cursor in its first field once the page's script runs; saving needs it.
+  await expect(page.getByTestId("create-panel").locator(":focus")).toHaveCount(1);
   await page.getByRole("button", { name: submit }).click();
   await expect(page.locator('[aria-invalid="true"]')).toHaveCount(errors);
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
@@ -129,25 +144,28 @@ test("the list and the forms on a desktop", async ({ browser }) => {
   await expect(page.getByRole("status").filter({ hasText: "Perubahan pada Cuci Gorden disimpan." })).toBeVisible();
   for (const width of widths.desktop) await shoot(page, "list-id", width, false);
 
-  await page.goto("/admin/services/new");
+  await page.goto("/admin/services?new");
   for (const width of widths.desktop) await shoot(page, "new-id", width, false);
   await submitEmpty(page, "Simpan layanan", 8);
   for (const width of widths.desktop) await shoot(page, "new-errors-id", width, false);
 
-  await page.goto(`/admin/services/edit?id=${serviceId}`);
-  await expect(page.getByLabel("Harga penuh (Rp)")).toHaveValue("175000");
+  await page.goto("/admin/services");
+  const panel = await openRow(page, "Cuci Gorden");
+  await expect(panel.getByLabel("Harga penuh (Rp)")).toHaveValue("175000");
   for (const width of widths.desktop) await shoot(page, "edit-id", width, false);
 
+  // An old edit address for a service that does not exist leads to the list (R6).
   await page.goto("/admin/services/edit?id=tidak-ada");
-  await expect(page.getByRole("heading", { name: "Layanan tidak ditemukan" })).toBeVisible();
+  await expect(page).toHaveURL("/admin/services");
   await shoot(page, "edit-not-found-id", 1280, false);
 
   await page.goto("/en/admin/services");
   for (const width of widths.desktop) await shoot(page, "list-en", width, false);
-  await page.goto("/en/admin/services/new");
+  await page.goto("/en/admin/services?new");
   await submitEmpty(page, "Save service", 8);
   for (const width of widths.desktop) await shoot(page, "new-errors-en", width, false);
-  await page.goto(`/en/admin/services/edit?id=${serviceId}`);
+  await page.goto("/en/admin/services");
+  await openRow(page, "Curtain Wash");
   for (const width of widths.desktop) await shoot(page, "edit-en", width, false);
   await context.close();
 });
@@ -157,13 +175,13 @@ test("the list and the form on a narrow screen", async ({ browser }) => {
 
   await page.goto("/admin/services");
   for (const width of widths.phone) await shoot(page, "list-id", width, true);
-  await page.goto("/admin/services/new");
+  await page.goto("/admin/services?new");
   await submitEmpty(page, "Simpan layanan", 8);
   await shoot(page, "new-errors-id", 390, true);
 
   await page.goto("/en/admin/services");
   await shoot(page, "list-en", 360, true);
-  await page.goto(`/en/admin/services/edit?id=${serviceId}`);
+  await openRow(page, "Curtain Wash");
   await shoot(page, "edit-en", 390, true);
   await context.close();
 });
