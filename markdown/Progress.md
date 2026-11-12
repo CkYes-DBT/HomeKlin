@@ -71,7 +71,7 @@ Last updated: 2026-11-03. Written so that a **brand-new Claude session with no m
 | Interview (what the user actually wants) | done | summarised below |
 | Spec | done, approved | `markdown/SPEC.md` |
 | Plan and task list (41 tasks, 12 phases; T29b and T29c added 2026-11-03) | done, approved | `markdown/tasks/plan.md`, `markdown/tasks/todo.md` |
-| Build | **2026-11-05: every buildable task is done; T32 and T33 closed without building (no real stream, user decision). Left: T35 (real devices and people), T36 (after the redesign), T39 (day-of steps), the Checkpoint reviews.** **2026-11-11: T40–T44 done (agency fees, payouts, summaries backend); see done checklist below.** | `markdown/tasks/todo.md` |
+| Build | **2026-11-05: every buildable task is done; T32 and T33 closed without building (no real stream, user decision). Left: T35 (real devices and people), T36 (after the redesign), T39 (day-of steps), the Checkpoint reviews.** **2026-11-11: T40–T44 done (agency fees, payouts, summaries backend); see done checklist below.** **2026-11-12: Phase 13 (admin redesign, services screen first) planned; R1 (admin opts into `theme-forest` and the forest fonts) and R2 (dark-green admin sidebar) done; waiting at Checkpoint A for the user's review; next R3 (services list).** | `markdown/tasks/todo.md` |
 
 ## T40–T44 done checklist (2026-11-11)
 - **Migration numbers:** `20261111090000_agency_fees.sql`, `20261111090001_fix_order_fees_rls.sql` (RLS fix: use `my_agency_id()` instead of direct subquery)
