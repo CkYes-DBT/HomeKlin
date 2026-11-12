@@ -41,29 +41,86 @@ async function fillNewService(page: Page, service: { id: string; nameId: string;
   await page.getByLabel("Durasi (menit)").fill("90");
 }
 
+/** A service's row in the list (R3: a <details> per service inside one list). */
+function rowOf(page: Page, name: string) {
+  return page.getByRole("list", { name: "Layanan HomeKlin dan harganya" }).getByRole("listitem").filter({ hasText: name });
+}
+
+/** Sets a service's Aktif checkbox on its edit page and saves (R4 and R6 move this into the row's panel). */
+async function setActive(page: Page, service: { id: string }, active: boolean) {
+  await page.goto(`/admin/services/edit?id=${service.id}`);
+  await page.getByLabel("Aktif: tampil di katalog pelanggan").setChecked(active);
+  await page.getByRole("button", { name: "Simpan perubahan" }).click();
+  await expect(page).toHaveURL(`/admin/services?saved=${service.id}`);
+}
+
 test.describe("an admin", () => {
   test.use(signedInAs.admin);
 
-  test("sees every service with its price, type, duration and state", async ({ page }) => {
+  test("sees every service with its photo, type, duration, price, state and order", async ({ page }) => {
     await page.goto("/admin/services");
     await expect(page.getByRole("heading", { level: 1, name: "Layanan dan harga" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Tambah layanan" })).toHaveAttribute("href", "/admin/services/new");
 
-    const table = page.getByRole("table", { name: "Layanan HomeKlin dan harganya" });
-    for (const header of ["Layanan", "Jenis", "Harga", "Durasi", "Status"]) {
-      await expect(table.getByRole("columnheader", { name: header, exact: true })).toBeVisible();
+    // The column header row is for the eye only (aria-hidden): each row says its own values.
+    const header = page.getByTestId("services-header");
+    await expect(header).toHaveAttribute("aria-hidden", "true");
+    await expect(header).toHaveText(/Foto\s*Layanan\s*Durasi\s*Harga\s*Status\s*Urutan\s*Ubah/);
+    for (const column of ["Foto", "Layanan", "Durasi", "Harga", "Status", "Urutan"]) {
+      await expect(header.getByText(column, { exact: true })).toBeVisible();
     }
-    const row = table.getByRole("row").filter({ hasText: "Pembersihan Rutin" });
-    await expect(row).toContainText("Regular Cleaning");
-    await expect(row).toContainText("Seluruh rumah");
-    await expect(row).toContainText("2 jam");
-    await expect(row).toContainText(/Rp\s85\.000/);
-    // The state is a word as well as the switch, never the colour alone.
-    await expect(row.getByRole("switch", { name: "Tampilkan Pembersihan Rutin di katalog pelanggan" })).toBeVisible();
-    await expect(row.getByText(/^(Aktif|Nonaktif)$/)).toBeVisible();
+
+    const row = rowOf(page, "Pembersihan Rutin");
+    const summary = row.locator("summary");
+    await expect(summary).toContainText("Pembersihan Rutin");
+    await expect(summary).toContainText("Jenis: Seluruh rumah");
+    await expect(summary).toContainText("Sekitar 2 jam");
+    await expect(summary).toContainText(/Rp\s85\.000/);
+    // The state is a word with an icon, never the colour alone.
+    await expect(summary.getByText(/^(Aktif|Draf)$/)).toBeVisible();
+    const { data } = await adminClient().from("services").select("sort_order").eq("id", "regular").single();
+    await expect(summary.getByTestId("service-order")).toHaveText(`Urutan ${data?.sort_order}`);
+    // What the row does comes first in its name, then the values it shows.
+    // A 68 px row, as in the mock.
+    expect((await summary.boundingBox())?.height).toBeCloseTo(68, 0);
+    await expect(summary).toHaveAccessibleName(/^Ubah layanan Pembersihan Rutin Jenis: Seluruh rumah Sekitar 2 jam Rp\s85\.000 (Aktif|Draf) Urutan \d+$/);
+  });
+
+  test("opens a row by click and by keyboard; every row starts closed", async ({ page }) => {
+    await page.goto("/admin/services");
+    const details = page.getByRole("list", { name: "Layanan HomeKlin dan harganya" }).locator("details");
+    await expect(details.first()).toBeVisible();
+    // All rows start closed.
+    await expect(page.locator("details[open]")).toHaveCount(0);
+
+    const row = rowOf(page, "Pembersihan Rutin").locator("details");
+    const summary = row.locator("summary");
+    const chevron = summary.getByTestId("row-chevron");
+    await expect(chevron).toHaveCSS("rotate", "none");
+
+    await summary.click();
+    await expect(row).toHaveAttribute("open", "");
+    // Open, the chevron points up and the panel shows the details and the way to change them.
+    await expect(chevron).toHaveCSS("rotate", "180deg");
+    await expect(row.getByText("Regular Cleaning")).toBeVisible();
     await expect(row.getByRole("link", { name: "Ubah Pembersihan Rutin" })).toHaveAttribute(
       "href",
       "/admin/services/edit?id=regular",
     );
+    await summary.click();
+    await expect(row).not.toHaveAttribute("open");
+
+    // By keyboard: the summary takes focus with a visible ring, Enter opens, Space closes.
+    // Shift+Tab then Tab lands on the summary by keyboard, which is what :focus-visible answers to.
+    await summary.focus();
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Tab");
+    await expect(summary).toBeFocused();
+    await expect(summary).toHaveCSS("outline-style", "solid");
+    await page.keyboard.press("Enter");
+    await expect(row).toHaveAttribute("open", "");
+    await page.keyboard.press("Space");
+    await expect(row).not.toHaveAttribute("open");
   });
 
   test("adds a service, changes its price, and switches it on and off for customers", async ({ page }) => {
@@ -83,11 +140,11 @@ test.describe("an admin", () => {
       await expect(page.getByRole("status").filter({ hasText: `${service.nameId} ditambahkan.` })).toContainText(
         "belum tampil di katalog pelanggan",
       );
-      const row = page.getByRole("row").filter({ hasText: service.nameId });
+      const row = rowOf(page, service.nameId);
       await expect(row).toContainText(service.nameEn);
-      await expect(row).toContainText("1 jam 30 menit");
-      await expect(row.getByRole("switch")).toHaveAttribute("aria-checked", "false");
-      await expect(row.getByText("Nonaktif", { exact: true })).toBeVisible();
+      await expect(row.locator("summary")).toContainText("Sekitar 1 jam 30 menit");
+      // A new service starts as a draft, said in a word on its chip.
+      await expect(row.getByText("Draf", { exact: true })).toBeVisible();
 
       const { data } = await adminClient().from("services").select("price_idr, is_active, category").eq("id", service.id).single();
       expect(data).toEqual({ price_idr: 90000, is_active: false, category: "fabrics" });
@@ -95,6 +152,8 @@ test.describe("an admin", () => {
     });
 
     await test.step("changes the price", async () => {
+      // The way to the edit page sits in the row's panel (R4 puts the form there).
+      await rowOf(page, service.nameId).locator("summary").click();
       await page.getByRole("link", { name: `Ubah ${service.nameId}` }).click();
       await expect(page).toHaveURL(`/admin/services/edit?id=${service.id}`);
       await expect(page.getByRole("heading", { level: 1, name: "Ubah layanan" })).toBeVisible();
@@ -110,34 +169,29 @@ test.describe("an admin", () => {
 
       await expect(page).toHaveURL(`/admin/services?saved=${service.id}`);
       await expect(page.getByRole("status").filter({ hasText: `Perubahan pada ${service.nameId} disimpan.` })).toBeVisible();
-      await expect(page.getByRole("row").filter({ hasText: service.nameId })).toContainText(/Rp\s95\.000/);
+      await expect(rowOf(page, service.nameId).locator("summary")).toContainText(/Rp\s95\.000/);
     });
 
+    // The row's switch is gone (R3, user decision a): the Aktif checkbox on the edit page switches a
+    // service on and off until R4 and R6 bring it into the row's panel. The chip shows the state.
     await test.step("switches it on: visitors read the new price in the catalog", async () => {
-      const row = page.getByRole("row").filter({ hasText: service.nameId });
-      const toggle = row.getByRole("switch", { name: `Tampilkan ${service.nameId} di katalog pelanggan` });
-      await toggle.click();
-      // The announcement comes with the server's answer, after the change is stored.
-      await expect(row.getByRole("status")).toHaveText(`${service.nameId} sekarang tampil di katalog pelanggan.`);
-      await expect(toggle).toHaveAttribute("aria-checked", "true");
-      await expect(row.getByText("Aktif", { exact: true })).toBeVisible();
+      await setActive(page, service, true);
+      await expect(page.getByRole("status").filter({ hasText: `Perubahan pada ${service.nameId} disimpan.` })).toContainText(
+        /Pelanggan melihat layanan ini di katalog dengan harga Rp\s95\.000/,
+      );
+      await expect(rowOf(page, service.nameId).getByText("Aktif", { exact: true })).toBeVisible();
       expect(await visitorSees(service.id)).toMatchObject({ price_idr: 95000 });
     });
 
     await test.step("switches it off again: visitors no longer see it", async () => {
-      const row = page.getByRole("row").filter({ hasText: service.nameId });
-      const toggle = row.getByRole("switch");
-      await toggle.click();
-      await expect(row.getByRole("status")).toHaveText(`${service.nameId} tidak tampil lagi di katalog pelanggan.`);
-      await expect(toggle).toHaveAttribute("aria-checked", "false");
+      await setActive(page, service, false);
+      await expect(rowOf(page, service.nameId).getByText("Draf", { exact: true })).toBeVisible();
       expect(await visitorSees(service.id)).toBeUndefined();
 
       // After a reload the list still shows what is stored.
-      await page.reload();
-      await expect(page.getByRole("row").filter({ hasText: service.nameId }).getByRole("switch")).toHaveAttribute(
-        "aria-checked",
-        "false",
-      );
+      await page.goto("/admin/services");
+      await expect(rowOf(page, service.nameId).getByText("Draf", { exact: true })).toBeVisible();
+      await expect(rowOf(page, service.nameId).getByText("Aktif", { exact: true })).toHaveCount(0);
     });
   });
 

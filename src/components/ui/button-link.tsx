@@ -21,6 +21,8 @@ type ButtonLinkProps = {
    * header fits the wordmark, the language link and this button on one 360 px row.
    */
   hideArrowOnPhones?: boolean;
+  /** forest only: the icon in the lime circle; an arrow unless the action adds something (Plus). */
+  circleIcon?: LucideIcon;
   /** Layout only (width, alignment); colours and shape come from the variant. */
   className?: string;
   children: ReactNode;
@@ -53,6 +55,7 @@ export function ButtonLink({
   variant = "primary",
   size = "md",
   hideArrowOnPhones = false,
+  circleIcon: CircleIcon = ArrowRight,
   className = "",
   children,
 }: ButtonLinkProps) {
@@ -72,7 +75,7 @@ export function ButtonLink({
           aria-hidden="true"
           className={`ml-1 size-6 shrink-0 items-center justify-center rounded-full bg-lime text-on-lime ${hideArrowOnPhones ? "hidden sm:flex" : "flex"}`}
         >
-          <ArrowRight className="size-3.5" strokeWidth={2.5} />
+          <CircleIcon className="size-3.5" strokeWidth={2.5} />
         </span>
       ) : null}
     </Link>

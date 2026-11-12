@@ -19,7 +19,7 @@ type SidebarShellProps = {
   | {
       /** The redesign's dark-green sidebar (the admin console, Phase 13, markdown/design.md). */
       tone: "forest";
-      /** The card under the wordmark, in place of the role badge: "Dasbor admin" over "Operasional HomeKlin". */
+      /** The card under the wordmark, in place of the role badge: "Admin Dashboard" over "Operasional HomeKlin". */
       roleCard: { label: string; title: string };
       /** Where the wordmark leads (the console's start page) and its accessible name. */
       home: HomeLink;

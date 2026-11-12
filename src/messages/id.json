@@ -62,7 +62,7 @@
     "menu": "Menu",
     "agencyRole": "Agensi",
     "adminRole": "Admin",
-    "adminDashboard": "Dasbor admin",
+    "adminDashboard": "Admin Dashboard",
     "adminOperations": "Operasional HomeKlin",
     "adminHome": "HomeKlin, ke Pemantauan langsung"
   },
@@ -1094,21 +1094,35 @@
   },
   "AdminServicesPage": {
     "title": "Layanan dan harga",
-    "description": "Satu daftar harga untuk semua pelanggan HomeKlin. Layanan yang aktif tampil di katalog pelanggan dengan harga ini, tanpa biaya tambahan.",
+    "description": "Satu daftar harga untuk semua pelanggan. Harga tampil penuh di situs HomeKlin dan halaman depan. Pilih sebuah layanan untuk membuka detailnya dan mengubahnya.",
     "add": "Tambah layanan",
-    "summary": "{total, plural, other {# layanan}}, {active, plural, other {# aktif}}",
     "emptyTitle": "Belum ada layanan",
     "emptyBody": "Tambahkan layanan pertama HomeKlin dengan tombol Tambah layanan. Pelanggan melihat harga ini apa adanya, tanpa biaya tambahan.",
     "loadErrorTitle": "Daftar layanan belum dapat dimuat",
     "loadErrorBody": "Muat ulang halaman ini. Jika masih gagal, coba lagi beberapa menit lagi.",
-    "table": {
-      "caption": "Layanan HomeKlin dan harganya",
+    "list": {
+      "label": "Layanan HomeKlin dan harganya",
+      "photo": "Foto",
       "service": "Layanan",
-      "category": "Jenis",
-      "price": "Harga",
       "duration": "Durasi",
+      "price": "Harga",
       "status": "Status",
-      "actions": "Aksi"
+      "order": "Urutan",
+      "edit": "Ubah"
+    },
+    "row": {
+      "open": "Ubah layanan",
+      "category": "Jenis: {category}",
+      "active": "Aktif",
+      "draft": "Draf",
+      "order": "Urutan"
+    },
+    "panel": {
+      "nameId": "Nama (Bahasa Indonesia)",
+      "nameEn": "Nama (Inggris)",
+      "descriptionId": "Deskripsi (Bahasa Indonesia)",
+      "descriptionEn": "Deskripsi (Inggris)",
+      "order": "Urutan tampil"
     },
     "categories": {
       "whole-home": "Seluruh rumah",
@@ -1116,17 +1130,16 @@
       "fabrics": "Kain & kasur"
     },
     "duration": {
-      "hours": "{hours, plural, other {# jam}}",
-      "minutes": "{minutes, plural, other {# menit}}",
-      "hoursMinutes": "{hours, plural, other {# jam}} {minutes, plural, other {# menit}}"
+      "hours": "Sekitar {hours, plural, other {# jam}}",
+      "minutes": "Sekitar {minutes, plural, other {# menit}}",
+      "hoursMinutes": "Sekitar {hours, plural, other {# jam}} {minutes, plural, other {# menit}}"
     },
     "edit": "Ubah",
-    "editName": "Ubah {name}",
     "notice": {
       "created": "{name} ditambahkan.",
       "saved": "Perubahan pada {name} disimpan.",
       "live": "Pelanggan melihat layanan ini di katalog dengan harga {price}.",
-      "hidden": "Layanan ini nonaktif, jadi belum tampil di katalog pelanggan."
+      "hidden": "Layanan ini masih draf, jadi belum tampil di katalog pelanggan."
     }
   },
   "AdminServiceSwitch": {

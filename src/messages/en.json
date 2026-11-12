@@ -62,7 +62,7 @@
     "menu": "Menu",
     "agencyRole": "Agency",
     "adminRole": "Admin",
-    "adminDashboard": "Admin dashboard",
+    "adminDashboard": "Admin Dashboard",
     "adminOperations": "HomeKlin operations",
     "adminHome": "HomeKlin, to Live monitoring"
   },
@@ -1094,21 +1094,35 @@
   },
   "AdminServicesPage": {
     "title": "Services and prices",
-    "description": "One price list for every HomeKlin customer. Active services appear in the customer catalog at these prices, with no extra fees.",
+    "description": "One price list for every customer. Prices appear in full on the HomeKlin site and the landing page. Choose a service to open its details and make changes.",
     "add": "Add service",
-    "summary": "{total, plural, one {# service} other {# services}}, {active, plural, other {# active}}",
     "emptyTitle": "No services yet",
     "emptyBody": "Add HomeKlin’s first service with the Add service button. Customers see these prices as they are, with no extra fees.",
     "loadErrorTitle": "The list of services could not be loaded",
     "loadErrorBody": "Reload this page. If it still fails, try again in a few minutes.",
-    "table": {
-      "caption": "HomeKlin’s services and their prices",
+    "list": {
+      "label": "HomeKlin’s services and their prices",
+      "photo": "Photo",
       "service": "Service",
-      "category": "Type",
-      "price": "Price",
       "duration": "Duration",
+      "price": "Price",
       "status": "Status",
-      "actions": "Actions"
+      "order": "Order",
+      "edit": "Edit"
+    },
+    "row": {
+      "open": "Edit service",
+      "category": "Type: {category}",
+      "active": "Active",
+      "draft": "Draft",
+      "order": "Order"
+    },
+    "panel": {
+      "nameId": "Name (Indonesian)",
+      "nameEn": "Name (English)",
+      "descriptionId": "Description (Indonesian)",
+      "descriptionEn": "Description (English)",
+      "order": "Display order"
     },
     "categories": {
       "whole-home": "Whole home",
@@ -1116,17 +1130,16 @@
       "fabrics": "Fabrics & mattresses"
     },
     "duration": {
-      "hours": "{hours, plural, one {# hour} other {# hours}}",
-      "minutes": "{minutes, plural, one {# minute} other {# minutes}}",
-      "hoursMinutes": "{hours, plural, one {# hour} other {# hours}} {minutes, plural, one {# minute} other {# minutes}}"
+      "hours": "About {hours, plural, one {# hour} other {# hours}}",
+      "minutes": "About {minutes, plural, one {# minute} other {# minutes}}",
+      "hoursMinutes": "About {hours, plural, one {# hour} other {# hours}} {minutes, plural, one {# minute} other {# minutes}}"
     },
     "edit": "Edit",
-    "editName": "Edit {name}",
     "notice": {
       "created": "{name} added.",
       "saved": "Changes to {name} saved.",
       "live": "Customers see this service in the catalog at {price}.",
-      "hidden": "This service is inactive, so it does not appear in the customer catalog yet."
+      "hidden": "This service is still a draft, so it does not appear in the customer catalog yet."
     }
   },
   "AdminServiceSwitch": {

@@ -17,6 +17,7 @@ const typeIcons: Record<ServiceCategory, LucideIcon> = {
 const tones = {
   evergreen: { tile: "bg-brand-50 text-brand-700", photo: "bg-surface-sunken" },
   forest: { tile: "bg-lime-wash text-on-lime-wash", photo: "bg-sunken" },
+  sunken: { tile: "bg-sunken text-ink-muted", photo: "bg-sunken" },
 };
 
 type ServiceVisualProps = {
@@ -29,7 +30,8 @@ type ServiceVisualProps = {
   fill?: boolean;
   /** Size of the icon on the tile. */
   iconClassName?: string;
-  /** evergreen: the T3b customer pages; forest: the landing page (markdown/design.md). */
+  /** evergreen: the T3b customer pages; forest: the landing page; sunken: the admin services list
+   * (markdown/design.md). */
   tone?: keyof typeof tones;
 };
 

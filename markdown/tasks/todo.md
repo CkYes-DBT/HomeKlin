@@ -312,7 +312,7 @@ Conventions for every task: tests written first; `npm run typecheck`, `npm run l
 ### Checkpoint A: admin shell
 - [ ] Check and e2e pass; screenshots show only admin changed; user review.
 
-- [ ] **R3 Services list** (M): one white `lg` card of `<details>` rows replacing `services-table`; header with h1 "Layanan dan harga", subtitle and the "Tambah layanan" pill (lime plus circle); sunken column header; 68 px rows (photo or type icon, name with "Jenis: ...", "Sekitar N jam", price via `formatRupiah`, Aktif/Draf chip with icon, order, 44 px chevron, hidden "Ubah layanan <name>"); stacked row below 768 px; chevron rotation off under reduced motion
+- [x] **R3 Services list** (M) — done 2026-11-12 (`services-list.tsx`, `admin-duration.ts`; row switch no longer rendered; 759 unit, 384 e2e pass; screenshots `docs/screenshots/r3/`): one white `lg` card of `<details>` rows replacing `services-table`; header with h1 "Layanan dan harga", subtitle and the "Tambah layanan" pill (lime plus circle); sunken column header; 68 px rows (photo or type icon, name with "Jenis: ...", "Sekitar N jam", price via `formatRupiah`, Aktif/Draf chip with icon, order, 44 px chevron, hidden "Ubah layanan <name>"); stacked row below 768 px; chevron rotation off under reduced motion
   - Accept: keyboard opens a row with a visible focus ring; no sideways scroll at 360 px in both languages.
   - Verify: unit test for the duration label; e2e for the list.
 - [ ] **R4 Edit in place** (M): `ServiceForm` panel layout inside each row, still `updateService`, same `name=` attributes, hidden fields, `useActionState`, `formError` and `updateTag`; bilingual name and description; "Batal" closes the panel

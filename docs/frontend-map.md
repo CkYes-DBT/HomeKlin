@@ -53,7 +53,7 @@ role check (`RoleGate`) and one content component.
 | `/agency/recordings` live and replay | `(agency)/agency/recordings/page.tsx` | `agency/`: recordings-content, live-tile, live-video, agency-recording-player |
 | `/admin` (no page of its own) | `(admin)/admin/page.tsx` | redirects to `/admin/monitor` inside its RoleGate (R2b) |
 | `/admin/monitor` Pemantauan langsung, live grid (start page) | `(admin)/admin/monitor/page.tsx` | `back-office/`: feed-tile, feed-video, feed-status |
-| `/admin/services`, `/new`, `/edit` Layanan dan harga | `(admin)/admin/services/...` | `admin/`: services-table, service-form, service-switch |
+| `/admin/services`, `/new`, `/edit` Layanan dan harga | `(admin)/admin/services/...` | `admin/`: services-list (R3; rows open with native details), service-form, service-switch (no longer rendered; R6 removes it) |
 | `/admin/tickets` Obrolan bantuan, inbox and chat | `(admin)/admin/tickets/page.tsx` | `admin/`: ticket-inbox, inbox-live, close-ticket; `support/ticket-chat` |
 | `/admin/faq` Pertanyaan umum | `(admin)/admin/faq/page.tsx` | placeholder |
 | `/admin/recordings` Rekaman, replay | `(admin)/admin/recordings/page.tsx` | `back-office/`: recordings-table, admin-recording-player |

@@ -4,13 +4,12 @@ import { useTranslations } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { Notice } from "@/components/admin/notice";
-import { ServicesTable } from "@/components/admin/services-table";
+import { ServicesList } from "@/components/admin/services-list";
 import { GateFallback } from "@/components/auth/gate-fallback";
 import { RoleGate } from "@/components/auth/role-gate";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
-import { ClientMessages } from "@/i18n/client-messages";
 import { listAllServices, type AdminService } from "@/lib/catalog/admin";
 import { CatalogError } from "@/lib/catalog/catalog";
 import { formatRupiah } from "@/lib/format";
@@ -24,16 +23,32 @@ export async function generateMetadata(): Promise<Metadata> {
 
 type SearchParams = PageProps<"/[locale]/admin/services">["searchParams"];
 
-// HomeKlin's services and its one price list (T7b), admins only (T5). The title is prerendered; the
-// list renders inside the page's own role check (a layout's check would not protect it) and is read
-// with the signed-in admin's own client, so row-level security decides what it may see: every service,
-// switched on or off. It is never cached, so admin always sees what is stored. After a save the form
-// comes back here with ?created= or ?saved= and the service's id, which says what was done.
+// HomeKlin's services and its one price list (T7b; the redesigned list since R3), admins only (T5). The
+// title and "Tambah layanan" are prerendered; the list renders inside the page's own role check (a
+// layout's check would not protect it) and is read with the signed-in admin's own client, so row-level
+// security decides what it may see: every service, active or draft. It is never cached, so admin
+// always sees what is stored. After a save the form comes back here with ?created= or ?saved= and the
+// service's id, which says what was done.
 export default function AdminServicesPage({ searchParams }: PageProps<"/[locale]/admin/services">) {
   const t = useTranslations("AdminServicesPage");
   return (
     <>
-      <PageHeader title={t("title")} description={t("description")} />
+      <PageHeader
+        size="compact"
+        title={t("title")}
+        description={t("description")}
+        action={
+          // Behind its own role check like the list, so the way to add a service never reaches anyone
+          // but admin; the title stays in the prerendered shell. R5 points it at the create panel.
+          <Suspense fallback={null}>
+            <RoleGate roles={["admin"]}>
+              <ButtonLink href="/admin/services/new" variant="forest" circleIcon={Plus}>
+                {t("add")}
+              </ButtonLink>
+            </RoleGate>
+          </Suspense>
+        }
+      />
       <Suspense fallback={<GateFallback />}>
         <RoleGate roles={["admin"]}>
           <AdminServicesContent searchParams={searchParams} />
@@ -70,34 +85,27 @@ async function AdminServicesContent({ searchParams }: { searchParams: SearchPara
   const createdId = parseServiceId(first(params.created));
   const savedId = parseServiceId(first(params.saved));
   const changed = services.find((service) => service.id === (createdId ?? savedId));
-  const active = services.filter((service) => service.isActive).length;
 
   return (
     <>
       {changed ? (
         <Notice
           tone="success"
-          title={t(createdId ? "notice.created" : "notice.saved", { name: changed.name.id })}
+          title={t(createdId ? "notice.created" : "notice.saved", {
+            name: locale === "en" ? changed.name.en : changed.name.id,
+          })}
         >
           {changed.isActive
             ? t("notice.live", { price: formatRupiah(changed.priceIdr, locale) })
             : t("notice.hidden")}
         </Notice>
       ) : null}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-ink-muted">{t("summary", { total: services.length, active })}</p>
-        <ButtonLink href="/admin/services/new" icon={Plus}>
-          {t("add")}
-        </ButtonLink>
-      </div>
       {services.length === 0 ? (
         <EmptyState icon={Tags} title={t("emptyTitle")}>
           {t("emptyBody")}
         </EmptyState>
       ) : (
-        <ClientMessages namespaces={["AdminServiceSwitch"]}>
-          <ServicesTable services={services} />
-        </ClientMessages>
+        <ServicesList services={services} />
       )}
     </>
   );

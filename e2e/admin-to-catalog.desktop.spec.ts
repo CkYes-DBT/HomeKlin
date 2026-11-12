@@ -66,14 +66,15 @@ test("a price admin saves is the price customers see on their next visit", async
   });
 
   await test.step("admin switches it off; the visitor no longer finds it", async () => {
-    await admin.goto("/admin/services");
-    const row = admin.getByRole("row").filter({ hasText: service.nameId });
-    const toggle = row.getByRole("switch", { name: `Tampilkan ${service.nameId} di katalog pelanggan` });
-    await toggle.click();
-    // The switch flips at once; this announcement comes with the server's answer, after the change is
-    // stored and the cache tag expired. Only then does the visitor look.
-    await expect(row.getByRole("status")).toHaveText(`${service.nameId} tidak tampil lagi di katalog pelanggan.`);
-    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    // The row's switch is gone (R3): the Aktif checkbox on the edit page switches it off until R4 and
+    // R6 bring it into the row's panel. The list comes back only after the change is stored and the
+    // cache tag expired; only then does the visitor look.
+    await admin.goto(`/admin/services/edit?id=${service.id}`);
+    await admin.getByLabel("Aktif: tampil di katalog pelanggan").uncheck();
+    await admin.getByRole("button", { name: "Simpan perubahan" }).click();
+    await expect(admin).toHaveURL(`/admin/services?saved=${service.id}`);
+    const row = admin.getByRole("list", { name: "Layanan HomeKlin dan harganya" }).getByRole("listitem").filter({ hasText: service.nameId });
+    await expect(row.getByText("Draf", { exact: true })).toBeVisible();
 
     const catalog = await visitorCatalog(visitor);
     await expect(catalog.getByRole("heading", { name: "Tidak ada layanan yang cocok" })).toBeVisible();
