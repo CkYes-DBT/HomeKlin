@@ -94,3 +94,9 @@ If behind schedule, work stops at the lowest-priority task reached (spec's Build
 ## Open questions
 - Vercel Hobby limits not yet checked (check at T2).
 - Product grading status unknown (not a blocker).
+
+## Phase 13: Back-office redesign, admin first (2026-11-12)
+The redesign moves to the admin group through the scoped `theme-forest` class (no rename codemod), starting with the "Layanan dan harga" screen. Tasks R1 to R7 in `markdown/tasks/todo.md`.
+- **Skills:** `frontend-ui-engineering` (every step), `impeccable` (fidelity to the mock and polish), `test-driven-development` and `incremental-implementation`, `source-driven-development` (next/font, forms, updateTag), `deprecation-and-migration` (retiring the new and edit pages), `code-review-and-quality` at Checkpoint B. Not used: `design-taste-frontend` (direction already fixed), `ui-ux-pro-max` (overlaps impeccable), DevTools browser testing (not configured; Playwright screenshots instead), Figma (not connected).
+- **Agents:** `homeklin-frontend` builds each task, one at a time (all tasks share globals.css, messages, the sidebar and the services e2e spec, so nothing runs in parallel); the lead runs the checks and commits; `code-reviewer` reviews at Checkpoint B.
+- **Risk:** the other admin pages (monitor, tickets, recordings, dashboard) pick up the cream canvas, new fonts and new radii from the wrapper and look mixed until their own migration.

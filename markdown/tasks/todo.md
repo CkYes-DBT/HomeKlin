@@ -291,3 +291,37 @@ Conventions for every task: tests written first; `npm run typecheck`, `npm run l
 
 ### Checkpoint 10: Agency fees backend complete
 - [x] `npm run check` passes (0 TS errors, 0 lint errors, 756/756 tests pass); migrations applied to test project; done checklist listed in Progress.md. — 2026-11-11
+
+## Phase 13: Back-office redesign, admin first (planned 2026-11-12)
+
+> Ports the redesign (markdown/design.md) to the admin group only, through the scoped `theme-forest` class (no rename codemod). Customer, cleaner, agency and owner pages stay on T3b. First screen: "Layanan dan harga" from the user's mock (screenshots; the reference HTML is not in the repo). No schema change. Built by `homeklin-frontend`, one task at a time; reviewed by `code-reviewer` at Checkpoint B.
+> Decisions (user, 2026-11-12): the row's on/off switch is removed (option a): `service-switch.tsx`, `setServiceActive` and their unit tests go, and the e2e switch steps are rewritten to use the panel checkbox. Card radius `lg` (design.md tables). The create panel keeps the ID field and both panels keep Urutan. Admin menu items keep their current names except "Layanan dan harga".
+
+- [ ] **R1 Admin theme scope** (S): shared font file for Inter, Inter Tight and Instrument Serif (landing imports it, unchanged look); `(admin)` layout wrapped in `theme-forest` + fonts; warning, danger and info redesign values added to `.theme-forest`
+  - Accept: admin pages use Inter on cream; agency, owner, customer and landing render as before.
+  - Verify: `npm run check`; `npm run test:e2e`; e2e asserts admin font is Inter and agency is not.
+  - Skills: `frontend-ui-engineering`, `source-driven-development` (next/font).
+- [ ] **R2 Forest sidebar for admin** (M): `tone="forest"` on `SidebarShell`, `SideNavList`, `BackOfficeTopBar`, `AccountSummary`; 256 px band, lime logo tile, role card "Dasbor admin / Operasional HomeKlin", 44 px items, active on band-raised with lime text and 3 px lime marker, ID/EN on-dark switch and user with "Keluar" at the bottom; dark top bar and menu below 1024 px
+  - Accept: matches the mock at 1440 px; agency and owner shells unchanged; focus ring lime on the band.
+  - Verify: `npm run check`; `npm run test:e2e`; screenshots of admin, agency, owner.
+
+### Checkpoint A: admin shell
+- [ ] Check and e2e pass; screenshots show only admin changed; user review.
+
+- [ ] **R3 Services list** (M): one white `lg` card of `<details>` rows replacing `services-table`; header with h1 "Layanan dan harga", subtitle and the "Tambah layanan" pill (lime plus circle); sunken column header; 68 px rows (photo or type icon, name with "Jenis: ...", "Sekitar N jam", price via `formatRupiah`, Aktif/Draf chip with icon, order, 44 px chevron, hidden "Ubah layanan <name>"); stacked row below 768 px; chevron rotation off under reduced motion
+  - Accept: keyboard opens a row with a visible focus ring; no sideways scroll at 360 px in both languages.
+  - Verify: unit test for the duration label; e2e for the list.
+- [ ] **R4 Edit in place** (M): `ServiceForm` panel layout inside each row, still `updateService`, same `name=` attributes, hidden fields, `useActionState`, `formError` and `updateTag`; bilingual name and description; "Batal" closes the panel
+  - Accept: save shows the notice; validation errors keep the panel open with messages per field.
+  - Verify: `npm run check`; `npm run test:e2e`.
+- [ ] **R5 Add in place** (S): "Tambah layanan" links to `/admin/services?new`, which renders an open, empty create panel at the top of the list (`createService`)
+  - Accept: works without JavaScript; created service starts as Draf.
+  - Verify: e2e.
+- [ ] **R6 Retire /admin/services/new and /edit** (S): delete both routes, the row switch (`service-switch.tsx`, `setServiceActive`, their unit tests) and unused messages; rewrite `admin-services.desktop.spec.ts`, `admin-to-catalog.desktop.spec.ts`, `no-horizontal-scroll.mobile.spec.ts`, `t7b.screenshots.ts`; update `docs/frontend-map.md`
+  - Accept: nothing links to the old routes; no spec removed, only rewritten.
+  - Verify: `npm run check`; `npm run test:e2e`.
+- [ ] **R7 Polish and proof** (S): screenshots at 360, 390, 1280, 1440 px in both languages under `docs/screenshots/r-admin-services/`; `impeccable` check against the mock; `code-review-and-quality`
+  - Verify: review findings fixed or logged.
+
+### Checkpoint B: admin services screen
+- [ ] Everything passes; matches the mock at 1440 and 360 px; user review.
