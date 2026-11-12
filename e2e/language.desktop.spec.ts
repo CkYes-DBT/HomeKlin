@@ -36,12 +36,14 @@ const backOffices = [
     root: "/agency",
     nav: "Agency navigation",
     labels: ["Dashboard", "Schedule", "Cleaners", "Orders", "Recordings"],
+    second: "/agency/schedule",
   },
   {
     name: "admin" as const,
-    root: "/admin",
+    root: "/admin/monitor",
     nav: "Admin navigation",
-    labels: ["Dashboard", "Live monitor", "Tickets", "Recordings", "Services and prices", "FAQ"],
+    labels: ["Live monitoring", "Services and prices", "Support chats", "FAQ", "Recordings"],
+    second: "/admin/services",
   },
 ];
 
@@ -58,11 +60,11 @@ for (const office of backOffices) {
       await expect(page.locator("html")).toHaveAttribute("lang", "en");
       const nav = page.getByRole("navigation", { name: office.nav });
       await expect(nav.getByRole("link")).toHaveText(office.labels);
-      await expect(nav.getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
-      await expect(page.getByRole("heading", { level: 1, name: "Dashboard" })).toBeVisible();
+      await expect(nav.getByRole("link", { name: office.labels[0] })).toHaveAttribute("aria-current", "page");
+      await expect(page.getByRole("heading", { level: 1, name: office.labels[0] })).toBeVisible();
 
       await nav.getByRole("link", { name: office.labels[1] }).click();
-      await expect(page).toHaveURL(`/en${office.root}/${office.name === "agency" ? "schedule" : "monitor"}`);
+      await expect(page).toHaveURL(`/en${office.second}`);
       await expect(page.getByRole("heading", { level: 1, name: office.labels[1] })).toBeVisible();
     });
   });

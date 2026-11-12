@@ -1,21 +1,23 @@
 import {
-  BookOpen,
   Building2,
   CalendarDays,
   ChartColumn,
+  CircleHelp,
   CirclePlay,
   ClipboardList,
+  History,
   LayoutDashboard,
-  MessagesSquare,
-  MonitorPlay,
+  LayoutGrid,
+  MessageCircle,
   ShieldCheck,
-  Tags,
   UsersRound,
+  Video,
 } from "lucide-react";
 import type { BackOfficeNavKey, MessageKeyIn, Navigation } from "./navigation";
 
 // Agency, admin and owner menus. Partner agencies run cleaners, availability and assignment;
-// HomeKlin admin owns the services and the one price list; the owner sees the business numbers and
+// HomeKlin admin owns the services and the one price list (its menu follows the mock, R2b: no
+// dashboard, live monitoring first, /admin redirects there); the owner sees the business numbers and
 // decides which partner agencies and admins HomeKlin has.
 // Labels: the BackOfficeNavigation namespace of src/messages/*.json, sent to the browser by the
 // back-office shell only.
@@ -33,12 +35,11 @@ export const backOfficeNavigation = {
   admin: {
     labelKey: "admin.label",
     items: [
-      { href: "/admin", exact: true, labelKey: "admin.dashboard", icon: LayoutDashboard },
-      { href: "/admin/monitor", labelKey: "admin.monitor", icon: MonitorPlay },
-      { href: "/admin/tickets", labelKey: "admin.tickets", icon: MessagesSquare },
-      { href: "/admin/recordings", labelKey: "admin.recordings", icon: CirclePlay },
-      { href: "/admin/services", labelKey: "admin.services", icon: Tags },
-      { href: "/admin/faq", labelKey: "admin.faq", icon: BookOpen },
+      { href: "/admin/monitor", labelKey: "admin.monitor", icon: Video },
+      { href: "/admin/services", labelKey: "admin.services", icon: LayoutGrid },
+      { href: "/admin/tickets", labelKey: "admin.tickets", icon: MessageCircle },
+      { href: "/admin/faq", labelKey: "admin.faq", icon: CircleHelp },
+      { href: "/admin/recordings", labelKey: "admin.recordings", icon: History },
     ],
   },
   owner: {

@@ -79,7 +79,7 @@ async function signedInPage(browser: Browser, device: Device) {
   await page.getByLabel("Email", { exact: true }).fill(account.email);
   await page.getByLabel("Kata sandi", { exact: true }).fill(account.password);
   await page.getByRole("button", { name: "Masuk", exact: true }).click();
-  await page.waitForURL((url) => url.pathname === "/admin");
+  await page.waitForURL((url) => url.pathname === "/admin/monitor");
   return { context, page };
 }
 

@@ -18,15 +18,15 @@ const shells = [
   },
   {
     name: "admin" as const,
-    root: "/admin",
+    // No dashboard (R2b): the console starts on live monitoring, and /admin leads there.
+    root: "/admin/monitor",
     navLabel: "Navigasi admin",
     items: [
-      { label: "Dasbor", path: "/admin" },
-      { label: "Monitor Langsung", path: "/admin/monitor" },
-      { label: "Tiket", path: "/admin/tickets" },
-      { label: "Rekaman", path: "/admin/recordings" },
+      { label: "Pemantauan langsung", path: "/admin/monitor" },
       { label: "Layanan dan harga", path: "/admin/services" },
-      { label: "FAQ", path: "/admin/faq" },
+      { label: "Obrolan bantuan", path: "/admin/tickets" },
+      { label: "Pertanyaan umum", path: "/admin/faq" },
+      { label: "Rekaman", path: "/admin/recordings" },
     ],
   },
 ];
@@ -49,7 +49,7 @@ for (const shell of shells) {
     test("navigates to every section and moves the current marker", async ({ page }) => {
       await page.goto(shell.root);
       const nav = page.getByRole("navigation", { name: shell.navLabel });
-      await expect(nav.getByRole("link", { name: "Dasbor" })).toHaveAttribute("aria-current", "page");
+      await expect(nav.getByRole("link", { name: shell.items[0].label, exact: true })).toHaveAttribute("aria-current", "page");
 
       for (const { label, path } of [...shell.items.slice(1), shell.items[0]]) {
         await nav.getByRole("link", { name: label, exact: true }).click();

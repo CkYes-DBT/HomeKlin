@@ -45,12 +45,11 @@
     },
     "admin": {
       "label": "Admin navigation",
-      "dashboard": "Dashboard",
-      "monitor": "Live monitor",
-      "tickets": "Tickets",
-      "recordings": "Recordings",
+      "monitor": "Live monitoring",
       "services": "Services and prices",
-      "faq": "FAQ"
+      "tickets": "Support chats",
+      "faq": "FAQ",
+      "recordings": "Recordings"
     },
     "owner": {
       "label": "Owner navigation",
@@ -64,7 +63,8 @@
     "agencyRole": "Agency",
     "adminRole": "Admin",
     "adminDashboard": "Admin dashboard",
-    "adminOperations": "HomeKlin operations"
+    "adminOperations": "HomeKlin operations",
+    "adminHome": "HomeKlin, to Live monitoring"
   },
   "MarketingHeader": {
     "nav": "Site navigation",
@@ -988,50 +988,8 @@
     "expiredTitle": "The recording was deleted",
     "expiredBody": "Recordings are deleted automatically 7 days after the job is done, so this one can no longer be played."
   },
-  "AdminDashboardPage": {
-    "title": "Dashboard",
-    "description": "Today’s jobs, cleaners and customer tickets in one view. Times in WIB.",
-    "summaryTitle": "Summary",
-    "tiles": {
-      "today": {
-        "label": "Today’s jobs",
-        "hint": "See the list below"
-      },
-      "inProgress": {
-        "label": "In progress",
-        "hint": "Open the live monitor"
-      },
-      "waiting": {
-        "label": "Waiting for a cleaner",
-        "hint": "See today’s jobs"
-      },
-      "tickets": {
-        "label": "Open tickets",
-        "hint": "{urgent, plural, =0 {None urgent} other {# urgent}}"
-      }
-    },
-    "tileUnavailable": "Could not be loaded",
-    "todayTitle": "Today’s jobs",
-    "todayDescription": "Every job scheduled for today, with the agency, the cleaner and the check-in status. Times in WIB.",
-    "todayEmptyTitle": "No jobs today",
-    "todayEmptyBody": "Paid jobs scheduled for today appear here, with their cleaner’s check-in status.",
-    "todaySummary": "{count, plural, one {# job} other {# jobs}}",
-    "errorTitle": "Today’s jobs could not be loaded.",
-    "errorBody": "Reload the page to try again.",
-    "ticketsTitle": "Latest open tickets",
-    "ticketsDescription": "Urgent ones first, then the newest. Open a ticket to reply to the customer.",
-    "ticketsAll": "See all tickets",
-    "ticketsEmptyTitle": "No open tickets",
-    "ticketsEmptyBody": "New questions from customers appear here and on the Tickets page.",
-    "ticketsErrorTitle": "Tickets could not be loaded.",
-    "urgent": "Urgent",
-    "customerFallback": "Customer",
-    "messageCount": "{count, plural, one {# message} other {# messages}}",
-    "lastToday": "Today, {time} WIB",
-    "lastDay": "{day}, {time} WIB"
-  },
   "AdminMonitorPage": {
-    "title": "Live monitor",
+    "title": "Live monitoring",
     "description": "Live streams of every job in progress. Only HomeKlin admins can open this page.",
     "emptyTitle": "No jobs in progress",
     "emptyBody": "Live streams of all jobs in progress appear here in one view.",
@@ -1059,7 +1017,7 @@
     "retrying": "Reloading the stream…"
   },
   "AdminTicketsPage": {
-    "title": "Tickets",
+    "title": "Support chats",
     "description": "Customer questions from the Help page: waiting ones at the top, urgent ones first, then the oldest.",
     "emptyTitle": "No tickets yet",
     "emptyBody": "Customer questions passed on from the Help page appear here, most urgent first.",

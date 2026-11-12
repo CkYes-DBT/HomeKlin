@@ -126,7 +126,7 @@ test.describe("the owner", () => {
     const context = await browser.newContext({ baseURL, storageState: { cookies: [], origins: [] } });
     const adminPage = await context.newPage();
     await signInWithPassword(adminPage, { email, password });
-    await expect(adminPage).toHaveURL("/admin");
+    await expect(adminPage).toHaveURL("/admin/monitor");
 
     // The same email again is refused, with words.
     await form.getByLabel("Nama lengkap").fill(fullName);
@@ -141,8 +141,8 @@ test.describe("the owner", () => {
     await expect(partnerRow(page, "Daftar akun admin", email)).toHaveCount(0);
 
     // Without the role the admin console sends them away.
-    await adminPage.goto("/admin");
-    await expect(adminPage).not.toHaveURL("/admin");
+    await adminPage.goto("/admin/monitor");
+    await expect(adminPage).not.toHaveURL("/admin/monitor");
     await context.close();
   });
 

@@ -38,7 +38,7 @@ test.describe("back-office menu on a narrow screen", () => {
     test.use(signedInAs.admin);
 
     test("closes with the Escape key and returns focus to the Menu button", async ({ page }) => {
-      await page.goto("/admin");
+      await page.goto("/admin/monitor");
       const menu = page.getByRole("button", { name: "Menu" });
       await menu.click();
       await expect(page.getByRole("navigation", { name: "Navigasi admin" })).toBeVisible();
@@ -49,14 +49,14 @@ test.describe("back-office menu on a narrow screen", () => {
     });
 
     test("gives the Menu button and every section a touch target of at least 44 px", async ({ page }) => {
-      await page.goto("/admin");
+      await page.goto("/admin/monitor");
       const menu = page.getByRole("button", { name: "Menu" });
       const menuBox = await menu.boundingBox();
       expect(menuBox?.height).toBeGreaterThanOrEqual(44);
 
       await menu.click();
       const links = page.getByRole("navigation", { name: "Navigasi admin" }).getByRole("link");
-      await expect(links).toHaveCount(6);
+      await expect(links).toHaveCount(5);
       for (const link of await links.all()) {
         const box = await link.boundingBox();
         expect(box?.height).toBeGreaterThanOrEqual(44);

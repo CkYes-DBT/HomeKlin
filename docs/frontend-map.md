@@ -46,17 +46,17 @@ role check (`RoleGate`) and one content component.
 ### Agency, admin and owner (desktop first, sidebar layout)
 | Address | Page file | Components |
 |---|---|---|
-| `/agency` dashboard | `(agency)/agency/page.tsx` | `agency/dashboard-content` |
+| `/agency` dashboard | `(agency)/agency/page.tsx` | `agency/dashboard-content`, `back-office/summary-tile` |
 | `/agency/schedule` windows | `(agency)/agency/schedule/page.tsx` | `agency/`: schedule-content, add-slot-form, slot-row-actions |
 | `/agency/cleaners` | `(agency)/agency/cleaners/page.tsx` | `agency/`: cleaners-content, add-cleaner-form |
 | `/agency/orders` jobs, assign | `(agency)/agency/orders/page.tsx` | `agency/assign-cleaner`, `back-office/jobs-table` |
 | `/agency/recordings` live and replay | `(agency)/agency/recordings/page.tsx` | `agency/`: recordings-content, live-tile, live-video, agency-recording-player |
-| `/admin` dashboard | `(admin)/admin/page.tsx` | `back-office/`: summary-tile, jobs-table, open-tickets |
-| `/admin/services`, `/new`, `/edit` | `(admin)/admin/services/...` | `admin/`: services-table, service-form, service-switch |
-| `/admin/tickets` inbox and chat | `(admin)/admin/tickets/page.tsx` | `admin/`: ticket-inbox, inbox-live, close-ticket; `support/ticket-chat` |
-| `/admin/monitor` live grid | `(admin)/admin/monitor/page.tsx` | `back-office/`: feed-tile, feed-video, feed-status |
-| `/admin/recordings` replay | `(admin)/admin/recordings/page.tsx` | `back-office/`: recordings-table, admin-recording-player |
-| `/admin/faq` | `(admin)/admin/faq/page.tsx` | placeholder |
+| `/admin` (no page of its own) | `(admin)/admin/page.tsx` | redirects to `/admin/monitor` inside its RoleGate (R2b) |
+| `/admin/monitor` Pemantauan langsung, live grid (start page) | `(admin)/admin/monitor/page.tsx` | `back-office/`: feed-tile, feed-video, feed-status |
+| `/admin/services`, `/new`, `/edit` Layanan dan harga | `(admin)/admin/services/...` | `admin/`: services-table, service-form, service-switch |
+| `/admin/tickets` Obrolan bantuan, inbox and chat | `(admin)/admin/tickets/page.tsx` | `admin/`: ticket-inbox, inbox-live, close-ticket; `support/ticket-chat` |
+| `/admin/faq` Pertanyaan umum | `(admin)/admin/faq/page.tsx` | placeholder |
+| `/admin/recordings` Rekaman, replay | `(admin)/admin/recordings/page.tsx` | `back-office/`: recordings-table, admin-recording-player |
 | `/owner` business numbers | `(owner)/owner/page.tsx` | `owner/`: numbers, trend-chart, agency-status-pill |
 | `/owner/agencies` | `(owner)/owner/agencies/page.tsx` | `owner/`: add-agency-form, confirm-action |
 | `/owner/admins` | `(owner)/owner/admins/page.tsx` | `owner/create-admin-form` |

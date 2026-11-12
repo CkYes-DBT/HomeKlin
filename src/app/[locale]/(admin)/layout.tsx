@@ -6,6 +6,7 @@ import { SidebarShell } from "@/components/shell/sidebar-shell";
 // (Phase 13): `theme-forest` gives the shared token names their redesign values and the wrapper loads
 // the redesign's fonts (src/app/fonts-forest.ts). The sidebar is fixed, but it is a descendant of the
 // wrapper, so it inherits both. The forest tone (R2) draws the shell as the redesign's dark-green band.
+// The wordmark leads to live monitoring, the console's start page (R2b: /admin redirects there too).
 // The agency and owner consoles share SidebarShell in its default tone and stay on T3b.
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslations("BackOfficeShell");
@@ -16,6 +17,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         roleLabel={t("adminRole")}
         tone="forest"
         roleCard={{ label: t("adminDashboard"), title: t("adminOperations") }}
+        home={{ href: "/admin/monitor", label: t("adminHome") }}
       >
         {children}
       </SidebarShell>

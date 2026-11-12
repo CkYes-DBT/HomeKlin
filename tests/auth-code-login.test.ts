@@ -69,7 +69,7 @@ describe("verifyLoginCode", () => {
     profile = { role: "admin" };
     verifyOtp.mockResolvedValue({ data: { user: { id: "u2" } }, error: null });
     await verifyLoginCode(null, form({ email: "admin@example.com", code: "123456" }));
-    expect(redirectMock).toHaveBeenCalledWith({ href: "/admin", locale: "id" });
+    expect(redirectMock).toHaveBeenCalledWith({ href: "/admin/monitor", locale: "id" });
   });
 
   it("refuses a wrong or malformed code and stays on the code step", async () => {

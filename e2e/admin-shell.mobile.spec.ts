@@ -18,13 +18,16 @@ test.describe("the admin top bar at 360 px", () => {
     await menu.click();
     await expect(menu).toHaveAttribute("aria-expanded", "true");
     const nav = page.getByRole("navigation", { name: "Navigasi admin" });
-    await expect(nav.getByRole("link")).toHaveCount(6);
+    await expect(nav.getByRole("link")).toHaveCount(5);
     await expect(nav.getByRole("link", { name: "Layanan dan harga", exact: true })).toHaveAttribute(
       "aria-current",
       "page",
     );
     await expect(header.getByRole("button", { name: "Keluar" })).toBeVisible();
     await expect(header.getByRole("group", { name: "Bahasa" })).toBeVisible();
+
+    // The wordmark in the bar leads to live monitoring, the console's start page (R2b).
+    await expect(header.getByRole("link", { name: "HomeKlin, ke Pemantauan langsung" })).toHaveAttribute("href", "/admin/monitor");
 
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     expect(overflow).toBeLessThanOrEqual(0);

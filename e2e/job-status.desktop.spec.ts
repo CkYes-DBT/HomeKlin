@@ -3,12 +3,13 @@ import { adminClient } from "../tests/integration/test-project";
 import { createJobWorld, jakartaClock, sessionOf, type JobWorld } from "./job-test-data";
 import { signedInAs } from "./setup/auth-state";
 
-// T18 on a desk: the agency (on /agency/orders) and admin (on /admin, "Pekerjaan hari ini") see where
-// each job stands: no cleaner yet, a cleaner assigned, checked in at a time, finished at a time.
-// Admin's list is read-only, and the agency can assign a cleaner only until check-in (T28,
-// covered in full by e2e/agency-back-office.desktop.spec.ts). The agency sees only the jobs routed to it; admin sees the
-// agency's name too. The spec makes its own agency (serving Jakarta Timur, with one cleaner) and writes
-// its own paid jobs a few minutes from now (e2e/job-test-data.ts), so they are today's jobs in Jakarta.
+// T18 on a desk: the agency (on /agency/orders) sees where each job stands: no cleaner yet, a cleaner
+// assigned, checked in at a time, finished at a time, and can assign a cleaner only until check-in
+// (T28, covered in full by e2e/agency-back-office.desktop.spec.ts). Admin sees finished jobs, read-only
+// and with the agency's name, on /admin/recordings (the dashboard's list of today's jobs went with the
+// dashboard, R2b). The agency sees only the jobs routed to it. The spec makes its own agency (serving
+// Jakarta Timur, with one cleaner) and writes its own paid jobs a few minutes from now
+// (e2e/job-test-data.ts), so they are today's jobs in Jakarta.
 
 test.describe.configure({ mode: "serial", timeout: 90_000 });
 
@@ -94,18 +95,20 @@ test.describe("the agency", () => {
 test.describe("admin", () => {
   test.use(signedInAs.admin);
 
-  test("sees today's jobs with the agency, the cleaner and the status, read-only", async ({ page }) => {
-    await page.goto("/admin");
-    await expect(page.getByRole("heading", { level: 2, name: "Pekerjaan hari ini" })).toBeVisible();
-    const table = page.getByRole("table", { name: "Pekerjaan hari ini" });
-    for (const id of Object.values(jobs)) await expect(table.locator(`tr[data-job="${id}"]`)).toHaveCount(1);
-
+  // The admin dashboard and its "Pekerjaan hari ini" list are gone (R2b, user 2026-11-12). Admin now
+  // meets a job once it is live (live monitoring, e2e/admin-console.desktop.spec.ts) and once it is
+  // finished, on the recordings page: still read-only, still with the agency and the cleaner.
+  test("sees a finished job with the agency, the cleaner and the finish time, read-only", async ({ page }) => {
+    await page.goto("/admin/recordings");
+    const table = page.getByRole("table", { name: "Pekerjaan selesai" });
+    await expect(table).toBeVisible();
     const row = (key: string) => table.locator(`tr[data-job="${jobs[key]}"]`);
-    await expect(row("unassigned")).toContainText(agencyName);
-    await expect(row("unassigned")).toContainText("Belum ada petugas");
-    await expect(row("assigned")).toContainText("Uji Petugas Meja");
-    await expect(row("started")).toContainText(`Check-in pukul ${times.checkedIn}`);
-    await expect(row("finished")).toContainText(`Selesai pukul ${times.completed}`);
+    await expect(row("finished")).toContainText(agencyName);
+    await expect(row("finished")).toContainText("Uji Petugas Meja");
+    await expect(row("finished")).toContainText(`${times.completed} WIB`);
+    await expect(row("finished")).toContainText("Tidak ada rekaman");
+    // Jobs that have not finished are not on this page.
+    for (const key of ["unassigned", "assigned", "started"]) await expect(row(key)).toHaveCount(0);
     await expectReadOnly(page, table);
   });
 });

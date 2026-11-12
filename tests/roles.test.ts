@@ -20,7 +20,7 @@ describe("roles", () => {
       customer: "/home",
       cleaner: "/cleaner",
       agency: "/agency",
-      admin: "/admin",
+      admin: "/admin/monitor",
       owner: "/owner",
     });
   });
@@ -131,7 +131,7 @@ describe("safeNextPath", () => {
   });
 
   it("falls back to the role's home when there is no next page", () => {
-    expect(safeNextPath(undefined, "admin")).toBe("/admin");
+    expect(safeNextPath(undefined, "admin")).toBe("/admin/monitor");
     expect(safeNextPath(null, "cleaner")).toBe("/cleaner");
     expect(safeNextPath("", "customer")).toBe("/home");
     expect(safeNextPath(42, "customer")).toBe("/home");

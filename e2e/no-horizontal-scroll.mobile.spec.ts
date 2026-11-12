@@ -19,8 +19,8 @@ const pageGroups = [
   {
     who: "an admin",
     session: signedInAs.admin,
+    // /admin is not a page of its own any more: it leads to /admin/monitor (R2b).
     paths: [
-      "/admin",
       "/admin/monitor",
       "/admin/tickets",
       "/admin/recordings",

@@ -1,3 +1,4 @@
+import { CircleHelp, History, LayoutGrid, MessageCircle, Video } from "lucide-react";
 import { describe, expect, it } from "vitest";
 import { isActivePath } from "@/components/shell/is-active-path";
 import { appNavigation } from "@/components/shell/app-navigation";
@@ -130,23 +131,23 @@ describe("navigation", () => {
     ]);
   });
 
-  it("gives the admin its console sections, including the price list", () => {
+  it("gives the admin the five console sections of the mock, live monitoring first, with no dashboard", () => {
     expect(items("admin", "id")).toEqual([
-      ["Dasbor", "/admin"],
-      ["Monitor Langsung", "/admin/monitor"],
-      ["Tiket", "/admin/tickets"],
-      ["Rekaman", "/admin/recordings"],
+      ["Pemantauan langsung", "/admin/monitor"],
       ["Layanan dan harga", "/admin/services"],
-      ["FAQ", "/admin/faq"],
+      ["Obrolan bantuan", "/admin/tickets"],
+      ["Pertanyaan umum", "/admin/faq"],
+      ["Rekaman", "/admin/recordings"],
     ]);
     expect(items("admin", "en")).toEqual([
-      ["Dashboard", "/admin"],
-      ["Live monitor", "/admin/monitor"],
-      ["Tickets", "/admin/tickets"],
-      ["Recordings", "/admin/recordings"],
+      ["Live monitoring", "/admin/monitor"],
       ["Services and prices", "/admin/services"],
+      ["Support chats", "/admin/tickets"],
       ["FAQ", "/admin/faq"],
+      ["Recordings", "/admin/recordings"],
     ]);
+    // The mock's glyphs: camera, four squares, chat bubble, help circle, clock with a circular arrow.
+    expect(backOfficeNavigation.admin.items.map((item) => item.icon)).toEqual([Video, LayoutGrid, MessageCircle, CircleHelp, History]);
   });
 
   it("gives the owner the business numbers, the partner agencies and the admin accounts", () => {

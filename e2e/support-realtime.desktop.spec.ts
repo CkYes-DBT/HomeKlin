@@ -47,7 +47,7 @@ test("an escalation reaches the inbox, and replies flow both ways in real time",
 
   // The admin's inbox is open before the question is asked.
   await adminPage.goto("/admin/tickets");
-  await expect(adminPage.getByRole("heading", { level: 1, name: "Tiket" })).toBeVisible();
+  await expect(adminPage.getByRole("heading", { level: 1, name: "Obrolan bantuan" })).toBeVisible();
   await expect(adminPage.getByText("Tiket baru muncul otomatis")).toBeVisible();
   await markDocument(adminPage);
 
@@ -126,7 +126,7 @@ test.describe("the inbox", () => {
     await page.goto(`/admin/tickets?ticket=${randomUUID()}`);
     await expect(page.getByRole("heading", { name: "Tiket tidak ditemukan" })).toBeVisible();
     await page.goto("/en/admin/tickets");
-    await expect(page.getByRole("heading", { level: 1, name: "Tickets" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Support chats" })).toBeVisible();
     await expect(page.getByText("New tickets appear automatically")).toBeVisible();
   });
 });

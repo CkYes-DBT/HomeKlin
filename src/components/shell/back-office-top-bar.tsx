@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Wordmark } from "@/components/brand/wordmark";
+import { Link } from "@/i18n/navigation";
 import { LanguageSwitch } from "./language-switch";
 import type { BackOfficeNavKey, ShellTone } from "./navigation";
 import { RoleBadge } from "./role-badge";
@@ -17,7 +18,27 @@ type BackOfficeTopBarProps = {
   account?: ReactNode;
   /** default: the light T3b bar. forest: the redesign's dark band (the admin console, Phase 13). */
   tone?: ShellTone;
+  /** Forest tone: the wordmark becomes a link to the console's start page. */
+  home?: HomeLink;
 };
+
+export type HomeLink = { href: string; label: string };
+
+/**
+ * The forest wordmark as a link to the console's start page (the admin console, R2b): 44 px tall, with
+ * the band's hover and pressed fills; the lime focus ring comes from on-dark-focus around it.
+ */
+export function HomeWordmark({ home }: { home: HomeLink }) {
+  return (
+    <Link
+      href={home.href}
+      aria-label={home.label}
+      className="inline-flex min-h-touch items-center rounded-md px-2 transition-colors duration-150 ease-out-quart hover:bg-band-raised/60 active:bg-band-raised"
+    >
+      <Wordmark palette="forest" onDark />
+    </Link>
+  );
+}
 
 // default keeps the T3b bar exactly. forest: the same bar on `band`, with the lime focus ring
 // (on-dark-focus), band-raised dividers and fills, and the sidebar's dark items in the menu.
@@ -44,7 +65,7 @@ const menuId = "back-office-menu";
 // (pushing content down), so nothing is covered and no focus trap is needed. The account and the
 // language switch sit in the menu, under the sections: at 360 px the bar has no room next to the
 // wordmark, the role and the Menu button.
-export function BackOfficeTopBar({ nav, roleLabel, account, tone = "default" }: BackOfficeTopBarProps) {
+export function BackOfficeTopBar({ nav, roleLabel, account, tone = "default", home }: BackOfficeTopBarProps) {
   const t = useTranslations("BackOfficeShell");
   // The address as the browser shows it (with /en), so switching the language also counts as
   // navigating; next-intl's usePathname would return the same path in both languages.
@@ -71,7 +92,15 @@ export function BackOfficeTopBar({ nav, roleLabel, account, tone = "default" }: 
     <header onKeyDown={handleKeyDown} className={look.header}>
       <div className="flex h-top-bar items-center justify-between gap-3 px-safe">
         <span className="flex min-w-0 items-center gap-2">
-          {forest ? <Wordmark palette="forest" onDark /> : <Wordmark />}
+          {forest && home ? (
+            <span className="-ml-2">
+              <HomeWordmark home={home} />
+            </span>
+          ) : forest ? (
+            <Wordmark palette="forest" onDark />
+          ) : (
+            <Wordmark />
+          )}
           <RoleBadge label={roleLabel} onDark={forest} />
         </span>
         <button

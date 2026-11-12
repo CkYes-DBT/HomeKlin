@@ -2,7 +2,7 @@ import { Suspense, type ReactNode } from "react";
 import { AccountSummary } from "@/components/auth/account-summary";
 import { Wordmark } from "@/components/brand/wordmark";
 import { ClientMessages } from "@/i18n/client-messages";
-import { BackOfficeTopBar } from "./back-office-top-bar";
+import { BackOfficeTopBar, HomeWordmark, type HomeLink } from "./back-office-top-bar";
 import { LanguageSwitch } from "./language-switch";
 import type { BackOfficeNavKey } from "./navigation";
 import { RoleBadge } from "./role-badge";
@@ -21,6 +21,8 @@ type SidebarShellProps = {
       tone: "forest";
       /** The card under the wordmark, in place of the role badge: "Dasbor admin" over "Operasional HomeKlin". */
       roleCard: { label: string; title: string };
+      /** Where the wordmark leads (the console's start page) and its accessible name. */
+      home: HomeLink;
     }
 );
 
@@ -39,7 +41,7 @@ export function SidebarShell(props: SidebarShellProps) {
       <div className="flex flex-1 flex-col lg:pl-sidebar">
         <SkipLink />
         {props.tone === "forest" ? (
-          <ForestSidebar nav={nav} roleCard={props.roleCard} />
+          <ForestSidebar nav={nav} roleCard={props.roleCard} home={props.home} />
         ) : (
           <LightSidebar nav={nav} roleLabel={roleLabel} />
         )}
@@ -47,6 +49,7 @@ export function SidebarShell(props: SidebarShellProps) {
           nav={nav}
           roleLabel={roleLabel}
           tone={forest ? "forest" : "default"}
+          home={props.tone === "forest" ? props.home : undefined}
           account={
             <Suspense fallback={null}>
               <AccountSummary variant="sidebar" tone={forest ? "forest" : "default"} />
@@ -90,11 +93,11 @@ function LightSidebar({ nav, roleLabel }: { nav: BackOfficeNavKey; roleLabel: st
 // The redesign's sidebar (markdown/design.md, Layout, sidebar): 256 px of `band` with no edge, the lime
 // wordmark tile, a role card on band-raised, the dark items, then the on-dark language switch and the
 // signed-in user. on-dark-focus turns the focus ring lime (12.0:1 on band, 8.4:1 on band-raised).
-function ForestSidebar({ nav, roleCard }: { nav: BackOfficeNavKey; roleCard: { label: string; title: string } }) {
+function ForestSidebar({ nav, roleCard, home }: { nav: BackOfficeNavKey; roleCard: { label: string; title: string }; home: HomeLink }) {
   return (
     <aside className="on-dark-focus fixed inset-y-0 left-0 z-(--z-sticky) hidden w-sidebar flex-col bg-band text-on-band lg:flex">
-      <div className="flex h-16 items-center px-5">
-        <Wordmark palette="forest" onDark />
+      <div className="flex h-16 items-center px-3">
+        <HomeWordmark home={home} />
       </div>
       <p className="mx-3 flex flex-col gap-0.5 rounded-md bg-band-raised px-4 py-3">
         <span className="text-xs text-on-band-muted">{roleCard.label}</span>

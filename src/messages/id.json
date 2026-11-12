@@ -45,12 +45,11 @@
     },
     "admin": {
       "label": "Navigasi admin",
-      "dashboard": "Dasbor",
-      "monitor": "Monitor Langsung",
-      "tickets": "Tiket",
-      "recordings": "Rekaman",
+      "monitor": "Pemantauan langsung",
       "services": "Layanan dan harga",
-      "faq": "FAQ"
+      "tickets": "Obrolan bantuan",
+      "faq": "Pertanyaan umum",
+      "recordings": "Rekaman"
     },
     "owner": {
       "label": "Navigasi pemilik",
@@ -64,7 +63,8 @@
     "agencyRole": "Agensi",
     "adminRole": "Admin",
     "adminDashboard": "Dasbor admin",
-    "adminOperations": "Operasional HomeKlin"
+    "adminOperations": "Operasional HomeKlin",
+    "adminHome": "HomeKlin, ke Pemantauan langsung"
   },
   "MarketingHeader": {
     "nav": "Navigasi situs",
@@ -988,50 +988,8 @@
     "expiredTitle": "Rekaman sudah dihapus",
     "expiredBody": "Rekaman dihapus otomatis 7 hari setelah pekerjaan selesai, jadi tidak bisa diputar lagi."
   },
-  "AdminDashboardPage": {
-    "title": "Dasbor",
-    "description": "Pekerjaan, petugas, dan tiket pelanggan hari ini dalam satu tampilan. Waktu dalam WIB.",
-    "summaryTitle": "Ringkasan",
-    "tiles": {
-      "today": {
-        "label": "Pekerjaan hari ini",
-        "hint": "Lihat daftar di bawah"
-      },
-      "inProgress": {
-        "label": "Sedang berlangsung",
-        "hint": "Buka monitor langsung"
-      },
-      "waiting": {
-        "label": "Menunggu petugas",
-        "hint": "Lihat pekerjaan hari ini"
-      },
-      "tickets": {
-        "label": "Tiket terbuka",
-        "hint": "{urgent, plural, =0 {Tidak ada yang mendesak} other {# mendesak}}"
-      }
-    },
-    "tileUnavailable": "Belum dapat dimuat",
-    "todayTitle": "Pekerjaan hari ini",
-    "todayDescription": "Semua pekerjaan yang dijadwalkan hari ini, dengan agensi, petugas, dan status check-in. Waktu dalam WIB.",
-    "todayEmptyTitle": "Tidak ada pekerjaan hari ini",
-    "todayEmptyBody": "Pekerjaan yang sudah dibayar dan dijadwalkan hari ini muncul di sini, lengkap dengan status check-in petugasnya.",
-    "todaySummary": "{count, plural, other {# pekerjaan}}",
-    "errorTitle": "Pekerjaan hari ini belum bisa dimuat.",
-    "errorBody": "Muat ulang halaman untuk mencoba lagi.",
-    "ticketsTitle": "Tiket terbuka terbaru",
-    "ticketsDescription": "Yang mendesak lebih dulu, lalu yang terbaru. Buka tiket untuk membalas pelanggan.",
-    "ticketsAll": "Lihat semua tiket",
-    "ticketsEmptyTitle": "Tidak ada tiket terbuka",
-    "ticketsEmptyBody": "Pertanyaan baru dari pelanggan muncul di sini dan di halaman Tiket.",
-    "ticketsErrorTitle": "Tiket belum bisa dimuat.",
-    "urgent": "Mendesak",
-    "customerFallback": "Pelanggan",
-    "messageCount": "{count, plural, other {# pesan}}",
-    "lastToday": "Hari ini, {time} WIB",
-    "lastDay": "{day}, {time} WIB"
-  },
   "AdminMonitorPage": {
-    "title": "Monitor Langsung",
+    "title": "Pemantauan langsung",
     "description": "Siaran langsung semua pekerjaan yang sedang berlangsung. Hanya admin HomeKlin yang dapat membuka halaman ini.",
     "emptyTitle": "Tidak ada pekerjaan yang sedang berlangsung",
     "emptyBody": "Siaran langsung semua pekerjaan yang sedang berlangsung muncul di sini dalam satu tampilan.",
@@ -1059,7 +1017,7 @@
     "retrying": "Memuat ulang siaran…"
   },
   "AdminTicketsPage": {
-    "title": "Tiket",
+    "title": "Obrolan bantuan",
     "description": "Pertanyaan pelanggan dari halaman Bantuan: yang menunggu jawaban di atas, yang mendesak lebih dulu, lalu yang paling lama.",
     "emptyTitle": "Belum ada tiket",
     "emptyBody": "Pertanyaan pelanggan yang diteruskan dari halaman Bantuan muncul di sini, diurutkan dari yang paling mendesak.",
@@ -1253,7 +1211,7 @@
     "back": "Kembali ke daftar layanan"
   },
   "AdminFaqPage": {
-    "title": "FAQ",
+    "title": "Pertanyaan umum",
     "emptyTitle": "Belum ada pertanyaan",
     "emptyBody": "Pertanyaan umum yang tampil di halaman Bantuan pelanggan muncul di sini. Anda dapat menambah dan mengubahnya."
   },

@@ -3,8 +3,8 @@ import { createTestUser, deleteTestUsers, adminClient, type TestUser } from "../
 import { createJobWorld, sessionOf, type JobWorld } from "../job-test-data";
 import type { StorageState } from "../setup/auth-state";
 
-// R2 review screenshots: the admin console's dark-green sidebar (the redesign, Phase 13) on the
-// dashboard, "Layanan dan harga" and the live monitor at 1280 and 1440 px, in both languages; the dark
+// R2 review screenshots: the admin console's dark-green sidebar (the redesign, Phase 13) on "Layanan
+// dan harga" and live monitoring at 1280 and 1440 px (no dashboard since R2b), in both languages; the dark
 // top bar with its menu open at 360 and 390 px; and the agency and owner consoles at 1440 px, to show
 // their light T3b sidebar did not change. Saved to docs/screenshots/r2/ as <surface>-<lang>-<width>.png
 // (phones also -fold.png, the first screen as it opens). The admin, the agency (with its own fictional
@@ -80,7 +80,6 @@ test("the admin sidebar on a desk", async ({ browser }) => {
     const { context, page } = await newPage(browser, "admin", "desktop", width);
     for (const [lang, prefix] of languages) {
       for (const [name, path] of [
-        ["admin-dashboard", "/admin"],
         ["admin-services", "/admin/services"],
         ["admin-monitor", "/admin/monitor"],
       ] as const) {

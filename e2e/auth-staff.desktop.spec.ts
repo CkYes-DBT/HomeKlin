@@ -77,13 +77,13 @@ test("an agency user lands on /agency, sees who is signed in, and is refused the
 
   await page.goto("/admin");
   await expect(page).toHaveURL("/agency");
-  await expect(page.getByRole("heading", { level: 2, name: "Pekerjaan hari ini" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { level: 1, name: "Pemantauan langsung" })).toHaveCount(0);
 });
 
-test("an admin lands on /admin, is refused an agency page, and signs out from the sidebar", async ({ page }) => {
+test("an admin lands on live monitoring, is refused an agency page, and signs out from the sidebar", async ({ page }) => {
   await logIn(page, administrator);
-  await expect(page).toHaveURL("/admin");
-  await expect(page.getByRole("heading", { level: 2, name: "Pekerjaan hari ini" })).toBeVisible();
+  await expect(page).toHaveURL("/admin/monitor");
+  await expect(page.getByRole("heading", { level: 1, name: "Pemantauan langsung" })).toBeVisible();
 
   // A sub-page of the agency section. The page the admin asked for never reaches the browser, not
   // even in the HTML that comes before the redirect; their own pages do (the check is not vacuous).
@@ -94,17 +94,17 @@ test("an admin lands on /admin, is refused an agency page, and signs out from th
   const allowed = await (await page.request.get("/admin/tickets")).text();
   expect(allowed).toContain("Tiket baru muncul otomatis");
   await page.goto("/agency/schedule");
-  await expect(page).toHaveURL("/admin");
-  await expect(page.getByRole("heading", { level: 1, name: "Dasbor" })).toBeVisible();
+  await expect(page).toHaveURL("/admin/monitor");
+  await expect(page.getByRole("heading", { level: 1, name: "Pemantauan langsung" })).toBeVisible();
 
   // Staff signed in on the landing page see their chip, which leads back to their dashboard.
   await page.goto("/");
   await expect(page.getByRole("banner").getByRole("link", { name: "Uji Admin, dasbor Anda" })).toHaveAttribute(
     "href",
-    "/admin",
+    "/admin/monitor",
   );
 
-  await page.goto("/admin");
+  await page.goto("/admin/monitor");
   await page.getByRole("complementary").getByRole("button", { name: "Keluar" }).click();
   await expect(page).toHaveURL("/");
   await page.goto("/admin");

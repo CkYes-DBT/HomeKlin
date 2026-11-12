@@ -29,15 +29,28 @@ test.describe("the admin sidebar at 1440 px", () => {
     await expect(current).toHaveCSS("color", lime);
 
     const links = nav.getByRole("link");
-    await expect(links).toHaveCount(6);
+    await expect(links).toHaveCount(5);
     for (const link of await links.all()) {
       const linkBox = await link.boundingBox();
       expect(linkBox?.height).toBeGreaterThanOrEqual(44);
     }
   });
 
+  test("lists the five sections of the mock in order, and the wordmark leads to live monitoring", async ({ page }) => {
+    await page.goto("/admin/services");
+    const nav = page.getByRole("navigation", { name: "Navigasi admin" });
+    await expect(nav.getByRole("link")).toHaveText(["Pemantauan langsung", "Layanan dan harga", "Obrolan bantuan", "Pertanyaan umum", "Rekaman"]);
+
+    const home = page.locator("aside").getByRole("link", { name: "HomeKlin, ke Pemantauan langsung" });
+    const homeBox = await home.boundingBox();
+    expect(homeBox?.height).toBeGreaterThanOrEqual(44);
+    await home.click();
+    await expect(page).toHaveURL("/admin/monitor");
+    await expect(page.getByRole("heading", { level: 1, name: "Pemantauan langsung" })).toBeVisible();
+  });
+
   test("shows the role card, the language switch and a Keluar button", async ({ page }) => {
-    await page.goto("/admin");
+    await page.goto("/admin/monitor");
     const sidebar = page.locator("aside");
     await expect(sidebar.getByText("Dasbor admin", { exact: true })).toBeVisible();
     await expect(sidebar.getByText("Operasional HomeKlin", { exact: true })).toBeVisible();
@@ -60,11 +73,19 @@ test.describe("the admin sidebar at 1440 px", () => {
       .getByRole("link", { name: "Services and prices", exact: true });
     await expect(current).toHaveAttribute("aria-current", "page");
     await expect(sidebar.getByRole("button", { name: "Log out" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Admin navigation" }).getByRole("link")).toHaveText([
+      "Live monitoring",
+      "Services and prices",
+      "Support chats",
+      "FAQ",
+      "Recordings",
+    ]);
+    await expect(sidebar.getByRole("link", { name: "HomeKlin, to Live monitoring" })).toHaveAttribute("href", "/en/admin/monitor");
   });
 
   test("draws the focus ring in lime inside the band", async ({ page }) => {
-    await page.goto("/admin");
-    const link = page.getByRole("navigation", { name: "Navigasi admin" }).getByRole("link", { name: "Tiket" });
+    await page.goto("/admin/monitor");
+    const link = page.getByRole("navigation", { name: "Navigasi admin" }).getByRole("link", { name: "Obrolan bantuan" });
     await link.focus();
     await expect(link).toHaveCSS("outline-color", lime);
   });

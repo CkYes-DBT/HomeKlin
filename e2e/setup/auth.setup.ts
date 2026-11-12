@@ -20,7 +20,7 @@ const ownPage = {
   customer: "/orders",
   cleaner: "/cleaner",
   agency: "/agency",
-  admin: "/admin",
+  admin: "/admin/monitor",
   owner: "/owner",
 } as const satisfies Record<AppRole, string>;
 

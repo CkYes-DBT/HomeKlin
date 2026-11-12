@@ -3,9 +3,8 @@ import { adminClient, testProject } from "../tests/integration/test-project";
 import { createConsoleWorld, type ConsoleWorld } from "./admin-console-test-data";
 import { signedInAs } from "./setup/auth-state";
 
-// T24-T26 on a desk: the admin dashboard counts today's jobs, the jobs in progress, today's jobs
-// without a cleaner and the open tickets, and lists today's jobs and the latest open tickets; the live
-// monitor shows every live feed at once, each with its video, cleaner, agency, service, area, status
+// T25-T26 on a desk (the T24 dashboard was retired in R2b: /admin now leads to live monitoring): the
+// live monitor shows every live feed at once, each with its video, cleaner, agency, service, area, status
 // (polled) and start time; the recordings page lists past jobs and plays a recording still within its
 // 7 days, while a deleted one says so with no player. Customers and agencies are refused all of it.
 // The spec makes its own agency, cleaners, jobs, streams, recordings and ticket in the shared test
@@ -30,11 +29,6 @@ test.afterAll(async () => {
   await data?.cleanup();
 });
 
-/** The number a dashboard tile shows. */
-async function tileValue(tile: Locator): Promise<number> {
-  return Number((await tile.locator("[data-value]").innerText()).trim());
-}
-
 async function expectPlayable(page: Page, video: Locator) {
   const src = (await video.getAttribute("src")) ?? "";
   expect(src.startsWith(signedLink)).toBe(true);
@@ -44,45 +38,16 @@ async function expectPlayable(page: Page, video: Locator) {
 test.describe("admin", () => {
   test.use(signedInAs.admin);
 
-  test("the dashboard counts today's jobs, the jobs in progress, the jobs waiting for a cleaner and the open tickets", async ({ page }) => {
+  // The dashboard is gone (R2b, user 2026-11-12): the console starts on live monitoring.
+  test("/admin opens live monitoring, the first item of the menu", async ({ page }) => {
     await page.goto("/admin");
-    const summary = page.getByRole("region", { name: "Ringkasan" });
-
-    const today = summary.locator('[data-tile="today"]');
-    await expect(today).toContainText("Pekerjaan hari ini");
-    expect(await tileValue(today)).toBeGreaterThanOrEqual(3);
-    await expect(today).toHaveAttribute("href", "#today-jobs");
-
-    const inProgress = summary.locator('[data-tile="inProgress"]');
-    await expect(inProgress).toContainText("Sedang berlangsung");
-    expect(await tileValue(inProgress)).toBeGreaterThanOrEqual(2);
-    await expect(inProgress).toHaveAttribute("href", "/admin/monitor");
-
-    const waiting = summary.locator('[data-tile="waiting"]');
-    await expect(waiting).toContainText("Menunggu petugas");
-    expect(await tileValue(waiting)).toBeGreaterThanOrEqual(1);
-
-    const tickets = summary.locator('[data-tile="tickets"]');
-    await expect(tickets).toContainText("Tiket terbuka");
-    expect(await tileValue(tickets)).toBeGreaterThanOrEqual(1);
-    await expect(tickets).toContainText(/\d+ mendesak/);
-    await expect(tickets).toHaveAttribute("href", "/admin/tickets");
-  });
-
-  test("the dashboard lists today's jobs with their check-in status and links the latest open tickets", async ({ page }) => {
-    await page.goto("/admin");
-    const table = page.getByRole("table", { name: "Pekerjaan hari ini" });
-    await expect(table.locator(`tr[data-job="${data.live.first}"]`)).toContainText(/Check-in pukul \d{2}\.\d{2}/);
-    await expect(table.locator(`tr[data-job="${data.live.first}"]`)).toContainText(data.agencyName);
-    await expect(table.locator(`tr[data-job="${data.live.second}"]`)).toContainText(data.cleaners.second);
-    await expect(table.locator(`tr[data-job="${data.waiting}"]`)).toContainText("Belum ada petugas");
-
-    const tickets = page.getByRole("region", { name: "Tiket terbuka terbaru" });
-    const link = tickets.locator(`a[href="/admin/tickets?ticket=${data.ticket.id}"]`);
-    await expect(link).toContainText(data.ticket.question);
-    await expect(link).toContainText("Mendesak");
-    await expect(link).toContainText("Uji Pelanggan Pekerjaan");
-    await expect(tickets.getByRole("link", { name: "Lihat semua tiket" })).toHaveAttribute("href", "/admin/tickets");
+    await expect(page).toHaveURL("/admin/monitor");
+    await expect(page.getByRole("heading", { level: 1, name: "Pemantauan langsung" })).toBeVisible();
+    const nav = page.getByRole("navigation", { name: "Navigasi admin" });
+    await expect(nav.getByRole("link", { name: "Pemantauan langsung", exact: true })).toHaveAttribute("aria-current", "page");
+    // The page carries the live feeds, not the old dashboard's tiles or lists.
+    await expect(page.getByRole("list", { name: "Siaran langsung" }).locator(`[data-feed="${data.live.first}"]`)).toBeVisible();
+    await expect(page.locator("[data-tile]")).toHaveCount(0);
   });
 
   test("the live monitor shows every live feed at once, with a video that plays, and polls each status", async ({ page }) => {
@@ -149,12 +114,8 @@ test.describe("admin", () => {
 
   test("reads in English", async ({ page }) => {
     await page.goto("/en/admin");
-    const summary = page.getByRole("region", { name: "Summary" });
-    await expect(summary.locator('[data-tile="inProgress"]')).toContainText("In progress");
-    await expect(summary.locator('[data-tile="tickets"]')).toHaveAttribute("href", "/en/admin/tickets");
-    await expect(page.getByRole("region", { name: "Latest open tickets" }).locator(`a[href="/en/admin/tickets?ticket=${data.ticket.id}"]`)).toContainText(
-      "Urgent",
-    );
+    await expect(page).toHaveURL("/en/admin/monitor");
+    await expect(page.getByRole("heading", { level: 1, name: "Live monitoring" })).toBeVisible();
 
     await page.goto("/en/admin/monitor");
     const feed = page.getByRole("list", { name: "Live streams" }).locator(`[data-feed="${data.live.first}"]`);
@@ -172,9 +133,10 @@ for (const role of ["customer", "agency"] as const) {
   test.describe(`a signed-in ${role}`, () => {
     test.use(signedInAs[role]);
 
-    test("is refused the live monitor and the recordings, and never gets a feed or a link", async ({ page }) => {
+    test("is refused the console start, the live monitor and the recordings, and never gets a feed or a link", async ({ page }) => {
       const home = role === "customer" ? "/home" : "/agency";
-      for (const path of ["/admin/monitor", `/admin/recordings?recording=${data.recorded.available.recordingId}`]) {
+      // /admin too: it leads to live monitoring, but only for an admin (R2b).
+      for (const path of ["/admin", "/admin/monitor", `/admin/recordings?recording=${data.recorded.available.recordingId}`]) {
         // Not even the HTML that comes before the redirect holds a feed, a name or a link.
         const served = await (await page.request.get(path)).text();
         expect(served).not.toContain("/storage/v1/object/sign/");
