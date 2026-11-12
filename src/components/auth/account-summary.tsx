@@ -6,14 +6,33 @@ import { UserAvatar } from "./user-avatar";
 type AccountSummaryProps = {
   /** page: the account page's card. sidebar: the back office's sidebar and narrow-screen menu. */
   variant?: "page" | "sidebar";
+  /** sidebar only. forest: on the redesign's dark band (the admin console, Phase 13). */
+  tone?: "default" | "forest";
 };
 
 // Who is signed in, and the way out (T5): the account area of every shell. Reads the session, so it
 // sits inside <Suspense>; on a protected page it sits inside <RoleGate> as well.
-export async function AccountSummary({ variant = "page" }: AccountSummaryProps) {
+export async function AccountSummary({ variant = "page", tone = "default" }: AccountSummaryProps) {
   const [user, t] = await Promise.all([getCurrentUser(), getTranslations("AccountSummary")]);
   if (!user) return null;
   const name = user.fullName.trim() || t("noName");
+
+  // On the dark band: the lime-wash initials (9.9:1), the name in on-band (13.6:1 on band) and "Keluar"
+  // as an underlined text button under it. "Masuk sebagai" stays for screen readers only.
+  if (variant === "sidebar" && tone === "forest") {
+    return (
+      <div className="flex items-center gap-3">
+        <UserAvatar name={user.fullName} size="md" palette="forest" />
+        <div className="flex min-w-0 flex-col">
+          <p className="truncate text-sm font-semibold text-on-band">
+            <span className="sr-only">{t("signedInAs")} </span>
+            {name}
+          </p>
+          <SignOutButton look="linkOnDark" />
+        </div>
+      </div>
+    );
+  }
 
   if (variant === "sidebar") {
     return (

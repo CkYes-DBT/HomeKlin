@@ -41,7 +41,7 @@ const backOffices = [
     name: "admin" as const,
     root: "/admin",
     nav: "Admin navigation",
-    labels: ["Dashboard", "Live monitor", "Tickets", "Recordings", "Services & prices", "FAQ"],
+    labels: ["Dashboard", "Live monitor", "Tickets", "Recordings", "Services and prices", "FAQ"],
   },
 ];
 

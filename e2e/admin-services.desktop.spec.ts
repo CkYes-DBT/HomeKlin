@@ -46,7 +46,7 @@ test.describe("an admin", () => {
 
   test("sees every service with its price, type, duration and state", async ({ page }) => {
     await page.goto("/admin/services");
-    await expect(page.getByRole("heading", { level: 1, name: "Layanan & Harga" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Layanan dan harga" })).toBeVisible();
 
     const table = page.getByRole("table", { name: "Layanan HomeKlin dan harganya" });
     for (const header of ["Layanan", "Jenis", "Harga", "Durasi", "Status"]) {

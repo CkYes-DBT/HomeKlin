@@ -49,7 +49,7 @@
       "monitor": "Live monitor",
       "tickets": "Tickets",
       "recordings": "Recordings",
-      "services": "Services & prices",
+      "services": "Services and prices",
       "faq": "FAQ"
     },
     "owner": {
@@ -62,7 +62,9 @@
   "BackOfficeShell": {
     "menu": "Menu",
     "agencyRole": "Agency",
-    "adminRole": "Admin"
+    "adminRole": "Admin",
+    "adminDashboard": "Admin dashboard",
+    "adminOperations": "HomeKlin operations"
   },
   "MarketingHeader": {
     "nav": "Site navigation",
@@ -1133,7 +1135,7 @@
     "reloading": "Reloading the video…"
   },
   "AdminServicesPage": {
-    "title": "Services & prices",
+    "title": "Services and prices",
     "description": "One price list for every HomeKlin customer. Active services appear in the customer catalog at these prices, with no extra fees.",
     "add": "Add service",
     "summary": "{total, plural, one {# service} other {# services}}, {active, plural, other {# active}}",
@@ -1247,7 +1249,7 @@
     "title": "Edit service",
     "description": "While this service is active, customers see changes to its price and text as soon as you save them.",
     "notFoundTitle": "Service not found",
-    "notFoundBody": "There is no service at this address. Choose a service from the Services & prices list.",
+    "notFoundBody": "There is no service at this address. Choose a service from the Services and prices list.",
     "back": "Back to the list of services"
   },
   "AdminFaqPage": {

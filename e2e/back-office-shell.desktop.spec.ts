@@ -25,7 +25,7 @@ const shells = [
       { label: "Monitor Langsung", path: "/admin/monitor" },
       { label: "Tiket", path: "/admin/tickets" },
       { label: "Rekaman", path: "/admin/recordings" },
-      { label: "Layanan & Harga", path: "/admin/services" },
+      { label: "Layanan dan harga", path: "/admin/services" },
       { label: "FAQ", path: "/admin/faq" },
     ],
   },

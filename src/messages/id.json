@@ -49,7 +49,7 @@
       "monitor": "Monitor Langsung",
       "tickets": "Tiket",
       "recordings": "Rekaman",
-      "services": "Layanan & Harga",
+      "services": "Layanan dan harga",
       "faq": "FAQ"
     },
     "owner": {
@@ -62,7 +62,9 @@
   "BackOfficeShell": {
     "menu": "Menu",
     "agencyRole": "Agensi",
-    "adminRole": "Admin"
+    "adminRole": "Admin",
+    "adminDashboard": "Dasbor admin",
+    "adminOperations": "Operasional HomeKlin"
   },
   "MarketingHeader": {
     "nav": "Navigasi situs",
@@ -1133,7 +1135,7 @@
     "reloading": "Memuat ulang video…"
   },
   "AdminServicesPage": {
-    "title": "Layanan & Harga",
+    "title": "Layanan dan harga",
     "description": "Satu daftar harga untuk semua pelanggan HomeKlin. Layanan yang aktif tampil di katalog pelanggan dengan harga ini, tanpa biaya tambahan.",
     "add": "Tambah layanan",
     "summary": "{total, plural, other {# layanan}}, {active, plural, other {# aktif}}",
@@ -1247,7 +1249,7 @@
     "title": "Ubah layanan",
     "description": "Selama layanan ini aktif, pelanggan melihat perubahan harga dan teks segera setelah Anda menyimpannya.",
     "notFoundTitle": "Layanan tidak ditemukan",
-    "notFoundBody": "Tidak ada layanan dengan alamat ini. Pilih layanan dari daftar Layanan & Harga.",
+    "notFoundBody": "Tidak ada layanan dengan alamat ini. Pilih layanan dari daftar Layanan dan harga.",
     "back": "Kembali ke daftar layanan"
   },
   "AdminFaqPage": {

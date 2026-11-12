@@ -19,6 +19,11 @@ export type Navigation<LabelKey extends string = string> = {
 export type AppNavKey = "customer" | "cleaner";
 export type BackOfficeNavKey = "agency" | "admin" | "owner";
 export type NavKey = AppNavKey | BackOfficeNavKey;
+/**
+ * How a back-office shell looks: default is the light T3b sidebar (agency, owner); forest is the
+ * redesign's dark-green band (the admin console, Phase 13, markdown/design.md).
+ */
+export type ShellTone = "default" | "forest";
 
 // Every shell's navigation in one place, for server code and tests. Client components import
 // app-navigation.ts or back-office-navigation.ts directly, so each bundle carries only its own menus.

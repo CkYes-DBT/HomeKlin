@@ -136,7 +136,7 @@ describe("navigation", () => {
       ["Monitor Langsung", "/admin/monitor"],
       ["Tiket", "/admin/tickets"],
       ["Rekaman", "/admin/recordings"],
-      ["Layanan & Harga", "/admin/services"],
+      ["Layanan dan harga", "/admin/services"],
       ["FAQ", "/admin/faq"],
     ]);
     expect(items("admin", "en")).toEqual([
@@ -144,7 +144,7 @@ describe("navigation", () => {
       ["Live monitor", "/admin/monitor"],
       ["Tickets", "/admin/tickets"],
       ["Recordings", "/admin/recordings"],
-      ["Services & prices", "/admin/services"],
+      ["Services and prices", "/admin/services"],
       ["FAQ", "/admin/faq"],
     ]);
   });

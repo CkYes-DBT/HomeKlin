@@ -301,7 +301,7 @@ Conventions for every task: tests written first; `npm run typecheck`, `npm run l
   - Accept: admin pages use Inter on cream; agency, owner, customer and landing render as before.
   - Verify: `npm run check`; `npm run test:e2e`; e2e asserts admin font is Inter and agency is not.
   - Skills: `frontend-ui-engineering`, `source-driven-development` (next/font).
-- [ ] **R2 Forest sidebar for admin** (M): `tone="forest"` on `SidebarShell`, `SideNavList`, `BackOfficeTopBar`, `AccountSummary`; 256 px band, lime logo tile, role card "Dasbor admin / Operasional HomeKlin", 44 px items, active on band-raised with lime text and 3 px lime marker, ID/EN on-dark switch and user with "Keluar" at the bottom; dark top bar and menu below 1024 px
+- [x] **R2 Forest sidebar for admin** (M) — done 2026-11-12 (`tone="forest"` prop; e2e `admin-shell.desktop/mobile.spec.ts`; screenshots `docs/screenshots/r2/`; 756 unit, 383 e2e pass): `tone="forest"` on `SidebarShell`, `SideNavList`, `BackOfficeTopBar`, `AccountSummary`; 256 px band, lime logo tile, role card "Dasbor admin / Operasional HomeKlin", 44 px items, active on band-raised with lime text and 3 px lime marker, ID/EN on-dark switch and user with "Keluar" at the bottom; dark top bar and menu below 1024 px
   - Accept: matches the mock at 1440 px; agency and owner shells unchanged; focus ring lime on the band.
   - Verify: `npm run check`; `npm run test:e2e`; screenshots of admin, agency, owner.
 

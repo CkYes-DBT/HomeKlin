@@ -11,45 +11,45 @@ import { SkipLink } from "./skip-link";
 
 type SidebarShellProps = {
   nav: BackOfficeNavKey;
-  /** Shown next to the wordmark: "Agensi" or "Admin". */
+  /** Shown next to the wordmark: "Agensi" or "Admin" (in the forest tone, in the top bar below 1024 px). */
   roleLabel: string;
   children: ReactNode;
-};
+} & (
+  | { tone?: "default" }
+  | {
+      /** The redesign's dark-green sidebar (the admin console, Phase 13, markdown/design.md). */
+      tone: "forest";
+      /** The card under the wordmark, in place of the role badge: "Dasbor admin" over "Operasional HomeKlin". */
+      roleCard: { label: string; title: string };
+    }
+);
 
 // Agency and admin shell: desktop-first with a fixed sidebar; a top bar with a menu below 1024 px.
 // The sidebar closes with the account (who is signed in, and signing out) and the language switch,
 // under the sections, where staff look for settings rather than for work. The account part reads the
 // session, so it streams in behind <Suspense> while the rest of the shell stays prerendered. The
 // back-office menus' messages are sent to the browser only from here.
-export function SidebarShell({ nav, roleLabel, children }: SidebarShellProps) {
+// The default tone is the light T3b sidebar (agency, owner); the forest tone is the redesign's dark band.
+export function SidebarShell(props: SidebarShellProps) {
+  const { nav, roleLabel, children } = props;
+  const forest = props.tone === "forest";
+
   return (
     <ClientMessages namespaces={["BackOfficeNavigation", "BackOfficeShell", "SignOut"]}>
       <div className="flex flex-1 flex-col lg:pl-sidebar">
         <SkipLink />
-        <aside className="fixed inset-y-0 left-0 z-(--z-sticky) hidden w-sidebar flex-col border-r border-border bg-panel lg:flex">
-          <div className="flex h-16 items-center gap-2 px-5">
-            <Wordmark />
-            <RoleBadge label={roleLabel} />
-          </div>
-          <div className="flex-1 overflow-y-auto px-3 py-3">
-            <SideNavList nav={nav} />
-          </div>
-          <div className="flex flex-col gap-4 border-t border-border px-5 py-4">
-            <Suspense fallback={null}>
-              <AccountSummary variant="sidebar" />
-            </Suspense>
-            {/* A block around the switch keeps it at its own width in this column. */}
-            <div>
-              <LanguageSwitch />
-            </div>
-          </div>
-        </aside>
+        {props.tone === "forest" ? (
+          <ForestSidebar nav={nav} roleCard={props.roleCard} />
+        ) : (
+          <LightSidebar nav={nav} roleLabel={roleLabel} />
+        )}
         <BackOfficeTopBar
           nav={nav}
           roleLabel={roleLabel}
+          tone={forest ? "forest" : "default"}
           account={
             <Suspense fallback={null}>
-              <AccountSummary variant="sidebar" />
+              <AccountSummary variant="sidebar" tone={forest ? "forest" : "default"} />
             </Suspense>
           }
         />
@@ -60,5 +60,58 @@ export function SidebarShell({ nav, roleLabel, children }: SidebarShellProps) {
         </main>
       </div>
     </ClientMessages>
+  );
+}
+
+// The T3b sidebar of the agency and owner consoles, unchanged.
+function LightSidebar({ nav, roleLabel }: { nav: BackOfficeNavKey; roleLabel: string }) {
+  return (
+    <aside className="fixed inset-y-0 left-0 z-(--z-sticky) hidden w-sidebar flex-col border-r border-border bg-panel lg:flex">
+      <div className="flex h-16 items-center gap-2 px-5">
+        <Wordmark />
+        <RoleBadge label={roleLabel} />
+      </div>
+      <div className="flex-1 overflow-y-auto px-3 py-3">
+        <SideNavList nav={nav} />
+      </div>
+      <div className="flex flex-col gap-4 border-t border-border px-5 py-4">
+        <Suspense fallback={null}>
+          <AccountSummary variant="sidebar" />
+        </Suspense>
+        {/* A block around the switch keeps it at its own width in this column. */}
+        <div>
+          <LanguageSwitch />
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+// The redesign's sidebar (markdown/design.md, Layout, sidebar): 256 px of `band` with no edge, the lime
+// wordmark tile, a role card on band-raised, the dark items, then the on-dark language switch and the
+// signed-in user. on-dark-focus turns the focus ring lime (12.0:1 on band, 8.4:1 on band-raised).
+function ForestSidebar({ nav, roleCard }: { nav: BackOfficeNavKey; roleCard: { label: string; title: string } }) {
+  return (
+    <aside className="on-dark-focus fixed inset-y-0 left-0 z-(--z-sticky) hidden w-sidebar flex-col bg-band text-on-band lg:flex">
+      <div className="flex h-16 items-center px-5">
+        <Wordmark palette="forest" onDark />
+      </div>
+      <p className="mx-3 flex flex-col gap-0.5 rounded-md bg-band-raised px-4 py-3">
+        <span className="text-xs text-on-band-muted">{roleCard.label}</span>
+        <span className="text-sm font-semibold text-on-band">{roleCard.title}</span>
+      </p>
+      <div className="flex-1 overflow-y-auto px-3 py-4">
+        <SideNavList nav={nav} tone="forest" />
+      </div>
+      <div className="flex flex-col gap-4 border-t border-band-raised px-5 py-4">
+        {/* A block around the switch keeps it at its own width in this column. */}
+        <div>
+          <LanguageSwitch palette="forest" onDark />
+        </div>
+        <Suspense fallback={null}>
+          <AccountSummary variant="sidebar" tone="forest" />
+        </Suspense>
+      </div>
+    </aside>
   );
 }
