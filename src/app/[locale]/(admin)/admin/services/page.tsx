@@ -31,7 +31,7 @@ type SearchParams = PageProps<"/[locale]/admin/services">["searchParams"];
 // security decides what it may see: every service, active or draft. It is never cached, so admin
 // always sees what is stored. Each row opens its edit form in place (R4); ?new opens an empty form to
 // add a service above the rows (R5). After a save the action comes back here with ?created= or ?saved=
-// and the service's id, which says what was done, and no open panel.
+// and the service's id, which says what was done (the notice takes the cursor), and no open panel.
 export default function AdminServicesPage({ searchParams }: PageProps<"/[locale]/admin/services">) {
   const t = useTranslations("AdminServicesPage");
   return (
@@ -43,8 +43,8 @@ export default function AdminServicesPage({ searchParams }: PageProps<"/[locale]
         action={
           // Behind its own role check like the list, so the way to add a service never reaches anyone
           // but admin; the title stays in the prerendered shell. A link, so it opens the create panel
-          // without JavaScript too (R5).
-          <Suspense fallback={null}>
+          // without JavaScript too (R5). Until it streams in, a wordless block of its size holds its place.
+          <Suspense fallback={<GateFallback variant="action" />}>
             <RoleGate roles={["admin"]}>
               <ButtonLink href="/admin/services?new" variant="forest" circleIcon={Plus}>
                 {t("add")}
@@ -66,12 +66,17 @@ export default function AdminServicesPage({ searchParams }: PageProps<"/[locale]
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
 
 async function AdminServicesContent({ searchParams }: { searchParams: SearchParams }) {
-  const [t, locale, params, supabase] = await Promise.all([
+  const [t, locale, params, supabase, categories] = await Promise.all([
     getTranslations("AdminServicesPage"),
     getLocale(),
     searchParams,
     createSupabaseServerClient({ writeCookies: false }),
+    categoryOptions(),
   ]);
+  // New for every render of the list (after the request's own data, so it is never prerendered). The
+  // panels and the notice are keyed on it: after a save, even one that comes back to the same address,
+  // every row is drawn anew (closed, no old messages) and the notice takes the cursor again.
+  const renderId = crypto.randomUUID();
 
   let services: AdminService[];
   try {
@@ -109,7 +114,11 @@ async function AdminServicesContent({ searchParams }: { searchParams: SearchPara
   return (
     <>
       {changed ? (
+        // The cursor goes to the notice: the form it was in has closed, and a screen reader reads at once
+        // what was done and whether customers see it. The row's summary would only repeat the row.
         <Notice
+          key={renderId}
+          focus
           tone="success"
           title={t(createdId ? "notice.created" : "notice.saved", {
             name: locale === "en" ? changed.name.en : changed.name.id,
@@ -126,7 +135,7 @@ async function AdminServicesContent({ searchParams }: { searchParams: SearchPara
         </EmptyState>
       ) : (
         <ClientMessages namespaces={["AdminServiceForm"]}>
-          <ServicesList services={services} categories={await categoryOptions()} create={create} />
+          <ServicesList services={services} categories={categories} create={create} renderId={renderId} />
         </ClientMessages>
       )}
     </>

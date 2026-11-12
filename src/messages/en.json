@@ -1107,8 +1107,7 @@
       "duration": "Duration",
       "price": "Price",
       "status": "Status",
-      "order": "Order",
-      "edit": "Edit"
+      "order": "Order"
     },
     "row": {
       "open": "Edit service",

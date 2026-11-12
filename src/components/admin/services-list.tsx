@@ -15,6 +15,12 @@ type ServicesListProps = {
   categories: Categories;
   /** At /admin/services?new: the empty form to add a service, open at the top (R5). */
   create?: ServiceFormValues;
+  /**
+   * New on every server render of the page (a random id). Every panel is keyed on it, so each answer
+   * from the server, above all the redirect after a save or an add (even to the same address), draws
+   * the panels anew: closed, back on the stored values, with no message left from an earlier refusal.
+   */
+  renderId: string;
 };
 
 // HomeKlin's services and the one price list (R3, the redesign's "Layanan dan harga"): one white card
@@ -23,7 +29,8 @@ type ServicesListProps = {
 // Rows cannot live in a <table>, so this is a list: each summary says all its own values in its
 // accessible name ("Ubah layanan Pembersihan Rutin, Jenis: Seluruh rumah, Sekitar 2 jam, Rp 85.000,
 // Aktif, Urutan 1"), and the column header row above is for the eye only (aria-hidden), so a screen
-// reader meets each fact once. At ?new an open "Layanan baru" panel sits above the rows (R5).
+// reader meets each fact once. At ?new an open "Layanan baru" panel sits above the rows (R5). Every
+// server render draws the panels anew (renderId), so a save or an add always comes back to closed rows.
 //
 // Columns (from 768 px): picture, service, duration (from 1280 px; under the name below that), price,
 // status, order, chevron. Below 768 px a row stacks: picture, name with type and duration, then price
@@ -31,19 +38,21 @@ type ServicesListProps = {
 const columns =
   "md:grid-cols-[--spacing(10)_minmax(0,1fr)_--spacing(30)_--spacing(35)_--spacing(15)_--spacing(11)] xl:grid-cols-[--spacing(10)_minmax(0,1fr)_--spacing(50)_--spacing(30)_--spacing(35)_--spacing(15)_--spacing(11)]";
 
-/** Changes whenever a stored value does, so a saved row is drawn anew: closed, its form fresh. */
-function versionOf(values: ServiceFormValues) {
-  return Object.values(values).join("\u0000");
-}
-
-export function ServicesList({ services, categories, create }: ServicesListProps) {
+export function ServicesList({ services, categories, create, renderId }: ServicesListProps) {
   const t = useTranslations("AdminServicesPage");
 
   return (
     <div className="overflow-hidden rounded-lg bg-card">
       {create ? (
         <div className="border-b border-border">
-          <ServiceCreatePanel initial={create} categories={categories} summary={<CreateSummary />} />
+          <ServiceCreatePanel
+            key={renderId}
+            initial={create}
+            categories={categories}
+            summary={<CreateSummary />}
+            // For the eye the summary says what the panel is; this is the heading to jump to.
+            heading={<h2 className="sr-only">{t("create.title")}</h2>}
+          />
         </div>
       ) : null}
       {services.length > 0 ? (
@@ -59,16 +68,14 @@ export function ServicesList({ services, categories, create }: ServicesListProps
             <span className="text-right">{t("list.price")}</span>
             <span>{t("list.status")}</span>
             <span className="text-right">{t("list.order")}</span>
-            <span className="sr-only">{t("list.edit")}</span>
           </div>
           <ul aria-label={t("list.label")} className="divide-y divide-border">
             {services.map((service) => {
-              const values = serviceToFormValues(service);
               return (
                 <li key={service.id}>
                   <ServiceEditPanel
-                    key={versionOf(values)}
-                    initial={values}
+                    key={renderId}
+                    initial={serviceToFormValues(service)}
                     categories={categories}
                     summary={<ServiceSummary service={service} />}
                   />
@@ -85,7 +92,7 @@ export function ServicesList({ services, categories, create }: ServicesListProps
 const chevronClass =
   "flex size-touch items-center justify-center justify-self-end text-ink-muted transition-[rotate] duration-150 ease-out-quart group-open:rotate-180 motion-reduce:transition-none";
 
-/** The create panel's own row: what it is, in a heading, and its chevron. */
+/** The create panel's own row: what it is and its chevron. Its heading sits in the panel (service-panel.tsx). */
 function CreateSummary() {
   const t = useTranslations("AdminServicesPage.create");
   return (
@@ -96,7 +103,7 @@ function CreateSummary() {
         <Plus className="size-5" strokeWidth={2.5} />
       </span>
       <span className="flex min-w-0 flex-1 flex-col">
-        <h2 className="text-base font-semibold text-ink">{t("title")}</h2>
+        <span className="text-base font-semibold text-ink">{t("title")}</span>
         <span className="text-xs text-ink-muted">{t("description")}</span>
       </span>
       <span aria-hidden="true" className={chevronClass}>

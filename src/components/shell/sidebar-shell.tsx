@@ -20,11 +20,14 @@ type SidebarShellProps = {
       /** The redesign's dark-green sidebar (the admin console, Phase 13, markdown/design.md). */
       tone: "forest";
       /** The card under the wordmark, in place of the role badge: "Admin Dashboard" over "Operasional HomeKlin". */
-      roleCard: { label: string; title: string };
+      roleCard: RoleCard;
       /** Where the wordmark leads (the console's start page) and its accessible name. */
       home: HomeLink;
     }
 );
+
+/** The card under the wordmark. labelLang: the label's language, when it is not the page's. */
+type RoleCard = { label: string; labelLang?: string; title: string };
 
 // Agency and admin shell: desktop-first with a fixed sidebar; a top bar with a menu below 1024 px.
 // The sidebar closes with the account (who is signed in, and signing out) and the language switch,
@@ -93,14 +96,16 @@ function LightSidebar({ nav, roleLabel }: { nav: BackOfficeNavKey; roleLabel: st
 // The redesign's sidebar (markdown/design.md, Layout, sidebar): 256 px of `band` with no edge, the lime
 // wordmark tile, a role card on band-raised, the dark items, then the on-dark language switch and the
 // signed-in user. on-dark-focus turns the focus ring lime (12.0:1 on band, 8.4:1 on band-raised).
-function ForestSidebar({ nav, roleCard, home }: { nav: BackOfficeNavKey; roleCard: { label: string; title: string }; home: HomeLink }) {
+function ForestSidebar({ nav, roleCard, home }: { nav: BackOfficeNavKey; roleCard: RoleCard; home: HomeLink }) {
   return (
     <aside className="on-dark-focus fixed inset-y-0 left-0 z-(--z-sticky) hidden w-sidebar flex-col bg-band text-on-band lg:flex">
       <div className="flex h-16 items-center px-3">
         <HomeWordmark home={home} />
       </div>
       <p className="mx-3 flex flex-col gap-0.5 rounded-md bg-band-raised px-4 py-3">
-        <span className="text-xs text-on-band-muted">{roleCard.label}</span>
+        <span lang={roleCard.labelLang} className="text-xs text-on-band-muted">
+          {roleCard.label}
+        </span>
         <span className="text-sm font-semibold text-on-band">{roleCard.title}</span>
       </p>
       <div className="flex-1 overflow-y-auto px-3 py-4">

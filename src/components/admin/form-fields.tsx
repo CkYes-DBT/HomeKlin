@@ -2,7 +2,7 @@
 
 import { Check, ChevronDown, CircleAlert } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
-import { panelLook } from "@/components/auth/form-controls";
+import { appLook, panelLook } from "@/components/auth/form-controls";
 
 // The back-office form controls that src/components/auth/form-controls.tsx does not have: a select, a
 // multi-line text field, a checkbox and a value that cannot be changed. They look like its TextField
@@ -16,13 +16,6 @@ type Notes = { hint?: string; error?: string };
 
 /** app: the T3b look (agency slots, reviews); panel: the redesign (admin service panels, R4). */
 type Look = "app" | "panel";
-
-const appLook = {
-  field: "flex flex-col gap-2",
-  label: "px-1 text-sm font-medium text-ink",
-  hint: "px-1 text-sm text-ink-faint",
-  error: "flex items-start gap-1.5 px-1 text-sm font-medium text-danger",
-};
 
 const looks = { app: appLook, panel: panelLook };
 

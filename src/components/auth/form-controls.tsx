@@ -37,7 +37,8 @@ export const panelLook = {
   error: "flex items-start gap-1.5 text-sm font-medium text-danger",
 };
 
-const appLook = {
+/** The T3b app look of a field (sign-in, customer forms; agency slots and reviews via admin/form-fields). */
+export const appLook = {
   field: "flex flex-col gap-2",
   label: "px-1 text-sm font-medium text-ink",
   input: inputClass,

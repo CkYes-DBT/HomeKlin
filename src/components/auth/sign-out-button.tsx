@@ -42,7 +42,7 @@ function SignOutSubmit({ look }: { look: "button" | "linkOnDark" }) {
   const { pending } = useFormStatus();
   // The text button shows an icon only while it works; the pill always carries one.
   const icon = pending ? (
-    <LoaderCircle className="size-4.5 shrink-0 animate-spin" aria-hidden="true" />
+    <LoaderCircle className="size-4.5 shrink-0 animate-spin motion-reduce:animate-none" aria-hidden="true" />
   ) : look === "button" ? (
     <LogOut className="size-4.5 shrink-0" aria-hidden="true" />
   ) : null;

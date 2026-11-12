@@ -324,7 +324,7 @@ Conventions for every task: tests written first; `npm run typecheck`, `npm run l
 - [x] **R6 Retire /admin/services/new and /edit** (S) — done 2026-11-12 (old addresses redirect behind the admin check: new to `?new`, edit to the list; switch and 7 unit tests for it removed; 752 unit, 386/387 e2e with one sign-in flake that passed alone): delete both routes, the row switch (`service-switch.tsx`, `setServiceActive`, their unit tests) and unused messages; rewrite `admin-services.desktop.spec.ts`, `admin-to-catalog.desktop.spec.ts`, `no-horizontal-scroll.mobile.spec.ts`, `t7b.screenshots.ts`; update `docs/frontend-map.md`
   - Accept: nothing links to the old routes; no spec removed, only rewritten.
   - Verify: `npm run check`; `npm run test:e2e`.
-- [ ] **R7 Polish and proof** (S): screenshots at 360, 390, 1280, 1440 px in both languages under `docs/screenshots/r-admin-services/`; `impeccable` check against the mock; `code-review-and-quality`
+- [x] **R7 Polish and proof** (S) — done 2026-11-12: code review 0 critical, 1 high (H1, check-in status, for the user), 3 medium and 7 low fixed (stale panel after save, focus to the notice, useId field ids, no-JS and redirect tests, pill placeholder, lang on the card, duplicate-code test, getService removed); 749 unit pass; e2e 385 of 387 (one load flake; recordings test broken by leftover test data): screenshots at 360, 390, 1280, 1440 px in both languages under `docs/screenshots/r-admin-services/`; `impeccable` check against the mock; `code-review-and-quality`
   - Verify: review findings fixed or logged.
 
 ### Checkpoint B: admin services screen

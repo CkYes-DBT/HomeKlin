@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { FormAlert, TextField } from "@/components/auth/form-controls";
 import { Link } from "@/i18n/navigation";
 import type { ServiceFormValues } from "@/lib/validation/service";
@@ -24,7 +24,9 @@ type PanelProps = {
 //
 // Who decides whether a panel is open: the browser does, as the row is clicked, Enter or Space. React
 // only says "open" when the last save was refused, so the messages are in view; it never says
-// "closed", so rendering again (a new answer, the list coming back) never shuts a row admin opened.
+// "closed", so rendering again in the browser never shuts a row admin opened. A save that goes through
+// comes back as a new server render, which draws every panel anew (the list keys them on a new id each
+// render, services-list.tsx): closed, on the stored values, with no message from an earlier refusal.
 // A form sent as a plain post (before the page's script has loaded) is still checked on the server and
 // nothing invalid is saved, but the page comes back as it was, rows closed and without the messages:
 // the role-checked list streams in behind Suspense, and React does not hand that post's answer back
@@ -66,7 +68,6 @@ function EditPanel({
       {summary}
       <PanelForm
         mode="edit"
-        idPrefix={`service-${initial.id}`}
         initial={initial}
         categories={categories}
         service={service}
@@ -85,7 +86,7 @@ function EditPanel({
  * link back to the list, which closes it with or without JavaScript. When it opens, the cursor goes to
  * its first field, so a keyboard user lands in the form.
  */
-export function ServiceCreatePanel({ initial, categories, summary }: PanelProps) {
+export function ServiceCreatePanel({ initial, categories, summary, heading }: PanelProps & { heading: ReactNode }) {
   const service = useServiceForm("create", initial);
   const { form } = service;
 
@@ -98,7 +99,7 @@ export function ServiceCreatePanel({ initial, categories, summary }: PanelProps)
       {summary}
       <PanelForm
         mode="create"
-        idPrefix="new-service"
+        heading={heading}
         initial={initial}
         categories={categories}
         service={service}
@@ -118,8 +119,8 @@ const cancelClass =
 
 type PanelFormProps = {
   mode: "create" | "edit";
-  /** Makes every field id unique on the page, which holds one form per service. */
-  idPrefix: string;
+  /** The panel's heading, first in the form (the create panel's "Layanan baru"). */
+  heading?: ReactNode;
   initial: ServiceFormValues;
   categories: Categories;
   service: ReturnType<typeof useServiceForm>;
@@ -131,9 +132,13 @@ type PanelFormProps = {
 // price and order in one row, the checkbox, and the buttons at the bottom left. Below 1024 px the
 // fields stack (duration, price and order share a row from 768 px). The names and descriptions carry
 // their lang, so a screen reader reads each in its own language.
-function PanelForm({ mode, idPrefix, initial, categories, service, cancel }: PanelFormProps) {
+function PanelForm({ mode, heading, initial, categories, service, cancel }: PanelFormProps) {
   const { t, locale, formAction, pending, form, resultKey, values, errorOf, formMessage } = service;
-  const id = (field: string) => `${idPrefix}-${field}`;
+  // The page holds one form per service, so every id (field, hint, error) starts with this form's own
+  // useId. A service id cannot do that: ids may hold hyphens, so "deep" and "deep-name" would give two
+  // fields the same id.
+  const formId = useId();
+  const id = (field: string) => `${formId}-${field}`;
 
   return (
     <form
@@ -142,6 +147,7 @@ function PanelForm({ mode, idPrefix, initial, categories, service, cancel }: Pan
       noValidate
       className="flex flex-col gap-5 bg-field px-4 pt-2 pb-6 md:px-6"
     >
+      {heading}
       <input type="hidden" name="locale" value={locale} />
       {mode === "edit" ? <input type="hidden" name="id" value={initial.id} /> : null}
 

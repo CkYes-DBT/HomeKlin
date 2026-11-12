@@ -23,6 +23,23 @@ test.afterAll(async () => {
   if (created.length > 0) await adminClient().from("services").delete().in("id", created.splice(0));
 });
 
+/** Stores a fictional, switched-off service directly, last in the list, for a test that changes it. */
+async function storeService(service: { id: string; nameId: string; nameEn: string }) {
+  const { error } = await adminClient().from("services").insert({
+    id: service.id,
+    category: "rooms",
+    name_id: service.nameId,
+    name_en: service.nameEn,
+    description_id: "Layanan uji otomatis. Tidak dijual.",
+    description_en: "An automated test service. Not for sale.",
+    price_idr: 85_000,
+    duration_minutes: 60,
+    is_active: false,
+    sort_order: 999,
+  });
+  if (error) throw new Error(`Could not store the test service: ${error.message}`);
+}
+
 /** What a visitor's catalog (the customer pages' read, src/lib/catalog/catalog.ts) says about a service. */
 async function visitorSees(id: string): Promise<{ price_idr: number } | undefined> {
   const { data, error } = await visitorClient().rpc("search_services", { p_query: null, p_category: null, p_area: null });
@@ -80,7 +97,7 @@ test.describe("an admin", () => {
     // The column header row is for the eye only (aria-hidden): each row says its own values.
     const header = page.getByTestId("services-header");
     await expect(header).toHaveAttribute("aria-hidden", "true");
-    await expect(header).toHaveText(/Foto\s*Layanan\s*Durasi\s*Harga\s*Status\s*Urutan\s*Ubah/);
+    await expect(header).toHaveText(/Foto\s*Layanan\s*Durasi\s*Harga\s*Status\s*Urutan$/);
     for (const column of ["Foto", "Layanan", "Durasi", "Harga", "Status", "Urutan"]) {
       await expect(header.getByText(column, { exact: true })).toBeVisible();
     }
@@ -160,9 +177,10 @@ test.describe("an admin", () => {
       await panel.getByRole("button", { name: "Simpan layanan" }).click();
 
       await expect(page).toHaveURL(`/admin/services?created=${service.id}`);
-      await expect(page.getByRole("status").filter({ hasText: `${service.nameId} ditambahkan.` })).toContainText(
-        "belum tampil di katalog pelanggan",
-      );
+      const added = page.getByRole("status").filter({ hasText: `${service.nameId} ditambahkan.` });
+      await expect(added).toContainText("belum tampil di katalog pelanggan");
+      // The cursor goes to the notice, so a screen reader reads what was done (R7, M2).
+      await expect(added).toBeFocused();
       await expect(createPanel(page)).toHaveCount(0);
       const row = rowOf(page, service.nameId);
       await expect(row.locator("summary")).toContainText("Sekitar 1 jam 30 menit");
@@ -188,7 +206,7 @@ test.describe("an admin", () => {
       await panel.getByRole("button", { name: "Simpan perubahan" }).click();
 
       await expect(page).toHaveURL(`/admin/services?saved=${service.id}`);
-      await expect(page.getByRole("status").filter({ hasText: `Perubahan pada ${service.nameId} disimpan.` })).toBeVisible();
+      await expect(page.getByRole("status").filter({ hasText: `Perubahan pada ${service.nameId} disimpan.` })).toBeFocused();
       await expect(rowOf(page, service.nameId).locator("summary")).toContainText(/Rp\s95\.000/);
       // A saved panel closes, as it does when the page loads anew without JavaScript.
       await expect(rowOf(page, service.nameId).locator("details")).not.toHaveAttribute("open");
@@ -331,6 +349,62 @@ test.describe("an admin", () => {
     expect(data?.name_id).toBe("Pembersihan Rutin");
   });
 
+  // R7 review, M1: a refused save leaves its answer in the form; the save that follows must still
+  // close the row and drop the messages and what was typed, also when the address does not change.
+  test("a save after a refused one closes the row with no messages, also on the same address", async ({ page }) => {
+    const service = testService();
+    await storeService(service);
+    const priceHint = "Tulis harga dalam rupiah penuh, misalnya 85000 atau 85.000.";
+
+    await page.goto("/admin/services");
+    for (const address of [`/admin/services?saved=${service.id}`, `/admin/services?saved=${service.id}`]) {
+      const panel = await openRow(page, service.nameId);
+      const price = panel.getByLabel("Harga penuh (Rp)");
+      await expect(price).toHaveValue("85000");
+      await price.fill("85,5");
+      await panel.getByRole("button", { name: "Simpan perubahan" }).click();
+      await expect(panel.getByText(priceHint)).toBeVisible();
+
+      // The stored price typed back: a save with nothing changed.
+      await price.fill("85000");
+      await panel.getByRole("button", { name: "Simpan perubahan" }).click();
+      await expect(page).toHaveURL(address);
+      const notice = page.getByRole("status").filter({ hasText: `Perubahan pada ${service.nameId} disimpan.` });
+      await expect(notice).toBeVisible();
+      // M2: the cursor is on the notice, so a screen reader reads what was done.
+      await expect(notice).toBeFocused();
+      const row = rowOf(page, service.nameId).locator("details");
+      await expect(row).not.toHaveAttribute("open");
+      await expect(row.getByText(priceHint)).toHaveCount(0);
+      // The form's message region is there, with nothing in it (a closed row hides it from roles).
+      await expect(row.locator('[role="alert"]')).toBeEmpty();
+      await expect(row.getByLabel("Harga penuh (Rp)")).toHaveValue("85000");
+    }
+  });
+
+  // R7 review, M3: ids may hold hyphens, so "<id>-name" must not give a field the id of another
+  // service's field. Every id on the page is unique and every label finds its own field.
+  test("two services whose ids overlap keep their fields apart", async ({ page }) => {
+    const base = testService();
+    const longer = { id: `${base.id}-name`, nameId: `${base.nameId} Panjang`, nameEn: `${base.nameEn} Long` };
+    created.push(longer.id);
+    await storeService(base);
+    await storeService(longer);
+
+    await page.goto("/admin/services");
+    await expect(rowOf(page, longer.nameId)).toBeVisible();
+    const ids = await page.locator("[id]").evaluateAll((elements) => elements.map((element) => element.id));
+    expect(ids.filter((id, index) => ids.indexOf(id) !== index)).toEqual([]);
+
+    const panel = await openRow(page, longer.nameId);
+    await expect(panel.getByLabel("ID layanan")).toHaveValue(longer.id);
+    await expect(panel.getByLabel("Nama layanan (Bahasa Indonesia)")).toHaveValue(longer.nameId);
+    const first = rowOf(page, base.nameId).filter({ hasNotText: longer.nameId });
+    await first.locator("summary").click();
+    await expect(first.getByLabel("Nama layanan (Bahasa Indonesia)")).toHaveValue(base.nameId);
+    await expect(first.getByLabel("ID layanan")).toHaveValue(base.id);
+  });
+
   // R6: the pages of their own are gone. A bookmark of one, even for a service that does not exist,
   // leads to the list in the same language, never to a dead end.
   test("an old address to add or change a service leads to the list, in the same language", async ({ page }) => {
@@ -371,5 +445,34 @@ test.describe("a signed-in customer", () => {
     // The old address to add a service checks the role before it sends anyone on (R6).
     await page.goto("/admin/services/new");
     await expect(page).toHaveURL("/home");
+    // And so does the old address to change one (R7, L4).
+    const edit = await (await page.request.get("/admin/services/edit?id=regular")).text();
+    expect(edit).not.toContain("Layanan HomeKlin dan harganya");
+    expect(edit).not.toContain("Simpan perubahan");
+    await page.goto("/admin/services/edit?id=regular");
+    await expect(page).toHaveURL("/home");
+  });
+});
+
+// R7 review, L3: without JavaScript. The role-checked list and the "Tambah layanan" pill stream in
+// behind <Suspense>, and without a script the browser never swaps the streamed part in, so the page
+// shows its prerendered header and the loading placeholder; the create panel is in the HTML but hidden.
+// What the server sent is still plain HTML: the way to add a service and the create panel's Batal are
+// ordinary links.
+test.describe("an admin without JavaScript", () => {
+  test.use({ ...signedInAs.admin, javaScriptEnabled: false });
+
+  test("gets the page header, and the links to add a service and to cancel are plain links", async ({ page }) => {
+    await page.goto("/admin/services?new");
+    await expect(page.getByRole("heading", { level: 1, name: "Layanan dan harga" })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Memuat" })).toBeVisible();
+    // The streamed list is in the page, but hidden until a script would show it.
+    const panel = createPanel(page);
+    await expect(panel).toHaveCount(1);
+    await expect(panel).toBeHidden();
+
+    const html = await (await page.request.get("/admin/services?new")).text();
+    expect(html).toMatch(/<a[^>]*href="\/admin\/services\?new"[^>]*>(?:(?!<\/a>)[\s\S])*Tambah layanan/);
+    expect(html).toMatch(/<a[^>]*href="\/admin\/services"[^>]*>Batal<\/a>/);
   });
 });

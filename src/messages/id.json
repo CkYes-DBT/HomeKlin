@@ -1107,8 +1107,7 @@
       "duration": "Durasi",
       "price": "Harga",
       "status": "Status",
-      "order": "Urutan",
-      "edit": "Ubah"
+      "order": "Urutan"
     },
     "row": {
       "open": "Ubah layanan",

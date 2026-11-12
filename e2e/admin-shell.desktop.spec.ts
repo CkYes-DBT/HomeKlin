@@ -52,7 +52,9 @@ test.describe("the admin sidebar at 1440 px", () => {
   test("shows the role card, the language switch and a Keluar button", async ({ page }) => {
     await page.goto("/admin/monitor");
     const sidebar = page.locator("aside");
+    // English on the Indonesian page too (the user's choice), marked so a screen reader says it in English.
     await expect(sidebar.getByText("Admin Dashboard", { exact: true })).toBeVisible();
+    await expect(sidebar.getByText("Admin Dashboard", { exact: true })).toHaveAttribute("lang", "en");
     await expect(sidebar.getByText("Operasional HomeKlin", { exact: true })).toBeVisible();
     await expect(sidebar.getByRole("group", { name: "Bahasa" })).toBeVisible();
 
@@ -67,6 +69,8 @@ test.describe("the admin sidebar at 1440 px", () => {
     await page.goto("/en/admin/services");
     const sidebar = page.locator("aside");
     await expect(sidebar.getByText("Admin Dashboard", { exact: true })).toBeVisible();
+    // The page is English already, so the label needs no lang of its own.
+    await expect(sidebar.getByText("Admin Dashboard", { exact: true })).not.toHaveAttribute("lang");
     await expect(sidebar.getByText("HomeKlin operations", { exact: true })).toBeVisible();
     const current = page
       .getByRole("navigation", { name: "Admin navigation" })
