@@ -18,12 +18,14 @@ export async function AccountSummary({ variant = "page", tone = "default" }: Acc
   const name = user.fullName.trim() || t("noName");
 
   // On the dark band: the lime-wash initials (9.9:1), the name in on-band (13.6:1 on band) and "Keluar"
-  // as an underlined text button under it. "Masuk sebagai" stays for screen readers only.
+  // as an underlined text button under it. "Masuk sebagai" stays for screen readers only. The name (20)
+  // and the link's text (20) with 4 px between fill exactly the 44 px avatar; the link's 44 px hit area
+  // reaches past its text without adding height.
   if (variant === "sidebar" && tone === "forest") {
     return (
       <div className="flex items-center gap-3">
-        <UserAvatar name={user.fullName} size="md" palette="forest" />
-        <div className="flex min-w-0 flex-col">
+        <UserAvatar name={user.fullName} size="touch" palette="forest" />
+        <div className="flex min-w-0 flex-col gap-1">
           <p className="truncate text-sm font-semibold text-on-band">
             <span className="sr-only">{t("signedInAs")} </span>
             {name}

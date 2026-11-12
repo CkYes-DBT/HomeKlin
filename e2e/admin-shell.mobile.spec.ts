@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { signedInAs } from "./setup/auth-state";
+import { expectAccountFitsAvatar } from "./admin-account";
 
 // R2 on a phone: below 1024 px the admin sidebar becomes a dark-green top bar whose Menu opens the same
 // dark sections, the language switch and the signed-in user, without sideways scrolling at 360 px.
@@ -24,6 +25,7 @@ test.describe("the admin top bar at 360 px", () => {
       "page",
     );
     await expect(header.getByRole("button", { name: "Keluar" })).toBeVisible();
+    await expectAccountFitsAvatar(header);
     await expect(header.getByRole("group", { name: "Bahasa" })).toBeVisible();
 
     // The wordmark in the bar leads to live monitoring, the console's start page (R2b).

@@ -18,9 +18,11 @@ type SignOutButtonProps = {
 const looks = {
   button:
     "inline-flex min-h-touch w-full items-center justify-center gap-2 rounded-full border border-border-control bg-surface px-5 text-sm font-semibold whitespace-nowrap text-ink transition-[background-color,transform] duration-150 ease-out-quart hover:bg-surface-sunken active:scale-[0.98] active:bg-brand-50 disabled:cursor-progress disabled:bg-surface-sunken disabled:text-ink-muted disabled:active:scale-100",
-  // on-band-muted is 8.3:1 on band; hover and press brighten it to on-band (13.6:1).
+  // on-band-muted is 8.3:1 on band; hover and press brighten it to on-band (13.6:1). The box is only the
+  // 20 px text line, so it sits inside the avatar's height; the ::before stretches the hit area to 44 px
+  // (8 px up into the gap and the name's empty leading, 16 px down into the padding below).
   linkOnDark:
-    "-mx-1 inline-flex min-h-touch min-w-touch items-center gap-1.5 rounded-sm px-1 text-sm font-medium whitespace-nowrap text-on-band-muted underline decoration-1 underline-offset-4 transition-colors duration-150 ease-out-quart hover:text-on-band active:text-lime disabled:cursor-progress disabled:no-underline",
+    "relative -mx-1 inline-flex min-w-touch items-center before:absolute before:inset-x-0 before:-top-2 before:-bottom-4 before:content-[''] gap-1.5 rounded-sm px-1 text-sm font-medium whitespace-nowrap text-on-band-muted underline decoration-1 underline-offset-4 transition-colors duration-150 ease-out-quart hover:text-on-band active:text-lime disabled:cursor-progress disabled:no-underline",
 };
 
 // Signing out (T5): a form that posts to the signOut Server Action, which ends the session in this

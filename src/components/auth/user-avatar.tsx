@@ -3,8 +3,11 @@ import { UserRound } from "lucide-react";
 type UserAvatarProps = {
   /** The user's full name; the avatar shows its initials. */
   name: string;
-  /** sm 36 px (inside a 44 px chip), md 40 px (back-office sidebar), lg 56 px (account page). */
-  size?: "sm" | "md" | "lg";
+  /**
+   * sm 36 px (inside a 44 px chip), md 40 px (back-office sidebar), touch 44 px (the admin's dark
+   * sidebar, as tall as the name and "Keluar" beside it), lg 56 px (account page).
+   */
+  size?: "sm" | "md" | "touch" | "lg";
   /** evergreen: the T3b apps. forest: the redesign (the landing page). */
   palette?: "evergreen" | "forest";
 };
@@ -12,6 +15,7 @@ type UserAvatarProps = {
 const sizes = {
   sm: "size-9 text-xs",
   md: "size-10 text-sm",
+  touch: "size-touch text-sm",
   lg: "size-14 text-lg",
 };
 

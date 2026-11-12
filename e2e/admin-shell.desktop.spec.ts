@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { signedInAs } from "./setup/auth-state";
+import { expectAccountFitsAvatar } from "./admin-account";
 
 // R2 on a desk: the admin sidebar is the redesign's dark-green band (markdown/design.md, Layout, "Agency
 // and admin back office"): 256 px of `band`, a role card, 44 px items with the current one in lime on
@@ -60,9 +61,7 @@ test.describe("the admin sidebar at 1440 px", () => {
 
     const signOut = sidebar.getByRole("button", { name: "Keluar" });
     await expect(signOut).toBeVisible();
-    const signOutBox = await signOut.boundingBox();
-    expect(signOutBox?.height).toBeGreaterThanOrEqual(44);
-    expect(signOutBox?.width).toBeGreaterThanOrEqual(44);
+    await expectAccountFitsAvatar(sidebar);
   });
 
   test("reads the same in English", async ({ page }) => {
