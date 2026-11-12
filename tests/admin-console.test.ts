@@ -27,6 +27,7 @@ function job(id: string, overrides: Partial<AdminJob> = {}): AdminJob {
     recordingExpiresAt: null,
     recordingDeleted: false,
     agencyName: "Uji Agensi",
+    orderCode: "HK-1001",
     ...overrides,
   };
 }

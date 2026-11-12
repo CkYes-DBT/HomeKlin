@@ -83,7 +83,8 @@ export type BackOfficeJob = {
 };
 
 export type AgencyJob = BackOfficeJob & { address: string; contactPhone: string | null };
-export type AdminJob = BackOfficeJob & { agencyName: string };
+/** orderCode: the short order number, "HK-1042" (20261112100000_admin_jobs_code.sql). */
+export type AdminJob = BackOfficeJob & { agencyName: string; orderCode: string };
 
 type BackOfficeRow = {
   order_id: string;
@@ -129,8 +130,12 @@ export async function listAgencyJobs(client: SupabaseClient): Promise<AgencyJob[
 
 /** Every paid job, for admin, latest first. */
 export async function listAdminJobs(client: SupabaseClient): Promise<AdminJob[]> {
-  type Row = BackOfficeRow & { agency_name: string };
-  return (await read<Row>(client, "admin_jobs")).map((row) => ({ ...backOfficeJob(row), agencyName: row.agency_name }));
+  type Row = BackOfficeRow & { agency_name: string; order_code: string };
+  return (await read<Row>(client, "admin_jobs")).map((row) => ({
+    ...backOfficeJob(row),
+    agencyName: row.agency_name,
+    orderCode: row.order_code,
+  }));
 }
 
 export type AgencyCleaner = { id: string; fullName: string; photoUrl: string | null };

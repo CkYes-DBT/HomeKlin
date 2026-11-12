@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { listAdminJobs } from "@/lib/jobs/jobs";
 import { listLiveStreams } from "@/lib/stream/streams";
 import { adminClient } from "./test-project";
 import { createWorld, hours, type World } from "./world";
@@ -73,5 +74,11 @@ describe("order codes", { timeout: 60_000 }, () => {
     expect(error).toBeNull();
     const streams = await listLiveStreams(world.users.admin.client);
     expect(streams.find((stream) => stream.orderId === orderId)?.orderCode).toBe(await codeOf(orderId));
+  });
+
+  it("is listed with each job admin sees", async () => {
+    const orderId = await world.job({ startsAt: new Date(Date.now() + hours(2)) });
+    const jobs = await listAdminJobs(world.users.admin.client);
+    expect(jobs.find((job) => job.id === orderId)?.orderCode).toBe(await codeOf(orderId));
   });
 });
