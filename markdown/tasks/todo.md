@@ -305,6 +305,10 @@ Conventions for every task: tests written first; `npm run typecheck`, `npm run l
   - Accept: matches the mock at 1440 px; agency and owner shells unchanged; focus ring lime on the band.
   - Verify: `npm run check`; `npm run test:e2e`; screenshots of admin, agency, owner.
 
+- [ ] **R2b Admin menu as in the mock** (S): five items in this order: Pemantauan langsung (`/admin/monitor`, video icon), Layanan dan harga (`/admin/services`, grid icon), Obrolan bantuan (`/admin/tickets`, chat icon), Pertanyaan umum (`/admin/faq`, help-circle icon), Rekaman (`/admin/recordings`, history icon); English "Live monitoring", "Services and prices", "Support chats", "FAQ", "Recordings". Dasbor goes (user, 2026-11-12): `/admin` redirects to `/admin/monitor`; the logo links there; dashboard-only components are removed, shared ones (`jobs-table`, used by agency) stay; its e2e and unit tests are rewritten for the new start page, not dropped
+  - Accept: the menu matches the mock; `/admin` and `/en/admin` land on the live page; `tests/protected-pages.test.ts` still passes.
+  - Verify: `npm run check`; `npm run test:e2e`.
+
 ### Checkpoint A: admin shell
 - [ ] Check and e2e pass; screenshots show only admin changed; user review.
 
@@ -324,4 +328,14 @@ Conventions for every task: tests written first; `npm run typecheck`, `npm run l
   - Verify: review findings fixed or logged.
 
 ### Checkpoint B: admin services screen
+- [ ] Everything passes; matches the mock at 1440 and 360 px; user review.
+
+- [ ] **M1 Pemantauan langsung screen** (M): port `/admin/monitor` to the user's mock `Admin-Live` (2026-11-12): h1 "Pemantauan langsung" (no "Contoh", real data) and a summary line "N pekerjaan sedang berlangsung. M terkendala." (terkendala = weak or disconnected); grid `repeat(auto-fill, minmax(300px, 1fr))`, 20 px gap; white `lg` card, 12 px padding; 16:9 video frame `md` radius (empty frame on a pale green fill with a 44 px white icon circle); status chip (live dot + "Sedang berlangsung" on success-surface, wifi icon + "Sinyal lemah" on warning-surface, wifi-off + "Terputus" on danger-surface; a disconnected frame on sunken with "Siaran terputus"); on the right of the chip the start time "Mulai 09.12" instead of the mock's order number (no short number exists; user, 2026-11-12); cleaner name (600), "service, area" (13 px muted), agency name (12 px muted); "Buka" (underlined, 44 px) puts that card's video into full screen (user, 2026-11-12). Keep FeedStatus, FeedVideo and the server-signed video links as they are
+  - Accept: matches the mock at 1440 px; one column at 360 px with no sideways scroll; status never colour alone.
+  - Verify: `npm run check`; `npm run test:e2e`; screenshots.
+- [ ] **M2 Live filters** (S): segmented toggle "Semua / Terkendala" and the "Area layanan" select (all areas plus each area), as query parameters so they work without JavaScript
+  - Accept: filters combine; the summary line counts what is shown; empty result has a plain message.
+  - Verify: e2e.
+
+### Checkpoint C: admin live screen
 - [ ] Everything passes; matches the mock at 1440 and 360 px; user review.
