@@ -3,6 +3,7 @@ import { Plus, Tags } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { categoryOptions } from "@/components/admin/category-options";
 import { Notice } from "@/components/admin/notice";
 import { ServicesList } from "@/components/admin/services-list";
 import { GateFallback } from "@/components/auth/gate-fallback";
@@ -10,11 +11,12 @@ import { RoleGate } from "@/components/auth/role-gate";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
-import { listAllServices, type AdminService } from "@/lib/catalog/admin";
+import { ClientMessages } from "@/i18n/client-messages";
+import { listAllServices, nextSortOrder, type AdminService } from "@/lib/catalog/admin";
 import { CatalogError } from "@/lib/catalog/catalog";
 import { formatRupiah } from "@/lib/format";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { parseServiceId } from "@/lib/validation/service";
+import { parseServiceId, type ServiceFormValues } from "@/lib/validation/service";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("AdminServicesPage");
@@ -27,8 +29,9 @@ type SearchParams = PageProps<"/[locale]/admin/services">["searchParams"];
 // title and "Tambah layanan" are prerendered; the list renders inside the page's own role check (a
 // layout's check would not protect it) and is read with the signed-in admin's own client, so row-level
 // security decides what it may see: every service, active or draft. It is never cached, so admin
-// always sees what is stored. After a save the form comes back here with ?created= or ?saved= and the
-// service's id, which says what was done.
+// always sees what is stored. Each row opens its edit form in place (R4); ?new opens an empty form to
+// add a service above the rows (R5). After a save the action comes back here with ?created= or ?saved=
+// and the service's id, which says what was done, and no open panel.
 export default function AdminServicesPage({ searchParams }: PageProps<"/[locale]/admin/services">) {
   const t = useTranslations("AdminServicesPage");
   return (
@@ -39,10 +42,11 @@ export default function AdminServicesPage({ searchParams }: PageProps<"/[locale]
         description={t("description")}
         action={
           // Behind its own role check like the list, so the way to add a service never reaches anyone
-          // but admin; the title stays in the prerendered shell. R5 points it at the create panel.
+          // but admin; the title stays in the prerendered shell. A link, so it opens the create panel
+          // without JavaScript too (R5).
           <Suspense fallback={null}>
             <RoleGate roles={["admin"]}>
-              <ButtonLink href="/admin/services/new" variant="forest" circleIcon={Plus}>
+              <ButtonLink href="/admin/services?new" variant="forest" circleIcon={Plus}>
                 {t("add")}
               </ButtonLink>
             </RoleGate>
@@ -85,6 +89,22 @@ async function AdminServicesContent({ searchParams }: { searchParams: SearchPara
   const createdId = parseServiceId(first(params.created));
   const savedId = parseServiceId(first(params.saved));
   const changed = services.find((service) => service.id === (createdId ?? savedId));
+  // ?new (any value) opens the create panel. A new service starts as a draft, after the last one.
+  const create: ServiceFormValues | undefined =
+    params.new === undefined
+      ? undefined
+      : {
+          id: "",
+          category: "",
+          sortOrder: String(nextSortOrder(services)),
+          nameId: "",
+          nameEn: "",
+          descriptionId: "",
+          descriptionEn: "",
+          priceIdr: "",
+          durationMinutes: "",
+          isActive: false,
+        };
 
   return (
     <>
@@ -100,12 +120,14 @@ async function AdminServicesContent({ searchParams }: { searchParams: SearchPara
             : t("notice.hidden")}
         </Notice>
       ) : null}
-      {services.length === 0 ? (
+      {services.length === 0 && !create ? (
         <EmptyState icon={Tags} title={t("emptyTitle")}>
           {t("emptyBody")}
         </EmptyState>
       ) : (
-        <ServicesList services={services} />
+        <ClientMessages namespaces={["AdminServiceForm"]}>
+          <ServicesList services={services} categories={await categoryOptions()} create={create} />
+        </ClientMessages>
       )}
     </>
   );

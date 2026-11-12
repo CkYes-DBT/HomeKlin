@@ -25,6 +25,7 @@ const pageGroups = [
       "/admin/tickets",
       "/admin/recordings",
       "/admin/services",
+      "/admin/services?new",
       "/admin/services/new",
       "/admin/services/edit?id=regular",
       "/admin/faq",

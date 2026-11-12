@@ -18,21 +18,22 @@ type ServiceFormProps = {
   categories: readonly { value: string; label: string }[];
 };
 
-// Adds or changes one of HomeKlin's services (T7b): its id, type and place in the list, its name and
-// description in both languages side by side, its one price and duration, and whether customers see
-// it. The form posts to a Server Action (src/lib/catalog/admin-actions.ts) that checks the role and
-// every field on the server; each problem comes back per field, in the page's language, and the
-// cursor moves to the first one. It also works before JavaScript loads (a plain form post). Browser
-// validation is off (noValidate), so every message comes from the server.
-// Sources: node_modules/next/dist/docs/01-app/02-guides/forms.md ("Validation errors", "Pending
-// states") and https://react.dev/reference/react/useActionState
-export function ServiceForm({ mode, initial, categories }: ServiceFormProps) {
+/**
+ * What a service form needs from its Server Action, shared by the /new and /edit pages (ServiceForm)
+ * and the list's panels (service-panel.tsx): the answer, the action to post to, whether it is still
+ * saving, the form's ref (the cursor goes to the first field to fix), the values to show and each
+ * field's message in the page's language. The action checks the role and every field on the server
+ * (src/lib/catalog/admin-actions.ts), also when the form goes as a plain post before the page's script
+ * has loaded.
+ * Sources: node_modules/next/dist/docs/01-app/02-guides/forms.md ("Validation errors", "Pending
+ * states") and https://react.dev/reference/react/useActionState
+ */
+export function useServiceForm(mode: ServiceFormProps["mode"], initial: ServiceFormValues) {
   const t = useTranslations("AdminServiceForm");
   const locale = useLocale();
   const [state, formAction, pending] = useActionState(mode === "create" ? createService : updateService, null);
   const form = useFocusFirstError(state);
   const resultKey = useResultKey(state);
-  const values = state?.values ?? initial;
   const errors = state?.fieldErrors ?? {};
   const errorCount = Object.keys(errors).length;
   const errorOf = (field: ServiceField) => {
@@ -44,12 +45,61 @@ export function ServiceForm({ mode, initial, categories }: ServiceFormProps) {
     : errorCount > 0
       ? t("errorSummary", { count: errorCount })
       : undefined;
+  return {
+    t,
+    locale,
+    formAction,
+    pending,
+    form,
+    resultKey,
+    /** What admin typed after a failed save, otherwise the starting values. */
+    values: state?.values ?? initial,
+    errorOf,
+    formMessage,
+    /** The last answer was a refusal, so the form must stay in view. */
+    failed: Boolean(state?.formError) || errorCount > 0,
+  };
+}
 
-  // A second click while saving would send the same form again; the button keeps its focus instead of
-  // being disabled, so a keyboard user stays where they were.
+type SaveButtonProps = {
+  pending: boolean;
+  label: string;
+  pendingLabel: string;
+  /** app: the T3b evergreen pill of the /new and /edit pages; panel: the redesign's forest pill. */
+  look?: "app" | "panel";
+};
+
+const saveLooks = {
+  app: "rounded-full bg-brand-600 px-6 text-on-brand hover:bg-brand-700 active:bg-brand-800 aria-disabled:bg-brand-700",
+  panel: "rounded-full bg-primary px-6 text-on-primary hover:bg-primary-container active:bg-band aria-disabled:bg-primary-container",
+};
+
+// A second click while saving would send the same form again; the button keeps its focus instead of
+// being disabled, so a keyboard user stays where they were.
+export function SaveButton({ pending, label, pendingLabel, look = "app" }: SaveButtonProps) {
   function holdWhilePending(event: MouseEvent<HTMLButtonElement>) {
     if (pending) event.preventDefault();
   }
+  return (
+    <button
+      type="submit"
+      aria-disabled={pending || undefined}
+      onClick={holdWhilePending}
+      className={`inline-flex min-h-touch items-center justify-center gap-2 text-sm font-semibold whitespace-nowrap transition-[background-color,transform] duration-150 ease-out-quart active:scale-[0.98] aria-disabled:cursor-progress aria-disabled:active:scale-100 ${saveLooks[look]}`}
+    >
+      {pending ? <LoaderCircle className="size-4.5 shrink-0 animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
+      {pending ? pendingLabel : label}
+    </button>
+  );
+}
+
+// Adds or changes one of HomeKlin's services (T7b) on a page of its own (/admin/services/new and
+// /edit, until R6 retires them for the list's panels): its id, type and place in the list, its name
+// and description in both languages side by side, its one price and duration, and whether customers
+// see it. Each problem comes back per field, in the page's language, and the cursor moves to the first
+// one. Browser validation is off (noValidate), so every message comes from the server.
+export function ServiceForm({ mode, initial, categories }: ServiceFormProps) {
+  const { t, locale, formAction, pending, form, resultKey, values, errorOf, formMessage } = useServiceForm(mode, initial);
 
   return (
     <form
@@ -184,15 +234,11 @@ export function ServiceForm({ mode, initial, categories }: ServiceFormProps) {
       <div className="border-t border-border px-5 pb-6 md:px-8">
         <FormAlert message={formMessage} tone="danger" resultKey={resultKey} />
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          <button
-            type="submit"
-            aria-disabled={pending || undefined}
-            onClick={holdWhilePending}
-            className="inline-flex min-h-touch items-center justify-center gap-2 rounded-full bg-brand-600 px-6 text-sm font-semibold whitespace-nowrap text-on-brand transition-[background-color,transform] duration-150 ease-out-quart hover:bg-brand-700 active:scale-[0.98] active:bg-brand-800 aria-disabled:cursor-progress aria-disabled:bg-brand-700 aria-disabled:active:scale-100"
-          >
-            {pending ? <LoaderCircle className="size-4.5 shrink-0 animate-spin" aria-hidden="true" /> : null}
-            {pending ? t("pending") : t(mode === "create" ? "submitCreate" : "submitEdit")}
-          </button>
+          <SaveButton
+            pending={pending}
+            label={t(mode === "create" ? "submitCreate" : "submitEdit")}
+            pendingLabel={t("pending")}
+          />
           <ButtonLink href="/admin/services" variant="secondary">
             {t("cancel")}
           </ButtonLink>

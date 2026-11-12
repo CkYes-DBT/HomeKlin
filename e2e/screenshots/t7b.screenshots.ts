@@ -135,7 +135,7 @@ test("the list and the forms on a desktop", async ({ browser }) => {
   for (const width of widths.desktop) await shoot(page, "new-errors-id", width, false);
 
   await page.goto(`/admin/services/edit?id=${serviceId}`);
-  await expect(page.getByLabel("Harga (Rp)")).toHaveValue("175000");
+  await expect(page.getByLabel("Harga penuh (Rp)")).toHaveValue("175000");
   for (const width of widths.desktop) await shoot(page, "edit-id", width, false);
 
   await page.goto("/admin/services/edit?id=tidak-ada");

@@ -16,10 +16,34 @@ type FieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "id" | "className"
   hint?: string;
   /** The problem to fix, in words; the field is marked invalid while there is one. */
   error?: string;
+  /**
+   * app (default): the T3b pill of the sign-in and customer forms. panel: the redesign's back-office
+   * input (markdown/design.md, Forms) for admin's in-list panels: 44 px, small radius, white on the
+   * panel's fill, a 12 px label above. Opt-in, so the customer forms keep their look.
+   */
+  look?: "app" | "panel";
 };
 
 const inputClass =
   "h-12 w-full rounded-full border border-border-control bg-surface px-5 text-base text-ink caret-brand-700 transition-colors duration-150 ease-out-quart placeholder:text-ink-faint hover:border-brand-600 aria-invalid:border-danger aria-invalid:bg-danger-surface disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-sunken";
+
+/** The redesign's input, its label and its notes (look="panel"). */
+export const panelLook = {
+  field: "flex flex-col gap-1.5",
+  label: "text-xs font-semibold text-ink",
+  input:
+    "h-11 w-full rounded-sm border border-border-control bg-card px-3.5 text-base text-ink caret-primary transition-colors duration-150 ease-out-quart placeholder:text-ink-muted hover:border-primary aria-invalid:border-danger aria-invalid:bg-danger-surface disabled:cursor-not-allowed disabled:border-border disabled:bg-sunken lg:text-sm",
+  hint: "text-xs text-ink-muted",
+  error: "flex items-start gap-1.5 text-sm font-medium text-danger",
+};
+
+const appLook = {
+  field: "flex flex-col gap-2",
+  label: "px-1 text-sm font-medium text-ink",
+  input: inputClass,
+  hint: "px-1 text-sm text-ink-faint",
+  error: "flex items-start gap-1.5 px-1 text-sm font-medium text-danger",
+};
 
 /** The ids under a field (hint, then error), for its aria-describedby. */
 function notesFor(id: string, hint?: string, error?: string) {
@@ -29,16 +53,18 @@ function notesFor(id: string, hint?: string, error?: string) {
   return { hintId, errorId, describedBy };
 }
 
-function FieldNotes({ hint, hintId, error, errorId }: { hint?: string; hintId?: string; error?: string; errorId?: string }) {
+type FieldNotesProps = { hint?: string; hintId?: string; error?: string; errorId?: string; look?: typeof appLook };
+
+function FieldNotes({ hint, hintId, error, errorId, look = appLook }: FieldNotesProps) {
   return (
     <>
       {hint ? (
-        <p id={hintId} className="px-1 text-sm text-ink-faint">
+        <p id={hintId} className={look.hint}>
           {hint}
         </p>
       ) : null}
       {error ? (
-        <p id={errorId} className="flex items-start gap-1.5 px-1 text-sm font-medium text-danger">
+        <p id={errorId} className={look.error}>
           <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </p>
@@ -47,21 +73,22 @@ function FieldNotes({ hint, hintId, error, errorId }: { hint?: string; hintId?: 
   );
 }
 
-export function TextField({ id, label, hint, error, ...input }: FieldProps) {
+export function TextField({ id, label, hint, error, look: lookName = "app", ...input }: FieldProps) {
   const notes = notesFor(id, hint, error);
+  const look = lookName === "panel" ? panelLook : appLook;
   return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor={id} className="px-1 text-sm font-medium text-ink">
+    <div className={look.field}>
+      <label htmlFor={id} className={look.label}>
         {label}
       </label>
       <input
         id={id}
         aria-invalid={error ? true : undefined}
         aria-describedby={notes.describedBy}
-        className={inputClass}
+        className={look.input}
         {...input}
       />
-      <FieldNotes hint={hint} error={error} {...notes} />
+      <FieldNotes hint={hint} error={error} look={look} {...notes} />
     </div>
   );
 }

@@ -1117,13 +1117,6 @@
       "draft": "Draft",
       "order": "Order"
     },
-    "panel": {
-      "nameId": "Name (Indonesian)",
-      "nameEn": "Name (English)",
-      "descriptionId": "Description (Indonesian)",
-      "descriptionEn": "Description (English)",
-      "order": "Display order"
-    },
     "categories": {
       "whole-home": "Whole home",
       "rooms": "Single rooms",
@@ -1134,12 +1127,15 @@
       "minutes": "About {minutes, plural, one {# minute} other {# minutes}}",
       "hoursMinutes": "About {hours, plural, one {# hour} other {# hours}} {minutes, plural, one {# minute} other {# minutes}}"
     },
-    "edit": "Edit",
     "notice": {
       "created": "{name} added.",
       "saved": "Changes to {name} saved.",
       "live": "Customers see this service in the catalog at {price}.",
       "hidden": "This service is still a draft, so it does not appear in the customer catalog yet."
+    },
+    "create": {
+      "title": "New service",
+      "description": "Fill in both languages. A new service is saved as a Draft until you tick Show on the customer site."
     }
   },
   "AdminServiceSwitch": {
@@ -1166,21 +1162,21 @@
       "id": "Service ID",
       "idHint": "Lowercase letters, numbers and hyphens, for example mattress-wash. It cannot be changed once saved.",
       "idFixed": "The ID cannot be changed.",
-      "category": "Service type",
+      "category": "Type",
       "categoryPlaceholder": "Choose a type",
       "sortOrder": "Display order",
       "sortOrderHint": "Lower numbers come first in the catalog.",
-      "nameId": "Name (Indonesian)",
-      "nameEn": "Name (English)",
-      "descriptionId": "Description (Indonesian)",
-      "descriptionEn": "Description (English)",
+      "nameId": "Service name (Indonesian)",
+      "nameEn": "Service name (English)",
+      "descriptionId": "Short description (Indonesian)",
+      "descriptionEn": "Short description (English)",
       "descriptionHint": "One or two sentences, at most 300 characters.",
-      "price": "Price (Rp)",
+      "price": "Full price (Rp)",
       "priceHint": "The full price the customer pays, with no other fees. For example 85000 or 85.000.",
       "duration": "Duration (minutes)",
       "durationHint": "About how long the job takes, 30 to 720 minutes.",
-      "active": "Active: shown in the customer catalog",
-      "activeHint": "Customers see an active service at once, at the price above. An inactive service stays saved for past orders."
+      "active": "Show on the customer site",
+      "activeHint": "Customers see this service at once, at the price above. Unticked, it becomes a Draft and stays saved for past orders."
     },
     "submitCreate": "Save service",
     "submitEdit": "Save changes",

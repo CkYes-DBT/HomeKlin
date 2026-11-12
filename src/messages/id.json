@@ -1117,13 +1117,6 @@
       "draft": "Draf",
       "order": "Urutan"
     },
-    "panel": {
-      "nameId": "Nama (Bahasa Indonesia)",
-      "nameEn": "Nama (Inggris)",
-      "descriptionId": "Deskripsi (Bahasa Indonesia)",
-      "descriptionEn": "Deskripsi (Inggris)",
-      "order": "Urutan tampil"
-    },
     "categories": {
       "whole-home": "Seluruh rumah",
       "rooms": "Per ruangan",
@@ -1134,12 +1127,15 @@
       "minutes": "Sekitar {minutes, plural, other {# menit}}",
       "hoursMinutes": "Sekitar {hours, plural, other {# jam}} {minutes, plural, other {# menit}}"
     },
-    "edit": "Ubah",
     "notice": {
       "created": "{name} ditambahkan.",
       "saved": "Perubahan pada {name} disimpan.",
       "live": "Pelanggan melihat layanan ini di katalog dengan harga {price}.",
       "hidden": "Layanan ini masih draf, jadi belum tampil di katalog pelanggan."
+    },
+    "create": {
+      "title": "Layanan baru",
+      "description": "Isi kedua bahasa. Layanan baru tersimpan sebagai Draf sampai Anda mencentang Tampilkan di situs pelanggan."
     }
   },
   "AdminServiceSwitch": {
@@ -1166,21 +1162,21 @@
       "id": "ID layanan",
       "idHint": "Huruf kecil, angka, dan tanda hubung, misalnya cuci-kasur. Tidak dapat diubah setelah disimpan.",
       "idFixed": "ID tidak dapat diubah.",
-      "category": "Jenis layanan",
+      "category": "Jenis",
       "categoryPlaceholder": "Pilih jenis",
       "sortOrder": "Urutan tampil",
       "sortOrderHint": "Angka kecil tampil lebih dulu di katalog.",
-      "nameId": "Nama (Bahasa Indonesia)",
-      "nameEn": "Nama (Inggris)",
-      "descriptionId": "Deskripsi (Bahasa Indonesia)",
-      "descriptionEn": "Deskripsi (Inggris)",
+      "nameId": "Nama layanan (Bahasa Indonesia)",
+      "nameEn": "Nama layanan (Inggris)",
+      "descriptionId": "Deskripsi singkat (Bahasa Indonesia)",
+      "descriptionEn": "Deskripsi singkat (Inggris)",
       "descriptionHint": "Satu atau dua kalimat, paling banyak 300 karakter.",
-      "price": "Harga (Rp)",
+      "price": "Harga penuh (Rp)",
       "priceHint": "Harga penuh yang dibayar pelanggan, tanpa biaya lain. Misalnya 85000 atau 85.000.",
       "duration": "Durasi (menit)",
       "durationHint": "Perkiraan lama pekerjaan, 30 sampai 720 menit.",
-      "active": "Aktif: tampil di katalog pelanggan",
-      "activeHint": "Pelanggan langsung melihat layanan yang aktif dengan harga di atas. Layanan nonaktif tetap tersimpan untuk pesanan lama."
+      "active": "Tampilkan di situs pelanggan",
+      "activeHint": "Pelanggan langsung melihat layanan ini dengan harga di atas. Tanpa centang, layanan menjadi Draf dan tetap tersimpan untuk pesanan lama."
     },
     "submitCreate": "Simpan layanan",
     "submitEdit": "Simpan perubahan",

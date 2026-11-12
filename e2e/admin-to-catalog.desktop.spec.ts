@@ -26,25 +26,39 @@ async function visitorCatalog(page: Page) {
   return page.getByRole("main");
 }
 
+/** This test's service in admin's list. */
+function rowOf(page: Page) {
+  return page.getByRole("list", { name: "Layanan HomeKlin dan harganya" }).getByRole("listitem").filter({ hasText: service.nameId });
+}
+
+/** Opens this test's row; its panel holds the edit form (R4). */
+async function openRow(page: Page) {
+  const details = rowOf(page).locator("details");
+  await details.locator("summary").click();
+  await expect(details).toHaveAttribute("open", "");
+  return details;
+}
+
 test("a price admin saves is the price customers see on their next visit", async ({ browser }) => {
   const adminContext = await browser.newContext({ storageState: signedInAs.admin.storageState });
   const visitorContext = await browser.newContext();
   const admin = await adminContext.newPage();
   const visitor = await visitorContext.newPage();
 
-  await test.step("admin adds the service, switched on, at Rp 90.000", async () => {
-    await admin.goto("/admin/services/new");
-    await admin.getByLabel("ID layanan").fill(service.id);
-    await admin.getByLabel("Jenis layanan").selectOption({ label: "Kain & kasur" });
-    await admin.getByLabel("Urutan tampil").fill("999");
-    await admin.getByLabel("Nama (Bahasa Indonesia)").fill(service.nameId);
-    await admin.getByLabel("Deskripsi (Bahasa Indonesia)").fill("Layanan uji otomatis. Tidak dijual.");
-    await admin.getByLabel("Nama (Inggris)").fill(service.nameEn);
-    await admin.getByLabel("Deskripsi (Inggris)").fill("An automated test service. Not for sale.");
-    await admin.getByLabel("Harga (Rp)").fill("90.000");
-    await admin.getByLabel("Durasi (menit)").fill("90");
-    await admin.getByLabel("Aktif: tampil di katalog pelanggan").check();
-    await admin.getByRole("button", { name: "Simpan layanan" }).click();
+  await test.step("admin adds the service in the list's create panel, switched on, at Rp 90.000", async () => {
+    await admin.goto("/admin/services?new");
+    const panel = admin.getByTestId("create-panel");
+    await panel.getByLabel("ID layanan").fill(service.id);
+    await panel.getByLabel("Jenis", { exact: true }).selectOption({ label: "Kain & kasur" });
+    await panel.getByLabel("Urutan tampil").fill("999");
+    await panel.getByLabel("Nama layanan (Bahasa Indonesia)").fill(service.nameId);
+    await panel.getByLabel("Deskripsi singkat (Bahasa Indonesia)").fill("Layanan uji otomatis. Tidak dijual.");
+    await panel.getByLabel("Nama layanan (Inggris)").fill(service.nameEn);
+    await panel.getByLabel("Deskripsi singkat (Inggris)").fill("An automated test service. Not for sale.");
+    await panel.getByLabel("Harga penuh (Rp)").fill("90.000");
+    await panel.getByLabel("Durasi (menit)").fill("90");
+    await panel.getByLabel("Tampilkan di situs pelanggan").check();
+    await panel.getByRole("button", { name: "Simpan layanan" }).click();
     await expect(admin).toHaveURL(`/admin/services?created=${service.id}`);
   });
 
@@ -54,10 +68,10 @@ test("a price admin saves is the price customers see on their next visit", async
     await expect(catalog).toContainText(/Rp\s90\.000/);
   });
 
-  await test.step("admin changes the price; the visitor sees the new one on the next visit", async () => {
-    await admin.goto(`/admin/services/edit?id=${service.id}`);
-    await admin.getByLabel("Harga (Rp)").fill("95.000");
-    await admin.getByRole("button", { name: "Simpan perubahan" }).click();
+  await test.step("admin changes the price in the row's panel; the visitor sees the new one on the next visit", async () => {
+    const panel = await openRow(admin);
+    await panel.getByLabel("Harga penuh (Rp)").fill("95.000");
+    await panel.getByRole("button", { name: "Simpan perubahan" }).click();
     await expect(admin).toHaveURL(`/admin/services?saved=${service.id}`);
 
     const catalog = await visitorCatalog(visitor);
@@ -66,15 +80,14 @@ test("a price admin saves is the price customers see on their next visit", async
   });
 
   await test.step("admin switches it off; the visitor no longer finds it", async () => {
-    // The row's switch is gone (R3): the Aktif checkbox on the edit page switches it off until R4 and
-    // R6 bring it into the row's panel. The list comes back only after the change is stored and the
-    // cache tag expired; only then does the visitor look.
-    await admin.goto(`/admin/services/edit?id=${service.id}`);
-    await admin.getByLabel("Aktif: tampil di katalog pelanggan").uncheck();
-    await admin.getByRole("button", { name: "Simpan perubahan" }).click();
+    // The row's switch is gone (R3): the panel's "Tampilkan di situs pelanggan" checkbox switches it
+    // off (R4). The list comes back only after the change is stored and the cache tag expired; only
+    // then does the visitor look.
+    const panel = await openRow(admin);
+    await panel.getByLabel("Tampilkan di situs pelanggan").uncheck();
+    await panel.getByRole("button", { name: "Simpan perubahan" }).click();
     await expect(admin).toHaveURL(`/admin/services?saved=${service.id}`);
-    const row = admin.getByRole("list", { name: "Layanan HomeKlin dan harganya" }).getByRole("listitem").filter({ hasText: service.nameId });
-    await expect(row.getByText("Draf", { exact: true })).toBeVisible();
+    await expect(rowOf(admin).getByText("Draf", { exact: true })).toBeVisible();
 
     const catalog = await visitorCatalog(visitor);
     await expect(catalog.getByRole("heading", { name: "Tidak ada layanan yang cocok" })).toBeVisible();
