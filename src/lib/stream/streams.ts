@@ -64,6 +64,8 @@ export async function streamStatus(viewer: SupabaseClient, orderId: string): Pro
 export type LiveStream = {
   sessionId: string;
   orderId: string;
+  /** The short order number people read out, "HK-1042" (unique, never changes). */
+  orderCode: string;
   status: StreamStatus;
   source: string;
   startedAt: string;
@@ -78,10 +80,11 @@ export type LiveStream = {
 export async function listLiveStreams(client: SupabaseClient): Promise<LiveStream[]> {
   const { data, error } = await client.rpc("live_streams");
   if (error) throw new StreamError(null, error.message);
-  type Row = ViewerRow & { updated_at: string; service_id: string; area_id: string; agency_name: string };
+  type Row = ViewerRow & { order_code: string; updated_at: string; service_id: string; area_id: string; agency_name: string };
   return (data as Row[]).map((row) => ({
     sessionId: row.session_id,
     orderId: row.order_id,
+    orderCode: row.order_code,
     status: row.status,
     source: row.source,
     startedAt: new Date(row.started_at).toISOString(),
