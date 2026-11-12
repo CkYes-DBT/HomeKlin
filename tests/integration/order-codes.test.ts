@@ -52,9 +52,19 @@ describe("order codes", { timeout: 60_000 }, () => {
 
     const changed = await adminClient().from("orders").update({ code: "HK-999999" }).eq("id", one);
     expect(changed.error?.message).toBe("order_code_fixed");
+    // Taking another order's code later is refused by the same trigger.
     const copied = await adminClient().from("orders").update({ code }).eq("id", two);
-    expect(copied.error).not.toBeNull();
+    expect(copied.error?.message).toBe("order_code_fixed");
     expect(await codeOf(one)).toBe(code);
+
+    // A new order that names a code already in use is refused by the unique constraint.
+    const { data: row, error: readError } = await adminClient().from("orders").select("*").eq("id", one).single();
+    expect(readError).toBeNull();
+    const copy: Record<string, unknown> = { ...(row as Record<string, unknown>), code };
+    delete copy.id;
+    delete copy.created_at;
+    const duplicate = await adminClient().from("orders").insert(copy);
+    expect(duplicate.error?.code).toBe("23505");
   });
 
   it("is listed with each live stream for admin", async () => {

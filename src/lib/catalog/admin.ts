@@ -53,13 +53,6 @@ export async function listAllServices(client: SupabaseClient): Promise<AdminServ
   return (data as AdminServiceRow[]).map(toAdminService);
 }
 
-/** One service by its id, or null when there is none. */
-export async function getService(client: SupabaseClient, id: string): Promise<AdminService | null> {
-  const { data, error } = await client.from("services").select(columns).eq("id", id).maybeSingle();
-  if (error) throw new CatalogError("service", error);
-  return data ? toAdminService(data as AdminServiceRow) : null;
-}
-
 /** The place for a new service: after the last one, within what the form accepts. */
 export function nextSortOrder(services: readonly AdminService[]): number {
   if (services.length === 0) return 0;
