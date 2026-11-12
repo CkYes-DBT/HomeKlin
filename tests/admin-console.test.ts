@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { adminRecordingState, parseRecordingParam, pastJobs } from "@/components/back-office/admin-console";
+import { adminRecordingState, monitorCounts, parseRecordingParam, pastJobs, waitingForCheckIn } from "@/components/back-office/admin-console";
 import type { AdminJob } from "@/lib/jobs/jobs";
 
 // The admin console (T26): which past jobs the recordings page shows and what it says about each
@@ -71,5 +71,42 @@ describe("parseRecordingParam", () => {
     expect(parseRecordingParam([id, "other"])).toBe(id);
     expect(parseRecordingParam("not-an-id")).toBeNull();
     expect(parseRecordingParam(undefined)).toBeNull();
+  });
+});
+
+describe("waitingForCheckIn", () => {
+  // Today in Jakarta is Wednesday 4 November: from 3 Nov 17.00 UTC to 4 Nov 17.00 UTC.
+  it("keeps today's jobs with a cleaner and no check-in yet, the earliest start first", () => {
+    const jobs = [
+      job("later-today", { startsAt: at(5 * hour) }),
+      job("late-this-morning", { startsAt: at(-2 * hour) }),
+      job("no-cleaner", { cleanerName: null }),
+      job("checked-in", { checkedInAt: at(-hour) }),
+      job("finished", { completedAt: at(-hour) }),
+      job("tomorrow", { startsAt: at(day) }),
+      job("yesterday", { startsAt: at(-day) }),
+    ];
+    expect(waitingForCheckIn(jobs, now).map((entry) => entry.id)).toEqual(["late-this-morning", "later-today"]);
+  });
+
+  it("uses the Jakarta date, not the UTC one", () => {
+    // 23.30 WIB on 4 November is still 4 November in Jakarta, though 16.30 UTC; 00.30 WIB on 5 November
+    // is 4 November in UTC but tomorrow in Jakarta.
+    const lateEvening = new Date("2026-11-04T16:30:00.000Z").toISOString();
+    const pastMidnight = new Date("2026-11-04T17:30:00.000Z").toISOString();
+    const jobs = [job("late-evening", { startsAt: lateEvening }), job("past-midnight", { startsAt: pastMidnight })];
+    expect(waitingForCheckIn(jobs, now).map((entry) => entry.id)).toEqual(["late-evening"]);
+  });
+});
+
+describe("monitorCounts", () => {
+  it("counts the streams in progress, the ones with trouble (weak or disconnected) and the jobs waiting", () => {
+    const streams = [{ status: "active" }, { status: "weak" }, { status: "disconnected" }, { status: "active" }] as const;
+    expect(monitorCounts(streams, 3)).toEqual({ live: 4, troubled: 2, waiting: 3 });
+    expect(monitorCounts([], 0)).toEqual({ live: 0, troubled: 0, waiting: 0 });
+  });
+
+  it("does not count a stream that has ended", () => {
+    expect(monitorCounts([{ status: "ended" }, { status: "active" }], 0)).toEqual({ live: 1, troubled: 0, waiting: 0 });
   });
 });

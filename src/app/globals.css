@@ -81,6 +81,7 @@
   --color-card: #ffffff; /* cards, FAQ rows, panels on cream */
   --color-field: #f7f6f0; /* input fill inside a white panel */
   --color-sunken: #ecebe2; /* separators, sunken chips, table headers */
+  --color-frame: #dfe8df; /* a video frame before its picture arrives (admin live monitor, M1); ink on it 12.5:1, ink-muted 5.1:1 */
   --color-band: #132a1f; /* dark bands, footer, utility bar */
   --color-band-raised: #24443a; /* step cards on a dark band */
   --color-on-band: #f3f2ea; /* 13.6:1 on band */

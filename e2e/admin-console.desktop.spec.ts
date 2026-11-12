@@ -5,8 +5,8 @@ import { signedInAs } from "./setup/auth-state";
 
 // T25-T26 on a desk (the T24 dashboard was retired in R2b: /admin now leads to live monitoring): the
 // live monitor shows every live feed at once, each with its video, cleaner, agency, service, area, status
-// (polled) and start time; the recordings page lists past jobs and plays a recording still within its
-// 7 days, while a deleted one says so with no player. Customers and agencies are refused all of it.
+// (polled) and order number (M1: e2e/admin-monitor.desktop.spec.ts covers the rest of its cards); the
+// recordings page lists past jobs and plays a recording still within its 7 days, while a deleted one says so with no player. Customers and agencies are refused all of it.
 // The spec makes its own agency, cleaners, jobs, streams, recordings and ticket in the shared test
 // project (e2e/admin-console-test-data.ts) and removes them at the end. Other specs and agents use the
 // same project at the same time, so counts are checked as "at least what this spec made".
@@ -46,25 +46,24 @@ test.describe("admin", () => {
     const nav = page.getByRole("navigation", { name: "Navigasi admin" });
     await expect(nav.getByRole("link", { name: "Pemantauan langsung", exact: true })).toHaveAttribute("aria-current", "page");
     // The page carries the live feeds, not the old dashboard's tiles or lists.
-    await expect(page.getByRole("list", { name: "Siaran langsung" }).locator(`[data-feed="${data.live.first}"]`)).toBeVisible();
+    await expect(page.getByRole("list", { name: "Pekerjaan yang dipantau" }).locator(`[data-feed="${data.live.first}"]`)).toBeVisible();
     await expect(page.locator("[data-tile]")).toHaveCount(0);
   });
 
   test("the live monitor shows every live feed at once, with a video that plays, and polls each status", async ({ page }) => {
     await page.goto("/admin/monitor");
-    const grid = page.getByRole("list", { name: "Siaran langsung" });
+    const grid = page.getByRole("list", { name: "Pekerjaan yang dipantau" });
     const first = grid.locator(`[data-feed="${data.live.first}"]`);
     const second = grid.locator(`[data-feed="${data.live.second}"]`);
 
     for (const [feed, cleaner, status] of [
-      [first, data.cleaners.first, "Aktif"],
+      [first, data.cleaners.first, "Sedang berlangsung"],
       [second, data.cleaners.second, "Sinyal lemah"],
     ] as const) {
       await expect(feed).toContainText(cleaner);
       await expect(feed).toContainText(data.agencyName);
-      await expect(feed).toContainText("Pembersihan Rutin");
-      await expect(feed).toContainText("Jakarta Timur");
-      await expect(feed).toContainText(/Mulai pukul \d{2}\.\d{2} WIB/);
+      await expect(feed).toContainText("Pembersihan Rutin, Jakarta Timur");
+      await expect(feed).toContainText(/HK-\d+/);
       await expect(feed.getByRole("status")).toContainText(status);
       const video = feed.locator("video");
       await expect(video).toHaveCount(1);
@@ -118,10 +117,9 @@ test.describe("admin", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Live monitoring" })).toBeVisible();
 
     await page.goto("/en/admin/monitor");
-    const feed = page.getByRole("list", { name: "Live streams" }).locator(`[data-feed="${data.live.first}"]`);
-    await expect(feed).toContainText("Regular Cleaning");
-    await expect(feed).toContainText(/Started at \d{2}\.\d{2} WIB/);
-    await expect(feed.getByRole("status")).toContainText("Active");
+    const feed = page.getByRole("list", { name: "Monitored jobs" }).locator(`[data-feed="${data.live.first}"]`);
+    await expect(feed).toContainText("Regular Cleaning, East Jakarta");
+    await expect(feed.getByRole("status")).toContainText("In progress");
 
     await page.goto(`/en/admin/recordings?recording=${data.recorded.available.recordingId}`);
     await expect(page.getByRole("region", { name: "Job recording" }).locator("video")).toHaveCount(1);

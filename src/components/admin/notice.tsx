@@ -1,9 +1,9 @@
-import { CircleAlert, CircleCheck } from "lucide-react";
+import { CircleAlert, CircleCheck, Info } from "lucide-react";
 import { FocusOnMount } from "./focus-on-mount";
 
 type NoticeProps = {
-  /** success: a change was saved; danger: something could not be done. */
-  tone: "success" | "danger";
+  /** success: a change was saved; danger: something could not be done; info: a quiet note beside what still works. */
+  tone: "success" | "danger" | "info";
   /** The fact in a few words, in bold. */
   title: string;
   /** What it means, or what to do next. */
@@ -19,6 +19,7 @@ type NoticeProps = {
 const tones = {
   success: { box: "bg-success-surface text-success", Icon: CircleCheck, role: "status" },
   danger: { box: "bg-danger-surface text-danger", Icon: CircleAlert, role: "alert" },
+  info: { box: "bg-info-surface text-info", Icon: Info, role: "status" },
 } as const;
 
 // A one-line message at the top of a back-office page, with an icon and words, never colour alone.
