@@ -74,10 +74,16 @@ export async function createTestUser(label: string, metadata: Record<string, unk
   return { id: data.user.id, email, password, client };
 }
 
-/** Deletes test users; their profiles go with them (on delete cascade). */
+/** Runs a clean-up delete and throws if it failed, so left-over test data never goes unnoticed. */
+export async function removed(what: string, request: PromiseLike<{ error: { message: string } | null }>): Promise<void> {
+  const { error } = await request;
+  if (error) throw new Error(`Could not delete ${what}: ${error.message}`);
+}
+
+/** Deletes test users; their profiles go with them (on delete cascade). Throws if one could not go. */
 export async function deleteTestUsers(users: readonly (TestUser | undefined)[]): Promise<void> {
   const admin = adminClient();
   for (const user of users) {
-    if (user) await admin.auth.admin.deleteUser(user.id);
+    if (user) await removed(`the test user ${user.email}`, admin.auth.admin.deleteUser(user.id));
   }
 }

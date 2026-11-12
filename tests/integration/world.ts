@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { adminClient, createTestUser, deleteTestUsers, type TestUser } from "./test-project";
+import { adminClient, createTestUser, deleteTestUsers, removed, type TestUser } from "./test-project";
 
 // A small world of its own in the test project, for the tests from T15 on: an area, a service, two
 // partner agencies (A and B) with a sign-in each and two cleaners each, two customers and an admin.
@@ -149,12 +149,19 @@ export async function createWorld(label: string): Promise<World> {
     return order.id;
   }
 
+  // Children first: a finished job has a fee row (order_fees) that does not go with its order, and an
+  // order keeps its window, agency and service. A failed delete throws, so a leak shows as a failure
+  // instead of piling up in the test project.
   async function cleanup() {
+    const both = [A, B];
+    await removed("the fee rows", admin.from("order_fees").delete().in("agency_id", both));
+    await removed("the payouts", admin.from("payouts").delete().in("agency_id", both));
+    await removed("the jobs", admin.from("orders").delete().in("agency_id", both));
     await deleteTestUsers(Object.values(users));
-    await admin.from("availability_slots").delete().eq("area_id", area);
-    await admin.from("agencies").delete().like("key", `${prefix}-%`);
-    await admin.from("services").delete().eq("id", serviceId);
-    await admin.from("service_areas").delete().eq("id", area);
+    await removed("the windows", admin.from("availability_slots").delete().eq("area_id", area));
+    await removed("the agencies", admin.from("agencies").delete().like("key", `${prefix}-%`));
+    await removed("the service", admin.from("services").delete().eq("id", serviceId));
+    await removed("the area", admin.from("service_areas").delete().eq("id", area));
   }
 
   return { prefix, area, serviceId, price, agencies: { A, B }, users, job, cleanup };

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { Browser } from "@playwright/test";
-import { adminClient, createTestUser, deleteTestUsers, type TestUser } from "../tests/integration/test-project";
+import { adminClient, createTestUser, deleteTestUsers, removed, type TestUser } from "../tests/integration/test-project";
 import { signInWithPassword } from "./order-test-data";
 import type { StorageState } from "./setup/auth-state";
 
@@ -160,10 +160,15 @@ export async function createJobWorld(label: string): Promise<JobWorld> {
       const recordings = await admin.from("recordings").select("file_path").in("order_id", orders);
       const files = ((recordings.data ?? []) as { file_path: string }[]).map((row) => row.file_path);
       if (files.length > 0) await admin.storage.from(recordingsBucket).remove(files);
-      await admin.from("orders").delete().in("id", orders.splice(0));
+      // A checked-out job has a fee row that does not go with its order (order_fees), so it goes first.
+      await removed("the fee rows", admin.from("order_fees").delete().in("order_id", orders));
+      await removed("the jobs", admin.from("orders").delete().in("id", orders.splice(0)));
     }
-    if (slots.length > 0) await admin.from("availability_slots").delete().in("id", slots.splice(0));
-    if (agencies.length > 0) await admin.from("agencies").delete().in("id", agencies.splice(0));
+    if (slots.length > 0) await removed("the windows", admin.from("availability_slots").delete().in("id", slots.splice(0)));
+    if (agencies.length > 0) {
+      await removed("the payouts", admin.from("payouts").delete().in("agency_id", agencies));
+      await removed("the agencies", admin.from("agencies").delete().in("id", agencies.splice(0)));
+    }
     await deleteTestUsers(users.splice(0));
   }
 
