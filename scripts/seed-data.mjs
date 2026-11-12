@@ -28,6 +28,9 @@ export const demoAccounts = [
   { localPart: "petugas.teguh", role: "cleaner", fullName: "Teguh Wicaksono", agency: "kilau-teratai" },
   { localPart: "petugas.ratna", role: "cleaner", fullName: "Ratna Handayani", agency: "cemara-rapi" },
   { localPart: "petugas.dimas", role: "cleaner", fullName: "Dimas Saputro", agency: "cemara-rapi" },
+  // A third cleaner per agency, so the admin live monitor shows a full grid in a demo (M1).
+  { localPart: "petugas.wulan", role: "cleaner", fullName: "Wulan Anggraeni", agency: "kilau-teratai" },
+  { localPart: "petugas.rizal", role: "cleaner", fullName: "Rizal Hakim", agency: "cemara-rapi" },
 ];
 
 // The catalog (T7). Areas and services are HomeKlin's own data: the seed adds the ones that are missing
@@ -175,6 +178,22 @@ export const todayJob = {
   startsInMinutes: 10,
   hours: 3,
 };
+
+/**
+ * Jobs in progress for the admin live monitor (M1): checked in and streaming the library clip, one
+ * status each, so a demo shows the whole grid with "Sinyal lemah" and "Terputus" as well. The
+ * upcoming job above is the grid's "Belum check-in" card. Fixed ids: each seed run starts these over
+ * from now, so seed again shortly before a demo.
+ *
+ * @type {readonly { id: string, serviceId: string, areaId: string, agency: string, cleaner: string, status: "active" | "weak" | "disconnected", startedMinutesAgo: number, hours: number }[]}
+ */
+export const monitorJobs = [
+  { id: "d3a0c1e2-0004-4000-8000-000000000004", serviceId: "regular", areaId: "jakarta-selatan", agency: "kilau-teratai", cleaner: "petugas.wulan", status: "active", startedMinutesAgo: 35, hours: 3 },
+  { id: "d3a0c1e2-0005-4000-8000-000000000005", serviceId: "sofa-carpet", areaId: "jakarta-pusat", agency: "kilau-teratai", cleaner: "petugas.teguh", status: "active", startedMinutesAgo: 50, hours: 3 },
+  { id: "d3a0c1e2-0006-4000-8000-000000000006", serviceId: "deep", areaId: "jakarta-barat", agency: "cemara-rapi", cleaner: "petugas.dimas", status: "active", startedMinutesAgo: 20, hours: 4 },
+  { id: "d3a0c1e2-0007-4000-8000-000000000007", serviceId: "kitchen-bathroom", areaId: "jakarta-pusat", agency: "cemara-rapi", cleaner: "petugas.ratna", status: "weak", startedMinutesAgo: 65, hours: 3 },
+  { id: "d3a0c1e2-0008-4000-8000-000000000008", serviceId: "regular", areaId: "jakarta-selatan", agency: "cemara-rapi", cleaner: "petugas.rizal", status: "disconnected", startedMinutesAgo: 80, hours: 3 },
+];
 
 /** The photo each demo cleaner shows the customer, a file in public/images. */
 export const cleanerPhotos = { "petugas.yuliana": "/images/cleaner-portrait.jpg", "petugas.ratna": "/images/cleaner-avatar.jpg" };

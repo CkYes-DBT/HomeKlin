@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { agencies, agencyAreas, seedAreas, seedServices, slotPattern } from "../scripts/seed-data.mjs";
+import { agencies, agencyAreas, demoAccounts, monitorJobs, seedAreas, seedServices, slotPattern, todayJob } from "../scripts/seed-data.mjs";
 import { serviceCategories } from "@/lib/catalog/catalog";
 import { demoUsers, planSeed, SEED_MARKER, seedTarget, slotTimes } from "../scripts/seed.mjs";
 
@@ -27,13 +27,27 @@ describe("demo users", () => {
     }
   });
 
-  it("has two cleaners per agency, four in all", () => {
+  it("has three cleaners per agency, six in all", () => {
     const cleaners = withRole("cleaner");
 
-    expect(cleaners).toHaveLength(4);
+    expect(cleaners).toHaveLength(6);
     for (const agency of agencies) {
-      expect(cleaners.filter((cleaner) => cleaner.agency === agency.key)).toHaveLength(2);
+      expect(cleaners.filter((cleaner) => cleaner.agency === agency.key)).toHaveLength(3);
     }
+  });
+
+  it("gives each live-monitor job its own cleaner, of its agency, in an area that agency serves", () => {
+    const cleaners = new Set(monitorJobs.map((job) => job.cleaner));
+    expect(cleaners.size).toBe(monitorJobs.length);
+    expect(cleaners.has(todayJob.cleaner)).toBe(false);
+    for (const job of monitorJobs) {
+      const account = demoAccounts.find((user) => user.localPart === job.cleaner);
+      expect(account?.role).toBe("cleaner");
+      expect(account?.agency).toBe(job.agency);
+      expect(agencyAreas[job.agency]).toContain(job.areaId);
+      expect(seedServices.map((service) => service.id)).toContain(job.serviceId);
+    }
+    expect(new Set(monitorJobs.map((job) => job.status))).toEqual(new Set(["active", "weak", "disconnected"]));
   });
 
   it("ties only agency users and cleaners to an agency", () => {

@@ -30,6 +30,7 @@ import {
   cleanerPhotos,
   demoJobs,
   faqEntries,
+  monitorJobs,
   PAYOUT_PERCENT_DEFAULT,
   seedAreas,
   seedServices,
@@ -561,6 +562,72 @@ export async function seedUpcomingJob({ client, customerId, job, now = new Date(
 }
 
 /**
+ * Starts the live monitor's demo jobs over (M1): each a paid job of the demo customer that began a
+ * little while ago, checked in, with a stream in the given status. Old runs' rows go first: a fee row
+ * (if someone checked one out), the order (its stream goes with it) and its window. Each window
+ * starts a few seconds past the minute, so it never meets a window of the seeded grid.
+ *
+ * @param {{ client: import("@supabase/supabase-js").SupabaseClient, customerId: string, jobs: readonly { id: string, serviceId: string, areaId: string, agencyId: string, cleanerId: string, status: "active" | "weak" | "disconnected", startedMinutesAgo: number, hours: number }[], now?: Date }} options
+ */
+export async function seedMonitorJobs({ client, customerId, jobs, now = new Date() }) {
+  const ids = jobs.map((job) => job.id);
+  const old = await must("old monitor jobs", client.from("orders").select("slot_id").in("id", ids));
+  await must("old monitor fees", client.from("order_fees").delete().in("order_id", ids));
+  await must("old monitor jobs", client.from("orders").delete().in("id", ids));
+  if (old.length > 0) await must("old monitor windows", client.from("availability_slots").delete().in("id", old.map((row) => row.slot_id)));
+
+  for (const [index, job] of jobs.entries()) {
+    const checkedInAt = new Date(now.getTime() - job.startedMinutesAgo * 60_000);
+    const startsAt = new Date(Math.floor((checkedInAt.getTime() - 10 * 60_000) / 60_000) * 60_000 + (index + 1) * 1000);
+    const endsAt = new Date(startsAt.getTime() + job.hours * hourMs);
+    const slot = await must(
+      "monitor window",
+      client
+        .from("availability_slots")
+        .insert({ agency_id: job.agencyId, area_id: job.areaId, starts_at: startsAt.toISOString(), ends_at: endsAt.toISOString(), capacity: 1, booked: 1 })
+        .select("id")
+        .single(),
+    );
+    const service = await must("monitor job's service", client.from("services").select("price_idr").eq("id", job.serviceId).single());
+    await must(
+      "monitor job",
+      client.from("orders").insert({
+        id: job.id,
+        customer_id: customerId,
+        service_id: job.serviceId,
+        area_id: job.areaId,
+        agency_id: job.agencyId,
+        slot_id: slot.id,
+        starts_at: startsAt.toISOString(),
+        ends_at: endsAt.toISOString(),
+        address: demoJobAddress,
+        contact_phone: demoJobPhone,
+        price_idr: service.price_idr,
+        stream_consent: true,
+        status: "paid",
+        payment_result_at: startsAt.toISOString(),
+        cleaner_id: job.cleanerId,
+        checked_in_at: checkedInAt.toISOString(),
+        check_in_lat: -6.2,
+        check_in_lng: 106.82,
+      }),
+    );
+    await must(
+      "monitor stream",
+      client.from("stream_sessions").insert({
+        order_id: job.id,
+        cleaner_id: job.cleanerId,
+        agency_id: job.agencyId,
+        status: job.status,
+        started_at: checkedInAt.toISOString(),
+        updated_at: now.toISOString(),
+      }),
+    );
+  }
+  return { jobs: jobs.length };
+}
+
+/**
  * Brings HomeKlin's FAQ entries up to date (T19); entries admin added are left alone.
  *
  * @param {{ client: import("@supabase/supabase-js").SupabaseClient }} options
@@ -883,6 +950,12 @@ async function main() {
     job: { ...today, agencyId: agencyIdOf(todayAgency), cleanerId: cleanerIdOf(todayCleaner) },
   });
   console.log(`Upcoming demo job for ${todayCleaner}: starts ${upcoming.startsAt} (check-in opens 15 minutes before).`);
+  const monitor = await seedMonitorJobs({
+    client,
+    customerId: customer.id,
+    jobs: monitorJobs.map(({ agency, cleaner, ...job }) => ({ ...job, agencyId: agencyIdOf(agency), cleanerId: cleanerIdOf(cleaner) })),
+  });
+  console.log(`Live monitor: ${monitor.jobs} jobs in progress with a stream (seed again before a demo to start them over).`);
   console.log(
     `Clips: ${clips.added} added, ${clips.kept} already there. Completed jobs with a recording: ${completed.added}` +
       (completed.added === 0 ? ` (no clips yet: put .mp4 or .webm files in ${clipsDirectory}/ and seed again).` : "."),
