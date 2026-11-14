@@ -2,6 +2,8 @@ export type NavMatch = {
   href: string;
   /** Section roots ("/", "/agency") match only their own path, so one item is current at a time. */
   exact?: boolean;
+  /** Other sections that belong to this item, so it stays current there too (the agency's schedule under Petugas). */
+  alsoOn?: readonly string[];
 };
 
 function trimTrailingSlash(path: string): string {
@@ -12,5 +14,5 @@ function trimTrailingSlash(path: string): string {
 export function isActivePath(pathname: string, item: NavMatch): boolean {
   const path = trimTrailingSlash(pathname);
   if (item.exact) return path === item.href;
-  return path === item.href || path.startsWith(`${item.href}/`);
+  return [item.href, ...(item.alsoOn ?? [])].some((href) => path === href || path.startsWith(`${href}/`));
 }

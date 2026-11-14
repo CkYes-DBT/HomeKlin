@@ -66,13 +66,13 @@ test("the landing header offers Masuk, which opens the sign-in page", async ({ p
 test("an agency user lands on /agency, sees who is signed in, and is refused the admin console", async ({ page }) => {
   await logIn(page, agency);
   await expect(page).toHaveURL("/agency");
-  await expect(page.getByRole("heading", { level: 1, name: "Dasbor" })).toBeVisible();
-  // The setup's agency user has no partner agency row of its own, so the dashboard says so (T28).
+  await expect(page.getByRole("heading", { level: 1, name: "Ringkasan" })).toBeVisible();
+  // The setup's agency user has no partner agency row of its own, so the summary says so (T28, D2).
   await expect(page.getByText("Akun ini belum terhubung ke agensi.")).toBeVisible();
 
   const sidebar = page.getByRole("complementary");
   await expect(sidebar.getByText("Masuk sebagai")).toBeVisible();
-  await expect(sidebar.getByText(agency.name, { exact: true })).toBeVisible();
+  await expect(sidebar).toContainText(agency.name);
   await expect(sidebar.getByRole("button", { name: "Keluar" })).toBeVisible();
 
   await page.goto("/admin");

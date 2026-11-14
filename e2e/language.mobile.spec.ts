@@ -96,16 +96,17 @@ test.describe("back office", () => {
 
     await toggle.getByRole("link", { name: "EN English" }).click();
     await expect(page).toHaveURL("/en/agency");
-    await expect(page.getByRole("heading", { level: 1, name: "Dashboard" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Summary" })).toBeVisible();
     await expect(menu).toHaveAttribute("aria-expanded", "false");
 
     await menu.click();
     await expect(page.getByRole("navigation", { name: "Agency navigation" }).getByRole("link")).toHaveText([
-      "Dashboard",
-      "Schedule",
+      "Summary",
+      "Incoming jobs",
+      "Completed orders",
       "Cleaners",
-      "Orders",
-      "Recordings",
+      "Cleaner videos",
+      "Services",
     ]);
   });
 });

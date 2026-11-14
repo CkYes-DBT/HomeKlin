@@ -85,7 +85,7 @@ export function AddSlotForm({ areas, areaFilter, minDate, maxDate, addSlot }: Ad
       noValidate
       aria-labelledby="add-slot-title"
       aria-describedby="add-slot-description"
-      className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 md:p-6"
+      className="flex flex-col gap-4 rounded-lg bg-card p-5 md:p-6"
     >
       <header className="flex flex-col gap-1">
         <h2 id="add-slot-title" className="font-display text-lg font-semibold text-ink">
@@ -96,7 +96,7 @@ export function AddSlotForm({ areas, areaFilter, minDate, maxDate, addSlot }: Ad
         </p>
       </header>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[minmax(0,1.2fr)_minmax(10.5rem,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.7fr)_auto] xl:items-end">
-        <SelectField
+        <SelectField look="panel"
           id="slot-area"
           name="areaId"
           label={t("area")}
@@ -105,10 +105,10 @@ export function AddSlotForm({ areas, areaFilter, minDate, maxDate, addSlot }: Ad
           value={areaId}
           onChange={(event) => setAreaId(event.target.value)}
         />
-        <TextField id="slot-date" type="date" label={t("date")} min={minDate} max={maxDate} value={date} onChange={(event) => setDate(event.target.value)} />
-        <TextField id="slot-start" type="time" label={t("start")} value={start} onChange={(event) => setStart(event.target.value)} />
-        <TextField id="slot-end" type="time" label={t("end")} value={end} onChange={(event) => setEnd(event.target.value)} />
-        <TextField
+        <TextField look="panel" id="slot-date" type="date" label={t("date")} min={minDate} max={maxDate} value={date} onChange={(event) => setDate(event.target.value)} />
+        <TextField look="panel" id="slot-start" type="time" label={t("start")} value={start} onChange={(event) => setStart(event.target.value)} />
+        <TextField look="panel" id="slot-end" type="time" label={t("end")} value={end} onChange={(event) => setEnd(event.target.value)} />
+        <TextField look="panel"
           id="slot-capacity"
           name="capacity"
           type="number"
@@ -125,7 +125,7 @@ export function AddSlotForm({ areas, areaFilter, minDate, maxDate, addSlot }: Ad
           {pending ? t("pending") : t("submit")}
         </button>
       </div>
-      <p id="slot-capacity-hint" className="px-1 text-sm text-ink-faint">
+      <p id="slot-capacity-hint" className="px-1 text-sm text-ink-muted">
         {t("capacityHint")}
       </p>
       <ActionFeedback error={error} done={done} resultKey={resultKey} />

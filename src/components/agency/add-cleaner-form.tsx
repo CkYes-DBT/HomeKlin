@@ -118,12 +118,12 @@ export function AddCleanerForm({ addCleaner }: { addCleaner: AgencyAction }) {
       onSubmit={submit}
       noValidate
       aria-labelledby="add-cleaner-title"
-      className="flex flex-col gap-5 rounded-xl border border-border bg-surface p-5 md:p-6"
+      className="flex flex-col gap-5 rounded-lg bg-card p-5 md:p-6"
     >
       <h2 id="add-cleaner-title" className="font-display text-lg font-semibold text-ink">
         {t("title")}
       </h2>
-      <TextField
+      <TextField look="panel"
         id="cleaner-name"
         name="fullName"
         label={t("name")}
@@ -132,7 +132,7 @@ export function AddCleanerForm({ addCleaner }: { addCleaner: AgencyAction }) {
         onChange={(event) => setName(event.target.value)}
         aria-invalid={state?.formError === "nameInvalid" ? true : undefined}
       />
-      <TextField
+      <TextField look="panel"
         id="cleaner-email"
         name="email"
         type="email"
@@ -158,11 +158,11 @@ export function AddCleanerForm({ addCleaner }: { addCleaner: AgencyAction }) {
               width={128}
               height={128}
               unoptimized
-              className="size-16 shrink-0 rounded-full bg-surface-sunken object-cover"
+              className="size-16 shrink-0 rounded-full bg-sunken object-cover"
             />
           ) : (
-            <span aria-hidden="true" className="flex size-16 shrink-0 items-center justify-center rounded-full border border-dashed border-border-control bg-surface-sunken">
-              <UserPlus className="size-6 text-ink-faint" />
+            <span aria-hidden="true" className="flex size-16 shrink-0 items-center justify-center rounded-full border border-dashed border-border-control bg-sunken">
+              <UserPlus className="size-6 text-ink-muted" />
             </span>
           )}
           <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -195,7 +195,7 @@ export function AddCleanerForm({ addCleaner }: { addCleaner: AgencyAction }) {
             ) : null}
           </div>
         </div>
-        <p id="cleaner-photo-hint" className="px-1 text-sm text-ink-faint">
+        <p id="cleaner-photo-hint" className="px-1 text-sm text-ink-muted">
           {t("photoHint")}
         </p>
       </div>

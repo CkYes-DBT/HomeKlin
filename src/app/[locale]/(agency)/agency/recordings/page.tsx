@@ -19,7 +19,7 @@ export default function AgencyRecordingsPage({ searchParams }: PageProps<"/[loca
   const t = useTranslations("AgencyRecordingsPage");
   return (
     <>
-      <PageHeader title={t("title")} description={t("description")} />
+      <PageHeader size="compact" title={t("title")} description={t("description")} />
       <Suspense fallback={<GateFallback />}>
         <RoleGate roles={["agency"]}>
           <RecordingsContent searchParams={searchParams} />

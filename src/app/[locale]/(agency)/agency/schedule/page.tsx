@@ -19,7 +19,7 @@ export default function AgencySchedulePage({ searchParams }: PageProps<"/[locale
   const t = useTranslations("AgencySchedulePage");
   return (
     <>
-      <PageHeader title={t("title")} description={t("description")} />
+      <PageHeader size="compact" title={t("title")} description={t("description")} />
       <Suspense fallback={<GateFallback />}>
         <RoleGate roles={["agency"]}>
           <ScheduleContent searchParams={searchParams} />

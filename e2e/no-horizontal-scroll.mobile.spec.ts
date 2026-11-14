@@ -14,7 +14,7 @@ const pageGroups = [
   {
     who: "an agency",
     session: signedInAs.agency,
-    paths: ["/agency", "/agency/schedule", "/agency/cleaners", "/agency/orders", "/agency/recordings"],
+    paths: ["/agency", "/agency/orders", "/agency/orders/job", "/agency/past", "/agency/past/job", "/agency/cleaners", "/agency/schedule", "/agency/recordings", "/agency/services"],
   },
   {
     who: "an admin",

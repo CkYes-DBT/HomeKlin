@@ -43,7 +43,7 @@ export function AssignCleaner({ orderId, cleaners, cleanerId }: AssignCleanerPro
     return (
       <span className="flex flex-col items-start gap-1 text-sm text-ink-muted">
         {t("noCleaners")}
-        <Link href="/agency/cleaners" className="inline-flex min-h-touch items-center gap-1.5 font-semibold text-brand-700 underline-offset-4 hover:underline">
+        <Link href="/agency/cleaners" className="inline-flex min-h-touch items-center gap-1.5 font-semibold text-primary underline-offset-4 hover:underline">
           <UserPlus className="size-4 shrink-0" aria-hidden="true" />
           {t("addCleaners")}
         </Link>

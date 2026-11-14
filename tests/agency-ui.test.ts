@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { summarizeAgencyJobs } from "@/components/agency/dashboard-summary";
 import { backOfficeRecordingState } from "@/components/agency/recording-state";
 import {
   groupScheduleDays,
@@ -15,7 +14,7 @@ import {
 
 // The agency back office's pure pieces (T27-T29): the windows it types in Jakarta time (WIB, UTC+7, no
 // daylight saving) as the ISO times the server actions take, the schedule's weeks and its grouping by
-// day and area, the dashboard's counts, and where a job's recording stands.
+// day and area, and where a job's recording stands.
 
 // Wednesday 4 November 2026, 22.30 WIB: UTC is still on 4 November, Jakarta too.
 const now = new Date("2026-11-04T15:30:00.000Z");
@@ -102,34 +101,6 @@ describe("groupScheduleDays", () => {
       ["jakarta-pusat", ["a"]],
       ["jakarta-timur", ["b", "c"]],
     ]);
-  });
-});
-
-type Job = Parameters<typeof summarizeAgencyJobs>[0][number];
-const job = (id: string, startsAt: string, more: Partial<Job> = {}): Job => ({
-  id,
-  startsAt,
-  endsAt: new Date(Date.parse(startsAt) + 2 * 3_600_000).toISOString(),
-  cleanerName: null,
-  checkedInAt: null,
-  completedAt: null,
-  ...more,
-});
-
-describe("summarizeAgencyJobs", () => {
-  it("counts the jobs still waiting for a cleaner and today's jobs in Jakarta, earliest waiting first", () => {
-    const summary = summarizeAgencyJobs(
-      [
-        job("tomorrow", "2026-11-05T01:00:00.000Z"),
-        job("tonight", "2026-11-04T16:00:00.000Z"),
-        job("today-assigned", "2026-11-04T08:00:00.000Z", { cleanerName: "Uji" }),
-        job("ended-unassigned", "2026-11-03T01:00:00.000Z"),
-        job("started", "2026-11-04T14:00:00.000Z", { checkedInAt: "2026-11-04T14:05:00.000Z", cleanerName: "Uji" }),
-      ],
-      now,
-    );
-    expect(summary.waiting.map((entry) => entry.id)).toEqual(["tonight", "tomorrow"]);
-    expect(summary.today.map((entry) => entry.id)).toEqual(["today-assigned", "started", "tonight"]);
   });
 });
 

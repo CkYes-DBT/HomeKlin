@@ -35,8 +35,8 @@ const backOffices = [
     name: "agency" as const,
     root: "/agency",
     nav: "Agency navigation",
-    labels: ["Dashboard", "Schedule", "Cleaners", "Orders", "Recordings"],
-    second: "/agency/schedule",
+    labels: ["Summary", "Incoming jobs", "Completed orders", "Cleaners", "Cleaner videos", "Services"],
+    second: "/agency/orders",
   },
   {
     name: "admin" as const,

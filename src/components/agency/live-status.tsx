@@ -18,7 +18,7 @@ const statuses: readonly StreamStatus[] = ["active", "weak", "disconnected", "en
 const styles: Record<Exclude<StreamStatus, "active">, { Icon: LucideIcon; pill: string }> = {
   weak: { Icon: SignalMedium, pill: "bg-warning-surface text-warning" },
   disconnected: { Icon: WifiOff, pill: "bg-danger-surface text-danger" },
-  ended: { Icon: CircleStop, pill: "bg-surface-sunken text-ink-muted" },
+  ended: { Icon: CircleStop, pill: "bg-sunken text-ink-muted" },
 };
 
 const isStatus = (value: unknown): value is StreamStatus => typeof value === "string" && (statuses as readonly string[]).includes(value);

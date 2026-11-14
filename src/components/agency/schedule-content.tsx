@@ -92,23 +92,23 @@ export async function ScheduleContent({ searchParams }: { searchParams: Promise<
           </header>
           <nav aria-label={t("weekNav")} className="flex items-center gap-1">
             {week > 0 ? (
-              <Link href={query({ week: week - 1 })} className={`${navLink} text-ink hover:bg-surface-sunken active:bg-brand-50`}>
+              <Link href={query({ week: week - 1 })} className={`${navLink} text-ink hover:bg-sunken active:bg-lime-wash`}>
                 <ChevronLeft className="size-4 shrink-0" aria-hidden="true" />
                 {t("previousWeek")}
               </Link>
             ) : (
-              <span aria-disabled="true" className={`${navLink} cursor-not-allowed text-ink-faint`}>
+              <span aria-disabled="true" className={`${navLink} cursor-not-allowed text-ink-muted`}>
                 <ChevronLeft className="size-4 shrink-0" aria-hidden="true" />
                 {t("previousWeek")}
               </span>
             )}
             {week < lastScheduleWeek ? (
-              <Link href={query({ week: week + 1 })} className={`${navLink} text-ink hover:bg-surface-sunken active:bg-brand-50`}>
+              <Link href={query({ week: week + 1 })} className={`${navLink} text-ink hover:bg-sunken active:bg-lime-wash`}>
                 {t("nextWeek")}
                 <ChevronRight className="size-4 shrink-0" aria-hidden="true" />
               </Link>
             ) : (
-              <span aria-disabled="true" className={`${navLink} cursor-not-allowed text-ink-faint`}>
+              <span aria-disabled="true" className={`${navLink} cursor-not-allowed text-ink-muted`}>
                 {t("nextWeek")}
                 <ChevronRight className="size-4 shrink-0" aria-hidden="true" />
               </span>
@@ -127,8 +127,8 @@ export async function ScheduleContent({ searchParams }: { searchParams: Promise<
                   aria-current={current ? "true" : undefined}
                   className={`${navLink} border ${
                     current
-                      ? "border-brand-600 bg-brand-100 text-brand-800"
-                      : "border-border bg-surface text-ink hover:border-brand-200 hover:bg-surface-sunken"
+                      ? "border-primary bg-lime-wash text-on-lime-wash"
+                      : "border-border bg-card text-ink hover:border-border-control hover:bg-sunken"
                   }`}
                 >
                   {area.id ? <MapPin className="size-4 shrink-0" aria-hidden="true" /> : null}
@@ -146,14 +146,14 @@ export async function ScheduleContent({ searchParams }: { searchParams: Promise<
         ) : (
           <ol className="flex flex-col gap-4">
             {days.map((day) => (
-              <li key={day.date} className="rounded-xl border border-border bg-surface">
+              <li key={day.date} className="rounded-lg border border-border bg-card">
                 <section aria-labelledby={`day-${day.date}`}>
                   <h3 id={`day-${day.date}`} className="border-b border-border px-4 py-3 font-display text-base font-semibold text-ink md:px-5">
                     {dayName(day.date)}
                   </h3>
                   {day.areas.map((group) => (
                     <div key={group.areaId} className="border-b border-border last:border-b-0">
-                      <h4 className="flex items-center gap-1.5 bg-surface-sunken px-4 py-2 text-xs font-semibold text-ink-muted md:px-5">
+                      <h4 className="flex items-center gap-1.5 bg-sunken px-4 py-2 text-xs font-semibold text-ink-muted md:px-5">
                         <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
                         {areaName(group.areaId)}
                       </h4>

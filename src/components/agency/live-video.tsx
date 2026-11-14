@@ -89,7 +89,7 @@ export function LiveVideo({ orderId, src: firstSrc, initialProblem, label }: Liv
   const failed = problem === "failed";
 
   return (
-    <div className="relative aspect-video overflow-hidden rounded-md bg-surface-sunken">
+    <div className="relative aspect-video overflow-hidden rounded-md bg-sunken">
       {ended || !src ? null : (
         <video
           key={load}
@@ -110,7 +110,7 @@ export function LiveVideo({ orderId, src: firstSrc, initialProblem, label }: Liv
       )}
       <div
         aria-live="polite"
-        className={ended || failed || reloading ? "absolute inset-0 flex flex-col items-center justify-center gap-1 bg-surface-sunken p-4 text-center" : "sr-only"}
+        className={ended || failed || reloading ? "absolute inset-0 flex flex-col items-center justify-center gap-1 bg-sunken p-4 text-center" : "sr-only"}
       >
         {reloading ? (
           <p className="flex items-center gap-2 text-sm text-ink-muted">
@@ -131,7 +131,7 @@ export function LiveVideo({ orderId, src: firstSrc, initialProblem, label }: Liv
             <button
               type="button"
               onClick={() => void reload()}
-              className="inline-flex min-h-touch items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-brand-700 transition-colors duration-150 ease-out-quart hover:bg-surface hover:text-brand-800 active:bg-brand-50"
+              className="inline-flex min-h-touch items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-primary transition-colors duration-150 ease-out-quart hover:bg-card hover:text-ink active:bg-lime-wash"
             >
               <RotateCw className="size-4 shrink-0" aria-hidden="true" />
               {t("reload")}
