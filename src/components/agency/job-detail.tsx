@@ -13,7 +13,6 @@ import { getCatalogServices, getServiceAreas } from "@/lib/catalog/cached";
 import { splitDuration } from "@/lib/catalog/customer-duration";
 import { formatRupiah } from "@/lib/format";
 import { jobProgress, JobsError, listAgencyCleaners, listAgencyJobs, type AgencyCleaner, type AgencyJob } from "@/lib/jobs/jobs";
-import { listAgencyOrderFees, PayoutError } from "@/lib/payouts";
 import { listLiveStreams, StreamError, type LiveStream } from "@/lib/stream/streams";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatAgencyDate } from "./agency-views";
@@ -37,10 +36,11 @@ export type DetailFrom = "incoming" | "past";
 
 const backHref = { incoming: "/agency/orders", past: "/agency/past" } as const;
 
-type Read = { job: AgencyJob | null; cleaners: AgencyCleaner[]; stream: LiveStream | null; fee: number | null } | "noAgency";
+type Read = { job: AgencyJob | null; cleaners: AgencyCleaner[]; stream: LiveStream | null } | "noAgency";
 
-// One job of the agency (D2, after the mocks Partner-Job and Partner-Job-Done): what, when and where,
-// who cleans it (or the assign control while nobody has), how far it has got, and its live view while
+// One job of the agency (D2, after the mocks Partner-Job and Partner-Job-Done): its order number, what,
+// when and where, the agency's fee ("perkiraan" until check-out, B4) and the customer's note (B7), who
+// cleans it (or the assign control while nobody has), how far it has got, and its live view while
 // under way or its recording once finished. ?order=<id> names it; agency_jobs() lists this agency's
 // jobs only, so another agency's id (or any unknown one) answers "not found" like an id that does not
 // exist. The video link is made on the server only after the database said this agency may watch
@@ -81,7 +81,7 @@ export async function JobDetail({ searchParams, from }: { searchParams: Promise<
       </>
     );
   }
-  const { job, stream, fee } = data;
+  const { job, stream } = data;
   if (!job) {
     return (
       <>
@@ -105,13 +105,17 @@ export async function JobDetail({ searchParams, from }: { searchParams: Promise<
   const duration = service ? splitDuration(service.durationMinutes) : null;
   const choices = data.cleaners.map((cleaner) => ({ id: cleaner.id, fullName: cleaner.fullName }));
 
-  const facts: { term: string; value: string }[] = [
+  const feeAmount = formatRupiah(job.agencyFeeIdr, locale);
+  const facts: { term: string; value: string; wide?: boolean; muted?: boolean }[] = [
     { term: t("facts.service"), value: serviceName },
     { term: t("facts.when"), value: when },
     ...(duration ? [{ term: t("facts.duration"), value: t("durationValue", duration) }] : []),
     { term: t("facts.area"), value: area },
     { term: t("facts.address"), value: job.address },
-    { term: t("facts.fee"), value: fee === null ? t(job.completedAt ? "feeUnknown" : "feeLater") : formatRupiah(fee, locale) },
+    { term: t("facts.fee"), value: job.agencyFeeFinal ? feeAmount : t("feeEstimate", { fee: feeAmount }) },
+    job.customerNote
+      ? { term: t("facts.note"), value: job.customerNote, wide: true }
+      : { term: t("facts.note"), value: t("noNote"), wide: true, muted: true },
   ];
 
   return (
@@ -122,7 +126,7 @@ export async function JobDetail({ searchParams, from }: { searchParams: Promise<
           <h1 className="font-display text-title font-semibold text-ink">{serviceName}</h1>
           <JobStatus progress={progress} label={t(`status.${progress}`)} />
         </div>
-        <p className="text-sm text-ink-muted tabular-nums">{stream ? t("subtitleCode", { code: stream.orderCode, when }) : when}</p>
+        <p className="text-sm text-ink-muted tabular-nums">{t("subtitleCode", { code: job.orderCode, when })}</p>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_--spacing(75)] lg:items-start">
@@ -130,9 +134,9 @@ export async function JobDetail({ searchParams, from }: { searchParams: Promise<
           <Panel id="facts-title" title={t("factsTitle")}>
             <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
               {facts.map((fact) => (
-                <div key={fact.term} className="flex min-w-0 flex-col gap-0.5">
+                <div key={fact.term} className={`flex min-w-0 flex-col gap-0.5 ${fact.wide ? "sm:col-span-2" : ""}`}>
                   <dt className="text-xs font-medium text-ink-muted">{fact.term}</dt>
-                  <dd className="text-sm break-words text-ink tabular-nums">{fact.value}</dd>
+                  <dd className={`text-sm break-words whitespace-pre-line tabular-nums ${fact.muted ? "text-ink-muted" : "text-ink"}`}>{fact.value}</dd>
                 </div>
               ))}
             </dl>
@@ -158,7 +162,11 @@ export async function JobDetail({ searchParams, from }: { searchParams: Promise<
           </Panel>
           <Panel id="steps-title" title={t("stepsTitle")}>
             <ol className="flex flex-col gap-3.5">
-              <Step done={job.cleanerName !== null} label={t("steps.assigned")} value={job.cleanerName ? t("steps.yes") : t("steps.notYet")} />
+              <Step
+                done={job.cleanerName !== null}
+                label={t("steps.assigned")}
+                value={job.cleanerName ? (job.assignedAt ? labels.time(job.assignedAt) : t("steps.yes")) : t("steps.notYet")}
+              />
               <Step done={job.checkedInAt !== null} label={t("steps.checkedIn")} value={job.checkedInAt ? labels.time(job.checkedInAt) : t("steps.notYet")} />
               <Step done={job.completedAt !== null} label={t("steps.completed")} value={job.completedAt ? labels.time(job.completedAt) : t("steps.notYet")} />
             </ol>
@@ -173,26 +181,18 @@ export async function JobDetail({ searchParams, from }: { searchParams: Promise<
     if (!(await getMyAgency(client))) return "noAgency";
     const [jobs, cleaners] = await Promise.all([listAgencyJobs(client), listAgencyCleaners(client)]);
     const found = id ? (jobs.find((candidate) => candidate.id === id) ?? null) : null;
-    if (!found) return { job: null, cleaners, stream: null, fee: null };
-    const [stream, fees] = await Promise.all([
+    if (!found) return { job: null, cleaners, stream: null };
+    const stream =
       found.checkedInAt && !found.completedAt
-        ? listLiveStreams(client)
+        ? await listLiveStreams(client)
             .then((streams) => streams.find((candidate) => candidate.orderId === found.id) ?? null)
             .catch((error: unknown) => {
               if (!(error instanceof StreamError)) throw error;
               console.error(error);
               return null;
             })
-        : null,
-      found.completedAt
-        ? listAgencyOrderFees(client, [found.id]).catch((error: unknown) => {
-            if (!(error instanceof PayoutError)) throw error;
-            console.error(error);
-            return null;
-          })
-        : null,
-    ]);
-    return { job: found, cleaners, stream, fee: fees?.get(found.id) ?? null };
+        : null;
+    return { job: found, cleaners, stream };
   }
 }
 

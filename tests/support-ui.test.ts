@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseSupportQuery } from "@/components/support/support-query";
-import { mergeMessages, messageFromChange, statusFromChange } from "@/components/support/ticket-messages";
+import { isReadBy, mergeMessages, messageFromChange, readTimeFromChange, statusFromChange } from "@/components/support/ticket-messages";
 
 // The support screens (T19-T21). /support and /admin/tickets keep what is open in the address
 // (?q=<search> and ?ticket=<id>), so a reload or a link opens the same thing; whatever it says is
@@ -79,5 +79,35 @@ describe("statusFromChange", () => {
     expect(statusFromChange({ id: "other", status: "closed" }, ticketId)).toBeNull();
     expect(statusFromChange({ id: ticketId, status: "lost" }, ticketId)).toBeNull();
     expect(statusFromChange(undefined, ticketId)).toBeNull();
+  });
+});
+
+// "Terkirim" or "Terbaca" under a message (B13): it is read once the other side's read time
+// (customer_read_at for admin's messages) is at or after it. Realtime brings a newer read time.
+describe("isReadBy", () => {
+  const message = { createdAt: "2026-11-14T02:30:00.000Z" };
+
+  it("is read when the other side read the chat at or after the message", () => {
+    expect(isReadBy(message, "2026-11-14T02:30:00.000Z")).toBe(true);
+    expect(isReadBy(message, "2026-11-14T02:31:00.000Z")).toBe(true);
+  });
+
+  it("is only sent when the other side read it before, or never", () => {
+    expect(isReadBy(message, "2026-11-14T02:29:59.000Z")).toBe(false);
+    expect(isReadBy(message, null)).toBe(false);
+  });
+});
+
+describe("readTimeFromChange", () => {
+  it("reads the side's read time from a change of this ticket", () => {
+    expect(readTimeFromChange({ id: ticketId, customer_read_at: "2026-11-14T09:30:00+07:00" }, ticketId, "customer")).toBe("2026-11-14T02:30:00.000Z");
+    expect(readTimeFromChange({ id: ticketId, admin_read_at: "2026-11-14T02:30:00Z" }, ticketId, "admin")).toBe("2026-11-14T02:30:00.000Z");
+  });
+
+  it("reads nothing from another ticket, an empty or a broken time", () => {
+    expect(readTimeFromChange({ id: "other", customer_read_at: "2026-11-14T02:30:00Z" }, ticketId, "customer")).toBeNull();
+    expect(readTimeFromChange({ id: ticketId, customer_read_at: null }, ticketId, "customer")).toBeNull();
+    expect(readTimeFromChange({ id: ticketId, customer_read_at: "soon" }, ticketId, "customer")).toBeNull();
+    expect(readTimeFromChange(undefined, ticketId, "customer")).toBeNull();
   });
 });

@@ -1,19 +1,21 @@
 import { expect, test, type Page } from "@playwright/test";
 import { adminClient } from "../tests/integration/test-project";
-import { jakartaClock } from "./job-test-data";
+import { jakartaClock, jobPhone } from "./job-test-data";
 import { createMonitorWorld, type MonitorWorld } from "./monitor-test-data";
 import { signedInAs } from "./setup/auth-state";
 
 // D1: the admin order detail page after the user's mocks "Admin-Order" and "Admin-Order-Issue", at
 // /admin/orders/<order number>. The spec makes its own agency, cleaners, jobs and streams (the monitor
 // world), one finished job and one help chat about the live order, and removes them at the end (the
-// chat goes with the world's customer).
+// chat goes with the world's customer). The live order also gets a customer note, an assignment time
+// and a payment method, as booking, assign_cleaner and the payment notification would write them (B2).
 
 test.describe.configure({ mode: "serial", timeout: 120_000 });
 
 let data: MonitorWorld;
 let finishedCode: string;
 const question = "Uji pertanyaan tentang pesanan ini dari pelanggan";
+const note = "Uji catatan: mohon lepas sepatu di pintu masuk.";
 
 test.beforeAll(async () => {
   test.setTimeout(180_000);
@@ -33,6 +35,11 @@ test.beforeAll(async () => {
   if (error || !ticket) throw new Error(`Could not set up the help chat: ${error?.message}`);
   const { error: messageError } = await admin.from("ticket_messages").insert({ ticket_id: ticket.id, from_admin: false, body: question });
   if (messageError) throw new Error(`Could not set up the first message: ${messageError.message}`);
+  const { error: orderError } = await admin
+    .from("orders")
+    .update({ customer_note: note, assigned_at: new Date(Date.now() - 30 * 60_000).toISOString(), payment_type: "gopay" })
+    .eq("id", data.live.active.id);
+  if (orderError) throw new Error(`Could not set up the order's details: ${orderError.message}`);
 });
 
 test.afterAll(async () => {
@@ -60,24 +67,39 @@ test("a live order shows its video, facts, people, payment and status steps", as
   const facts = card(page, "Detail pesanan");
   await expect(facts).toContainText("Pembersihan Rutin");
   await expect(facts).toContainText("Jakarta Timur");
+  await expect(facts).toContainText("Jl. Uji Pantau active, Cakung, Jakarta Timur");
+  await expect(facts).toContainText(note);
+
+  const customer = card(page, "Pelanggan");
+  await expect(customer).toContainText("Uji Pelanggan Pekerjaan");
+  await expect(customer.getByRole("link", { name: `Telepon ${jobPhone}` })).toHaveAttribute("href", `tel:${jobPhone}`);
 
   const people = card(page, "Petugas dan agensi");
   await expect(people).toContainText(job.cleaner);
   await expect(people).toContainText(data.agencyName);
 
-  await expect(card(page, "Pembayaran")).toContainText("Lunas");
+  // The booked price and its split (70% by default); an estimate until check-out writes the real fee.
+  const payment = card(page, "Pembayaran");
+  await expect(payment).toContainText(/Harga pelanggan\s*Rp\s150\.000/);
+  await expect(payment).toContainText(/Imbalan agensi \(70%\)\s*\(perkiraan\)\s*Rp\s105\.000/);
+  await expect(payment).toContainText(/Pendapatan HomeKlin\s*\(perkiraan\)\s*Rp\s45\.000/);
+  await expect(payment).toContainText("Lunas");
+  await expect(payment).toContainText("Dibayar dengan GoPay");
+  await expect(payment).not.toContainText("daftar harga");
 
   const steps = card(page, "Status pekerjaan");
+  await expect(steps.locator("[data-step='created']")).toHaveAttribute("data-state", "done");
+  await expect(steps.locator("[data-step='paid']")).toHaveAttribute("data-state", "done");
   await expect(steps.locator("[data-step='assigned']")).toHaveAttribute("data-state", "done");
+  await expect(steps.locator("[data-step='assigned']")).toContainText(/\d{2}\.\d{2}/);
   await expect(steps.locator("[data-step='checkedIn']")).toHaveAttribute("data-state", "done");
   await expect(steps.locator("[data-step='completed']")).toContainText("Belum");
   // Each step carries an icon beside its word, never colour alone.
-  await expect(steps.locator("li svg")).toHaveCount(3);
+  await expect(steps.locator("li svg")).toHaveCount(5);
 });
 
-test("the help chat about the order opens from the page, with the customer's name", async ({ page }) => {
+test("the help chat about the order opens from the page", async ({ page }) => {
   await page.goto(`/admin/orders/${data.live.active.code}`);
-  await expect(card(page, "Pelanggan")).toContainText("Uji Pelanggan Pekerjaan");
   await page.getByRole("link", { name: "Buka obrolan pelanggan" }).click();
   await expect(page).toHaveURL(/\/admin\/tickets\?ticket=/);
   await expect(page.getByRole("region", { name: "Percakapan dengan pelanggan" }).getByText(question).first()).toBeVisible();
@@ -90,9 +112,12 @@ test("a disconnected order says so in the chip, the frame and the steps", async 
   await expect(video.getByText("Siaran terputus", { exact: true })).toBeVisible();
   await expect(video).toContainText(/Siaran terputus pukul \d{2}\.\d{2}\./);
   await expect(card(page, "Status pekerjaan").locator("[data-step='disconnected']")).toHaveAttribute("data-state", "problem");
-  // No help chat about this order: no chat button and no customer card.
+  // No help chat about this order: no chat button, but the customer's card is there all the same.
   await expect(page.getByRole("link", { name: "Buka obrolan pelanggan" })).toHaveCount(0);
-  await expect(card(page, "Pelanggan")).toHaveCount(0);
+  await expect(card(page, "Pelanggan")).toContainText("Uji Pelanggan Pekerjaan");
+  // No note and no payment method on this order.
+  await expect(card(page, "Detail pesanan")).toContainText("Tidak ada catatan.");
+  await expect(card(page, "Pembayaran")).not.toContainText("Dibayar dengan");
 });
 
 test("an order not checked in yet shows its start time and no video", async ({ page }) => {
@@ -111,6 +136,8 @@ test("a finished order shows when it finished and that it has no recording", asy
   await expect(video).toContainText(/Pekerjaan selesai pukul \d{2}\.\d{2}\./);
   await expect(video).toContainText("Pekerjaan ini tidak memiliki rekaman.");
   await expect(card(page, "Status pekerjaan").locator("[data-step='completed']")).toHaveAttribute("data-state", "done");
+  // Finished, but the fee row is not written in this test data, so the split is still an estimate.
+  await expect(card(page, "Pembayaran")).toContainText("perkiraan");
 });
 
 test("an unknown or malformed order number shows a plain message", async ({ page }) => {
@@ -127,5 +154,7 @@ test("reads in English", async ({ page }) => {
   await expect(page.getByRole("status").first()).toHaveText("Weak signal");
   await expect(page.getByText(new RegExp(`^Order ${data.live.weak.code}, `))).toBeVisible();
   await expect(card(page, "Job status").locator("[data-step='weak']")).toContainText("Weak signal");
+  await expect(card(page, "Payment")).toContainText(/Agency fee \(70%\)\s*\(estimate\)/);
+  await expect(card(page, "Order details")).toContainText("No note.");
   await expect(page.getByRole("link", { name: "Back to live monitoring" })).toHaveAttribute("href", "/en/admin/monitor");
 });

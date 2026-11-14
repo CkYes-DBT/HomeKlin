@@ -388,7 +388,11 @@
       "unavailable": "Pesan belum terkirim karena ada gangguan. Coba lagi sebentar lagi."
     },
     "openJob": "Buka pekerjaan",
-    "urgentBanner": "Mendesak, dikirim {time}"
+    "urgentBanner": "Mendesak, dikirim {time}",
+    "guest": "Tamu, tanpa akun",
+    "guestNoEmail": "Tidak memberi email",
+    "read": "Terbaca",
+    "sent": "Terkirim"
   },
   "AccountPage": {
     "title": "Akun",
@@ -891,7 +895,6 @@
     "listTitle": "Petugas Anda",
     "count": "{count, plural, other {# petugas}}",
     "photoAlt": "Foto {name}",
-    "noPhoto": "Belum ada foto",
     "emptyTitle": "Belum ada petugas",
     "emptyBody": "Tambahkan petugas pertama Anda dengan formulir di bawah. Setelah itu Anda bisa menugaskannya ke pekerjaan.",
     "form": {
@@ -914,7 +917,10 @@
     "table": {
       "cleaner": "Petugas",
       "status": "Status",
-      "week": "Pekerjaan pekan ini"
+      "week": "Pekerjaan pekan ini",
+      "phone": "Nomor HP",
+      "area": "Area",
+      "edit": "Ubah"
     },
     "notAtWork": "Tidak sedang bertugas",
     "availability": {
@@ -932,7 +938,24 @@
       "free": "{free, number} dari {capacity, number} kosong",
       "note": "Setiap kotak menunjukkan tempat kosong pada jendela yang mulai pada jam itu, di semua area Anda. Jam bertanda Tutup tidak menerima pekerjaan.",
       "manage": "Atur jadwal"
-    }
+    },
+    "noPhone": "Nomor HP belum diisi",
+    "noArea": "Area belum dipilih",
+    "details": {
+      "edit": "Ubah",
+      "editFor": "Ubah nomor HP dan area {name}",
+      "formLabel": "Nomor HP dan area {name}",
+      "phone": "Nomor HP",
+      "phoneHint": "Misalnya 0812 3456 7890. Kosongkan untuk menghapus.",
+      "area": "Area",
+      "areaHint": "Hanya area yang dilayani agensi Anda.",
+      "noArea": "Belum dipilih",
+      "save": "Simpan",
+      "saving": "Menyimpan…",
+      "cancel": "Batal",
+      "saved": "Data {name} disimpan."
+    },
+    "weekJobsValue": "{count, plural, =0 {Belum ada pekerjaan pekan ini} other {# pekerjaan pekan ini}}"
   },
   "AgencyOrdersPage": {
     "title": "Pekerjaan masuk",
@@ -957,7 +980,7 @@
       "inProgress": "Berlangsung"
     },
     "searchLabel": "Cari pekerjaan",
-    "searchPlaceholder": "Layanan, alamat, petugas",
+    "searchPlaceholder": "Nomor pesanan, layanan, alamat, petugas",
     "searchSubmit": "Cari",
     "count": "{count, plural, =0 {Tidak ada pekerjaan} other {# pekerjaan}}, paling awal di atas",
     "countSearch": "{count, plural, =0 {Tidak ada pekerjaan} other {# pekerjaan}} untuk “{query}”",
@@ -973,7 +996,8 @@
       "when": "Jadwal",
       "status": "Status",
       "cleaner": "Petugas",
-      "detail": "Detail"
+      "detail": "Detail",
+      "fee": "Imbalan agensi"
     },
     "serviceFallback": "Layanan tidak aktif",
     "change": "Ganti",
@@ -1002,7 +1026,10 @@
         "started": "Petugas sudah check-in, jadi petugasnya tidak bisa diganti lagi.",
         "unavailable": "Penugasan belum bisa disimpan. Coba lagi sebentar lagi."
       }
-    }
+    },
+    "estimate": "perkiraan",
+    "feeEstimate": "{fee} (perkiraan)",
+    "feeValue": "Imbalan agensi {fee}"
   },
   "AgencyPastPage": {
     "title": "Pesanan selesai",
@@ -1011,8 +1038,6 @@
     "noAgencyBody": "Hubungi admin HomeKlin agar akun Anda dihubungkan ke agensi Anda.",
     "errorTitle": "Pesanan selesai belum bisa dimuat.",
     "errorBody": "Muat ulang halaman untuk mencoba lagi.",
-    "feesErrorTitle": "Imbalan per pesanan belum bisa dimuat.",
-    "feesErrorBody": "Daftar tetap tampil tanpa kolom imbalan.",
     "listTitle": "Daftar pesanan selesai",
     "filterLabel": "Filter rekaman",
     "filter": {
@@ -1021,7 +1046,7 @@
       "deleted": "Rekaman dihapus"
     },
     "searchLabel": "Cari pesanan",
-    "searchPlaceholder": "Layanan, alamat, petugas",
+    "searchPlaceholder": "Nomor pesanan, layanan, alamat, petugas",
     "searchSubmit": "Cari",
     "count": "{count, plural, =0 {Tidak ada pesanan} other {# pesanan}}, terbaru di atas",
     "countSearch": "{count, plural, =0 {Tidak ada pesanan} other {# pesanan}} untuk “{query}”",
@@ -1044,14 +1069,15 @@
     "finishedValue": "Selesai {day}, {window} WIB",
     "windowValue": "{window} WIB",
     "feeValue": "Imbalan agensi {fee}",
-    "noFee": "Belum tercatat",
     "noCleaner": "Tanpa petugas",
     "detailFor": "Lihat detail {service}, {day}",
     "recording": {
       "available": "Tersedia sampai {day}",
       "expired": "Dihapus setelah 7 hari",
       "none": "Tidak ada rekaman"
-    }
+    },
+    "estimate": "perkiraan",
+    "feeEstimate": "{fee} (perkiraan)"
   },
   "AgencyJobPage": {
     "title": "Detail pesanan",
@@ -1075,10 +1101,9 @@
       "duration": "Durasi",
       "area": "Area",
       "address": "Alamat",
-      "fee": "Imbalan agensi"
+      "fee": "Imbalan agensi",
+      "note": "Catatan pelanggan"
     },
-    "feeUnknown": "Belum dapat dibaca",
-    "feeLater": "Tercatat setelah pekerjaan selesai",
     "factsTitle": "Detail pesanan",
     "asideLabel": "Petugas dan status",
     "cleanerTitle": "Petugas",
@@ -1109,11 +1134,13 @@
     "liveSince": "Check-in pukul {time} WIB.",
     "recordingAfter": "Rekaman tersedia setelah pekerjaan selesai, selama 7 hari.",
     "liveNone": "Belum ada siaran untuk pekerjaan ini.",
-    "liveLater": "Siaran dimulai saat petugas check-in di alamat."
+    "liveLater": "Siaran dimulai saat petugas check-in di alamat.",
+    "noNote": "Tidak ada catatan.",
+    "feeEstimate": "{fee} (perkiraan, pasti setelah petugas check-out)"
   },
   "AgencyServicesPage": {
     "title": "Layanan",
-    "description": "Layanan HomeKlin yang dikerjakan petugas agensi Anda. Daftar dan harga ditetapkan oleh HomeKlin; agensi tidak dapat menambah layanan atau mengubah harga.",
+    "description": "Pilih layanan HomeKlin yang dapat dikerjakan agensi Anda. Daftar dan harga ditetapkan oleh HomeKlin; agensi tidak dapat menambah layanan atau mengubah harga.",
     "errorTitle": "Daftar layanan belum bisa dimuat.",
     "errorBody": "Muat ulang halaman untuk mencoba lagi.",
     "emptyTitle": "Belum ada layanan aktif",
@@ -1134,7 +1161,19 @@
       "rooms": "Per ruangan",
       "fabrics": "Kain & kasur"
     },
-    "note": "Semua layanan aktif HomeKlin dapat dipesan di area yang dilayani agensi Anda. Memilih sendiri layanan yang ditawarkan belum tersedia. Layanan baru muncul di sini setelah admin mengaktifkannya."
+    "noAgencyTitle": "Akun ini belum terhubung ke agensi.",
+    "noAgencyBody": "Hubungi admin HomeKlin agar akun Anda dihubungkan ke agensi Anda.",
+    "noteAll": "Agensi Anda menawarkan semua layanan aktif HomeKlin, juga layanan baru setelah admin mengaktifkannya. Pelanggan hanya dapat memesan layanan yang ditawarkan agensi di area mereka.",
+    "noteRestricted": "Layanan baru dari HomeKlin muncul di daftar ini setelah berstatus aktif, tetapi tidak ditawarkan sampai Anda mencentangnya. Pelanggan hanya dapat memesan layanan yang ditawarkan agensi di area mereka.",
+    "notOffered": "Tidak ditawarkan",
+    "offerService": "Tawarkan {name}",
+    "offerAll": "Tawarkan semua layanan, juga layanan baru dari HomeKlin",
+    "edit": "Ubah pilihan",
+    "cancel": "Batal",
+    "save": "Simpan pilihan",
+    "saving": "Menyimpan…",
+    "saved": "Pilihan layanan disimpan.",
+    "editing": "Mode ubah aktif: centang layanan yang ingin Anda tawarkan, lalu pilih Simpan pilihan."
   },
   "AgencyRecordingsPage": {
     "title": "Video petugas",
@@ -1319,7 +1358,8 @@
       "apply": "Terapkan"
     },
     "orderLine": "Pesanan {code}, {service}, {when}",
-    "orderLineShort": "Pesanan {code}, {when}"
+    "orderLineShort": "Pesanan {code}, {when}",
+    "guest": "Tamu"
   },
   "AdminRecordingsPage": {
     "title": "Rekaman",
@@ -1408,11 +1448,6 @@
     "create": {
       "title": "Layanan baru",
       "description": "Isi kedua bahasa. Layanan baru tersimpan sebagai Draf sampai Anda mencentang Tampilkan di situs pelanggan."
-    },
-    "photo": {
-      "title": "Foto layanan",
-      "shown": "Tampil di kartu layanan. Foto ditambahkan oleh tim pengembang.",
-      "none": "Belum ada foto, jadi kartu layanan menampilkan ikon jenisnya. Foto ditambahkan oleh tim pengembang."
     }
   },
   "AdminServiceForm": {
@@ -1465,6 +1500,20 @@
       "forbidden": "Hanya admin yang dapat mengubah layanan. Masuk dengan akun admin, lalu coba lagi.",
       "notFound": "Layanan ini tidak ditemukan lagi. Buka daftar layanan, lalu coba lagi.",
       "unavailable": "Perubahan belum dapat disimpan. Coba lagi sebentar lagi."
+    },
+    "photo": {
+      "title": "Foto layanan",
+      "own": "Foto ini tampil di kartu layanan pelanggan.",
+      "fallback": "Kartu layanan memakai foto bawaan HomeKlin atau ikon jenisnya. Tambahkan foto untuk menggantinya.",
+      "chosen": "Foto baru dipilih. Tersimpan setelah Anda menyimpan layanan.",
+      "removing": "Foto akan dihapus saat Anda menyimpan layanan.",
+      "add": "Tambah foto",
+      "change": "Ganti foto",
+      "takeBack": "Batalkan foto",
+      "remove": "Hapus foto layanan ini",
+      "previewAlt": "Pratinjau foto layanan",
+      "hint": "JPG, PNG atau WebP, paling besar 2 MB. Foto dipotong menjadi 3:2 di kartu layanan.",
+      "invalid": "Foto harus JPG, PNG atau WebP dan paling besar 2 MB."
     }
   },
   "AdminFaqPage": {
@@ -1854,11 +1903,16 @@
       "schedule": "Jadwal",
       "scheduleValue": "{day}, {window}",
       "duration": "Perkiraan durasi",
-      "area": "Area"
+      "area": "Area",
+      "address": "Alamat",
+      "note": "Catatan pelanggan",
+      "noNote": "Tidak ada catatan."
     },
     "customer": {
       "title": "Pelanggan",
-      "fromChat": "Dari obrolan bantuan pesanan ini"
+      "fallback": "Pelanggan",
+      "noPhone": "Nomor telepon tidak tercatat",
+      "call": "Telepon"
     },
     "cleaner": {
       "title": "Petugas dan agensi",
@@ -1869,9 +1923,29 @@
     },
     "payment": {
       "title": "Pembayaran",
-      "listPrice": "Harga di daftar harga",
-      "note": "Harga sesuai daftar harga saat ini. Harga saat dipesan dan pembagian imbalan agensi tidak tampil di konsol admin.",
-      "paid": "Lunas"
+      "paid": "Lunas",
+      "price": "Harga pelanggan",
+      "agencyFee": "Imbalan agensi",
+      "agencyFeePercent": "Imbalan agensi ({percent}%)",
+      "income": "Pendapatan HomeKlin",
+      "estimate": "perkiraan",
+      "estimateNote": "Imbalan pasti tercatat setelah petugas check-out.",
+      "method": "Dibayar dengan {method}",
+      "status": {
+        "pending_payment": "Menunggu pembayaran",
+        "failed": "Pembayaran gagal",
+        "cancelled": "Dibatalkan",
+        "paid": "Lunas"
+      },
+      "methods": {
+        "gopay": "GoPay",
+        "shopeepay": "ShopeePay",
+        "qris": "QRIS",
+        "bank_transfer": "transfer bank",
+        "credit_card": "kartu kredit atau debit",
+        "cstore": "gerai ritel",
+        "other": "metode lain"
+      }
     },
     "timeline": {
       "title": "Status pekerjaan",
@@ -1880,14 +1954,17 @@
         "checkedIn": "Check-in di alamat",
         "weak": "Sinyal lemah",
         "disconnected": "Siaran terputus",
-        "completed": "Selesai"
+        "completed": "Selesai",
+        "created": "Dipesan",
+        "paid": "Dibayar"
       },
       "states": {
         "done": "sudah",
         "problem": "ada kendala",
         "pending": "belum"
       },
-      "notYet": "Belum"
+      "notYet": "Belum",
+      "dated": "{date}, {time}"
     }
   },
   "AdminFaqForm": {

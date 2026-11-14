@@ -388,7 +388,11 @@
       "unavailable": "Your message was not sent because of a problem on our side. Please try again shortly."
     },
     "openJob": "Open job",
-    "urgentBanner": "Urgent, sent {time}"
+    "urgentBanner": "Urgent, sent {time}",
+    "guest": "Guest, no account",
+    "guestNoEmail": "No email given",
+    "read": "Read",
+    "sent": "Sent"
   },
   "AccountPage": {
     "title": "Account",
@@ -891,7 +895,6 @@
     "listTitle": "Your cleaners",
     "count": "{count, plural, one {# cleaner} other {# cleaners}}",
     "photoAlt": "Photo of {name}",
-    "noPhoto": "No photo yet",
     "emptyTitle": "No cleaners yet",
     "emptyBody": "Add your first cleaner with the form below. You can then assign them to jobs.",
     "form": {
@@ -914,7 +917,10 @@
     "table": {
       "cleaner": "Cleaner",
       "status": "Status",
-      "week": "Jobs this week"
+      "week": "Jobs this week",
+      "phone": "Phone",
+      "area": "Area",
+      "edit": "Edit"
     },
     "notAtWork": "Not at a job",
     "availability": {
@@ -932,7 +938,24 @@
       "free": "{free, number} of {capacity, number} free",
       "note": "Each box shows the free places of the time slots starting at that hour, across all your areas. Hours marked Closed take no jobs.",
       "manage": "Manage schedule"
-    }
+    },
+    "noPhone": "No phone yet",
+    "noArea": "No area yet",
+    "details": {
+      "edit": "Edit",
+      "editFor": "Edit the phone and area of {name}",
+      "formLabel": "Phone and area of {name}",
+      "phone": "Phone number",
+      "phoneHint": "For example 0812 3456 7890. Leave it empty to remove it.",
+      "area": "Area",
+      "areaHint": "Only the areas your agency serves.",
+      "noArea": "Not chosen",
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "saved": "Details of {name} saved."
+    },
+    "weekJobsValue": "{count, plural, =0 {No jobs this week} one {# job this week} other {# jobs this week}}"
   },
   "AgencyOrdersPage": {
     "title": "Incoming jobs",
@@ -957,7 +980,7 @@
       "inProgress": "In progress"
     },
     "searchLabel": "Search jobs",
-    "searchPlaceholder": "Service, address, cleaner",
+    "searchPlaceholder": "Order number, service, address, cleaner",
     "searchSubmit": "Search",
     "count": "{count, plural, =0 {No jobs} one {# job} other {# jobs}}, earliest first",
     "countSearch": "{count, plural, =0 {No jobs} one {# job} other {# jobs}} for “{query}”",
@@ -973,7 +996,8 @@
       "when": "Schedule",
       "status": "Status",
       "cleaner": "Cleaner",
-      "detail": "Details"
+      "detail": "Details",
+      "fee": "Agency fee"
     },
     "serviceFallback": "Service no longer offered",
     "change": "Change",
@@ -1002,7 +1026,10 @@
         "started": "The cleaner has checked in, so the cleaner can no longer be changed.",
         "unavailable": "The assignment could not be saved. Try again in a moment."
       }
-    }
+    },
+    "estimate": "estimate",
+    "feeEstimate": "{fee} (estimate)",
+    "feeValue": "Agency fee {fee}"
   },
   "AgencyPastPage": {
     "title": "Completed orders",
@@ -1011,8 +1038,6 @@
     "noAgencyBody": "Ask a HomeKlin admin to link your account to your agency.",
     "errorTitle": "The completed orders could not be loaded.",
     "errorBody": "Reload the page to try again.",
-    "feesErrorTitle": "The fee per order could not be loaded.",
-    "feesErrorBody": "The list still shows, without the fee column.",
     "listTitle": "Completed order list",
     "filterLabel": "Recording filter",
     "filter": {
@@ -1021,7 +1046,7 @@
       "deleted": "Recording deleted"
     },
     "searchLabel": "Search orders",
-    "searchPlaceholder": "Service, address, cleaner",
+    "searchPlaceholder": "Order number, service, address, cleaner",
     "searchSubmit": "Search",
     "count": "{count, plural, =0 {No orders} one {# order} other {# orders}}, newest first",
     "countSearch": "{count, plural, =0 {No orders} one {# order} other {# orders}} for “{query}”",
@@ -1044,14 +1069,15 @@
     "finishedValue": "Completed {day}, {window} WIB",
     "windowValue": "{window} WIB",
     "feeValue": "Agency fee {fee}",
-    "noFee": "Not recorded yet",
     "noCleaner": "No cleaner",
     "detailFor": "See details of {service}, {day}",
     "recording": {
       "available": "Available until {day}",
       "expired": "Deleted after 7 days",
       "none": "No recording"
-    }
+    },
+    "estimate": "estimate",
+    "feeEstimate": "{fee} (estimate)"
   },
   "AgencyJobPage": {
     "title": "Order details",
@@ -1075,10 +1101,9 @@
       "duration": "Duration",
       "area": "Area",
       "address": "Address",
-      "fee": "Agency fee"
+      "fee": "Agency fee",
+      "note": "Customer note"
     },
-    "feeUnknown": "Could not be read",
-    "feeLater": "Recorded once the job is finished",
     "factsTitle": "Order details",
     "asideLabel": "Cleaner and status",
     "cleanerTitle": "Cleaner",
@@ -1109,11 +1134,13 @@
     "liveSince": "Checked in at {time} WIB.",
     "recordingAfter": "The recording is available for 7 days once the job is finished.",
     "liveNone": "There is no live view for this job yet.",
-    "liveLater": "The live view starts when the cleaner checks in at the address."
+    "liveLater": "The live view starts when the cleaner checks in at the address.",
+    "noNote": "No note.",
+    "feeEstimate": "{fee} (estimate, final after the cleaner checks out)"
   },
   "AgencyServicesPage": {
     "title": "Services",
-    "description": "HomeKlin services your agency’s cleaners carry out. HomeKlin sets the list and the prices; an agency cannot add services or change prices.",
+    "description": "Choose the HomeKlin services your agency can do. HomeKlin sets the list and the prices; agencies cannot add services or change prices.",
     "errorTitle": "The service list could not be loaded.",
     "errorBody": "Reload the page to try again.",
     "emptyTitle": "No active services yet",
@@ -1134,7 +1161,19 @@
       "rooms": "Single rooms",
       "fabrics": "Fabrics & mattresses"
     },
-    "note": "Every active HomeKlin service can be booked in the areas your agency serves. Choosing which services you offer is not available yet. New services appear here once an admin makes them active."
+    "noAgencyTitle": "This account is not linked to an agency yet.",
+    "noAgencyBody": "Ask HomeKlin's admin to link your account to your agency.",
+    "noteAll": "Your agency offers every active HomeKlin service, including new ones once admin activates them. Customers can only book services that an agency in their area offers.",
+    "noteRestricted": "New HomeKlin services appear in this list once they are active, but are not offered until you tick them. Customers can only book services that an agency in their area offers.",
+    "notOffered": "Not offered",
+    "offerService": "Offer {name}",
+    "offerAll": "Offer every service, including new ones from HomeKlin",
+    "edit": "Change choice",
+    "cancel": "Cancel",
+    "save": "Save choice",
+    "saving": "Saving…",
+    "saved": "Service choice saved.",
+    "editing": "Edit mode: tick the services you want to offer, then choose Save choice."
   },
   "AgencyRecordingsPage": {
     "title": "Cleaner videos",
@@ -1319,7 +1358,8 @@
       "apply": "Apply"
     },
     "orderLine": "Order {code}, {service}, {when}",
-    "orderLineShort": "Order {code}, {when}"
+    "orderLineShort": "Order {code}, {when}",
+    "guest": "Guest"
   },
   "AdminRecordingsPage": {
     "title": "Recordings",
@@ -1408,11 +1448,6 @@
     "create": {
       "title": "New service",
       "description": "Fill in both languages. A new service is saved as a Draft until you tick Show on the customer site."
-    },
-    "photo": {
-      "title": "Service photo",
-      "shown": "Shown on the service card. Photos are added by the development team.",
-      "none": "No photo yet, so the service card shows its type's icon. Photos are added by the development team."
     }
   },
   "AdminServiceForm": {
@@ -1465,6 +1500,20 @@
       "forbidden": "Only an admin can change services. Log in with an admin account, then try again.",
       "notFound": "This service could not be found any more. Open the list of services, then try again.",
       "unavailable": "The changes could not be saved. Try again in a moment."
+    },
+    "photo": {
+      "title": "Service photo",
+      "own": "This photo shows on the customers' service card.",
+      "fallback": "The service card uses HomeKlin's own photo or its type's icon. Add a photo to replace it.",
+      "chosen": "New photo chosen. It is stored when you save the service.",
+      "removing": "The photo will be removed when you save the service.",
+      "add": "Add photo",
+      "change": "Change photo",
+      "takeBack": "Undo photo",
+      "remove": "Remove this service's photo",
+      "previewAlt": "Preview of the service photo",
+      "hint": "JPG, PNG or WebP, at most 2 MB. The photo is cropped to 3:2 on the service card.",
+      "invalid": "The photo must be JPG, PNG or WebP and at most 2 MB."
     }
   },
   "AdminFaqPage": {
@@ -1854,11 +1903,16 @@
       "schedule": "Schedule",
       "scheduleValue": "{day}, {window}",
       "duration": "Estimated duration",
-      "area": "Area"
+      "area": "Area",
+      "address": "Address",
+      "note": "Customer note",
+      "noNote": "No note."
     },
     "customer": {
       "title": "Customer",
-      "fromChat": "From this order's help chat"
+      "fallback": "Customer",
+      "noPhone": "No phone number on record",
+      "call": "Call"
     },
     "cleaner": {
       "title": "Cleaner and agency",
@@ -1869,9 +1923,29 @@
     },
     "payment": {
       "title": "Payment",
-      "listPrice": "Price list",
-      "note": "The price on today's price list. The price at booking and the agency fee split are not shown in the admin console.",
-      "paid": "Paid"
+      "paid": "Paid",
+      "price": "Customer price",
+      "agencyFee": "Agency fee",
+      "agencyFeePercent": "Agency fee ({percent}%)",
+      "income": "HomeKlin income",
+      "estimate": "estimate",
+      "estimateNote": "The final fee is recorded when the cleaner checks out.",
+      "method": "Paid with {method}",
+      "status": {
+        "pending_payment": "Waiting for payment",
+        "failed": "Payment failed",
+        "cancelled": "Cancelled",
+        "paid": "Paid"
+      },
+      "methods": {
+        "gopay": "GoPay",
+        "shopeepay": "ShopeePay",
+        "qris": "QRIS",
+        "bank_transfer": "bank transfer",
+        "credit_card": "credit or debit card",
+        "cstore": "a retail store",
+        "other": "another method"
+      }
     },
     "timeline": {
       "title": "Job status",
@@ -1880,14 +1954,17 @@
         "checkedIn": "Checked in at the address",
         "weak": "Weak signal",
         "disconnected": "Stream dropped",
-        "completed": "Finished"
+        "completed": "Finished",
+        "created": "Booked",
+        "paid": "Paid"
       },
       "states": {
         "done": "done",
         "problem": "having trouble",
         "pending": "not yet"
       },
-      "notYet": "Not yet"
+      "notYet": "Not yet",
+      "dated": "{date}, {time}"
     }
   },
   "AdminFaqForm": {

@@ -8,8 +8,8 @@ import { ClientMessages } from "@/i18n/client-messages";
 import { Link } from "@/i18n/navigation";
 import { AgencyError, getMyAgency } from "@/lib/agency/agency";
 import { getCatalogServices, getServiceAreas } from "@/lib/catalog/cached";
+import { formatRupiah } from "@/lib/format";
 import { jobProgress, JobsError, listAgencyCleaners, listAgencyJobs, type AgencyCleaner, type AgencyJob } from "@/lib/jobs/jobs";
-import { listLiveStreams, StreamError } from "@/lib/stream/streams";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { incomingCounts, incomingJobs, matchesSearch, parseIncomingStatus, parseSearch, type IncomingStatus } from "./agency-views";
 import { CountTile, DetailArrow, FilterLinks, Initials, JobStatus, SearchField } from "./agency-ui";
@@ -22,15 +22,15 @@ type SearchParams = Record<string, string | string[] | undefined>;
 const cell = "px-4 py-3 align-middle";
 const headCell = "px-4 py-3 text-left text-xs font-semibold text-ink-muted";
 
-type Read = { jobs: AgencyJob[]; cleaners: AgencyCleaner[]; codes: Map<string, string> } | null;
+type Read = { jobs: AgencyJob[]; cleaners: AgencyCleaner[] } | null;
 
 // "Pekerjaan masuk" (D2, after the mock Partner-Jobs; T18, T28): the paid jobs HomeKlin routed to this
 // agency that are not finished yet, earliest first, with four counts above (waiting for a cleaner,
-// assigned, under way, finished this week), a status filter (?status=) and a search (?q=) that work as
-// plain addresses, and for every job nobody has checked in to yet the control that assigns one of the
-// agency's own cleaners. Everything is read with the agency's own session: agency_jobs(),
-// agency_cleaners() and live_streams() answer with this agency's rows only. The order number is known
-// for the jobs under way only (live_streams() returns it; agency_jobs() does not).
+// assigned, under way, finished this week), a status filter (?status=) and a search (?q=, also by order
+// number) that work as plain addresses, the agency's fee for each job ("perkiraan" until check-out
+// records the real one, B4), and for every job nobody has checked in to yet the control that assigns
+// one of the agency's own cleaners. Everything is read with the agency's own session: agency_jobs()
+// and agency_cleaners() answer with this agency's rows only.
 export async function IncomingContent({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const [t, locale, params] = await Promise.all([getTranslations("AgencyOrdersPage"), getLocale(), searchParams]);
   const status = parseIncomingStatus(params.status);
@@ -41,17 +41,8 @@ export async function IncomingContent({ searchParams }: { searchParams: Promise<
     const client = await createSupabaseServerClient({ writeCookies: false });
     if (!(await getMyAgency(client))) data = null;
     else {
-      const [jobs, cleaners, streams] = await Promise.all([
-        listAgencyJobs(client),
-        listAgencyCleaners(client),
-        // The order numbers of the jobs under way; the list still works without them.
-        listLiveStreams(client).catch((error: unknown) => {
-          if (!(error instanceof StreamError)) throw error;
-          console.error(error);
-          return [];
-        }),
-      ]);
-      data = { jobs, cleaners, codes: new Map(streams.map((stream) => [stream.orderId, stream.orderCode])) };
+      const [jobs, cleaners] = await Promise.all([listAgencyJobs(client), listAgencyCleaners(client)]);
+      data = { jobs, cleaners };
     }
   } catch (error) {
     // Only a failed read becomes a message; anything else (such as Next.js' own signals) goes on.
@@ -70,11 +61,12 @@ export async function IncomingContent({ searchParams }: { searchParams: Promise<
   const [services, areas, labels] = await Promise.all([getCatalogServices(), getServiceAreas(), getSlotLabels(locale)]);
   const serviceName = (id: string) => services.find((service) => service.id === id)?.name[locale];
   const areaName = (id: string) => areas.find((area) => area.id === id)?.name[locale] ?? id;
-  const codes = data.codes;
+  const fee = (job: AgencyJob) =>
+    job.agencyFeeFinal ? formatRupiah(job.agencyFeeIdr, locale) : t("feeEstimate", { fee: formatRupiah(job.agencyFeeIdr, locale) });
 
   const open = incomingJobs(data.jobs, status);
   const rows = open.filter((job) =>
-    matchesSearch([serviceName(job.serviceId), areaName(job.areaId), job.address, job.cleanerName, codes.get(job.id)], query),
+    matchesSearch([serviceName(job.serviceId), areaName(job.areaId), job.address, job.cleanerName, job.orderCode], query),
   );
   const choices = data.cleaners.map((cleaner) => ({ id: cleaner.id, fullName: cleaner.fullName }));
 
@@ -145,6 +137,9 @@ export async function IncomingContent({ searchParams }: { searchParams: Promise<
                 <th scope="col" className={`${headCell} hidden lg:table-cell`}>
                   {t("table.cleaner")}
                 </th>
+                <th scope="col" className={`${headCell} hidden text-right md:table-cell`}>
+                  {t("table.fee")}
+                </th>
                 <th scope="col" className={headCell}>
                   <span className="sr-only">{t("table.detail")}</span>
                 </th>
@@ -154,9 +149,8 @@ export async function IncomingContent({ searchParams }: { searchParams: Promise<
               {rows.map((job) => {
                 const progress = jobProgress(job);
                 const service = serviceName(job.serviceId) ?? t("serviceFallback");
-                const code = codes.get(job.id);
                 const detail = { pathname: "/agency/orders/job", query: { order: job.id } };
-                const where = code ? `${code}, ${areaName(job.areaId)}` : areaName(job.areaId);
+                const where = `${job.orderCode}, ${areaName(job.areaId)}`;
                 const day = labels.day({ date: jakartaDayOf(job.startsAt, now).date, relative: jakartaDayOf(job.startsAt, now).relative });
                 const cleaner = (
                   <CleanerCell
@@ -178,6 +172,7 @@ export async function IncomingContent({ searchParams }: { searchParams: Promise<
                         <span className="text-ink tabular-nums">{t("whenValue", { day, window: labels.window(job) })}</span>
                         <JobStatus progress={progress} label={t(`status.${progress}`)} />
                         {cleaner}
+                        <span className="text-ink tabular-nums">{t("feeValue", { fee: fee(job) })}</span>
                       </span>
                     </td>
                     <td className={`${cell} hidden whitespace-nowrap text-ink tabular-nums md:table-cell`}>
@@ -191,6 +186,10 @@ export async function IncomingContent({ searchParams }: { searchParams: Promise<
                       </span>
                     </td>
                     <td className={`${cell} hidden min-w-64 lg:table-cell`}>{cleaner}</td>
+                    <td className={`${cell} hidden text-right whitespace-nowrap text-ink tabular-nums md:table-cell`}>
+                      {formatRupiah(job.agencyFeeIdr, locale)}
+                      {job.agencyFeeFinal ? null : <span className="block text-xs text-ink-muted">{t("estimate")}</span>}
+                    </td>
                     <td className={`${cell} w-14 text-right`}>
                       <DetailArrow href={detail} label={t("detailFor", { service, day })} />
                     </td>

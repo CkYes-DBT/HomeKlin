@@ -35,3 +35,16 @@ export function statusFromChange(row: unknown, ticketId: string): TicketStatus |
   const status = statuses.find((candidate) => candidate === row.status);
   return status ?? null;
 }
+
+/** "Terbaca": the other side read the chat at or after this message (B13). */
+export function isReadBy(message: Pick<TicketMessage, "createdAt">, readAt: string | null): boolean {
+  return readAt !== null && Date.parse(readAt) >= Date.parse(message.createdAt);
+}
+
+/** A side's read time (customer_read_at or admin_read_at) in a support_tickets change, or null. */
+export function readTimeFromChange(row: unknown, ticketId: string, side: "customer" | "admin"): string | null {
+  if (!isRecord(row) || row.id !== ticketId) return null;
+  const value = row[side === "customer" ? "customer_read_at" : "admin_read_at"];
+  if (typeof value !== "string" || Number.isNaN(Date.parse(value))) return null;
+  return new Date(value).toISOString();
+}

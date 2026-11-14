@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import type { ServiceFormValues } from "@/lib/validation/service";
 import { CheckboxField, FixedField, SelectField, TextAreaField } from "./form-fields";
 import { SaveButton, useServiceForm } from "./service-form";
+import { ServicePhotoField } from "./service-photo-field";
 
 type Categories = readonly { value: string; label: string }[];
 
@@ -15,8 +16,10 @@ type PanelProps = {
   categories: Categories;
   /** The row the panel opens from (rendered on the server): the details' <summary>. */
   summary: ReactNode;
-  /** The service's photo row (rendered on the server, services-list.tsx), after the mock "Admin-ServiceNew". */
+  /** What the service card shows now (rendered on the server, services-list.tsx): its photo or its type's icon. */
   photo: ReactNode;
+  /** The service has a photo of its own (services.photo_url, B10), which admin can remove. */
+  ownPhoto?: boolean;
 };
 
 // A service's row in admin's list (R4) and the "Layanan baru" panel above it (R5): a native <details>
@@ -49,6 +52,7 @@ function EditPanel({
   categories,
   summary,
   photo,
+  ownPhoto = false,
   returnFocus,
   onCancel,
 }: PanelProps & { returnFocus: boolean; onCancel: () => void }) {
@@ -74,6 +78,7 @@ function EditPanel({
         initial={initial}
         categories={categories}
         photo={photo}
+        ownPhoto={ownPhoto}
         service={service}
         cancel={
           <button type="button" onClick={cancel} className={cancelClass}>
@@ -129,18 +134,19 @@ type PanelFormProps = {
   initial: ServiceFormValues;
   categories: Categories;
   photo: ReactNode;
+  ownPhoto?: boolean;
   service: ReturnType<typeof useServiceForm>;
   cancel: ReactNode;
 };
 
 // The panel's layout, from the user's mock at 1440 px, on the row's open fill: the Indonesian name
 // beside the type, the English name beside the id, the two descriptions side by side, then duration,
-// price and order in one row, the photo row and the checkbox with its note (D1, the mock
+// price and order in one row, the photo with its upload (B10) and the checkbox with its note (D1, the mock
 // "Admin-ServiceNew"), and the buttons at the bottom left. Below 1024 px the
 // fields stack (duration, price and order share a row from 768 px). The names and descriptions carry
 // their lang, so a screen reader reads each in its own language.
-function PanelForm({ mode, heading, initial, categories, photo, service, cancel }: PanelFormProps) {
-  const { t, locale, formAction, pending, form, resultKey, values, errorOf, formMessage } = service;
+function PanelForm({ mode, heading, initial, categories, photo, ownPhoto = false, service, cancel }: PanelFormProps) {
+  const { t, locale, formAction, pending, form, resultKey, values, errorOf, photoError, formMessage } = service;
   // The page holds one form per service, so every id (field, hint, error) starts with this form's own
   // useId. A service id cannot do that: ids may hold hyphens, so "deep" and "deep-name" would give two
   // fields the same id.
@@ -269,7 +275,7 @@ function PanelForm({ mode, heading, initial, categories, photo, service, cancel 
         </div>
       </div>
 
-      {photo}
+      <ServicePhotoField id={formId} current={photo} ownPhoto={ownPhoto} error={photoError} />
 
       <CheckboxField
         id={id("active")}

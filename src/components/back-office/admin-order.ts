@@ -1,3 +1,4 @@
+import type { AdminOrderDetail } from "@/lib/jobs/admin-order";
 import type { AdminJob } from "@/lib/jobs/jobs";
 import type { StreamStatus } from "@/lib/stream/streams";
 
@@ -23,30 +24,60 @@ export function orderState(job: Pick<AdminJob, "cleanerName" | "checkedInAt" | "
 }
 
 export type TimelineStep = {
-  key: "assigned" | "checkedIn" | "weak" | "disconnected" | "completed";
+  key: "created" | "paid" | "assigned" | "checkedIn" | "weak" | "disconnected" | "completed";
   /** done: it happened; problem: the stream's trouble now; pending: not yet. */
   state: "done" | "problem" | "pending";
-  /** When it happened, if the database keeps the time (it keeps none for the assignment). */
+  /** When it happened; null when it has not, or when the database did not keep the time (older orders). */
   at: string | null;
 };
 
+/** What the status steps read from admin_order_detail() (B2). */
+export type TimelineOrder = Pick<AdminOrderDetail, "status" | "createdAt" | "paidAt" | "assignedAt" | "cleanerName" | "checkedInAt" | "completedAt">;
+
 /**
- * The status steps: assigned, checked in at the address, the stream's trouble when it has some (at its
- * last report, stream_sessions.updated_at), and finished.
+ * The status steps: booked, paid, assigned, checked in at the address, the stream's trouble when it has
+ * some (at the stream's last change, stream_sessions.updated_at), and finished. A paid order without a
+ * payment time, or a cleaner assigned before the time was kept (B3), is done without a time.
  */
-export function orderTimeline(
-  job: Pick<AdminJob, "cleanerName" | "checkedInAt" | "completedAt">,
-  stream: { status: StreamStatus; updatedAt: string } | null,
-): TimelineStep[] {
+export function orderTimeline(order: TimelineOrder, stream: { status: StreamStatus; updatedAt: string } | null): TimelineStep[] {
+  const paid = order.paidAt !== null || order.status === "paid";
+  const assigned = order.cleanerName !== null;
   const steps: TimelineStep[] = [
-    { key: "assigned", state: job.cleanerName ? "done" : "pending", at: null },
-    { key: "checkedIn", state: job.checkedInAt ? "done" : "pending", at: job.checkedInAt },
+    { key: "created", state: "done", at: order.createdAt },
+    { key: "paid", state: paid ? "done" : "pending", at: paid ? order.paidAt : null },
+    { key: "assigned", state: assigned ? "done" : "pending", at: assigned ? order.assignedAt : null },
+    { key: "checkedIn", state: order.checkedInAt ? "done" : "pending", at: order.checkedInAt },
   ];
-  if (!job.completedAt && stream && (stream.status === "weak" || stream.status === "disconnected")) {
+  if (!order.completedAt && stream && (stream.status === "weak" || stream.status === "disconnected")) {
     steps.push({ key: stream.status, state: "problem", at: stream.updatedAt });
   }
-  steps.push({ key: "completed", state: job.completedAt ? "done" : "pending", at: job.completedAt });
+  steps.push({ key: "completed", state: order.completedAt ? "done" : "pending", at: order.completedAt });
   return steps;
+}
+
+/** How an order was paid, grouped for the page; Midtrans names more types than the page needs words for. */
+export type PaymentMethodKey = "gopay" | "shopeepay" | "qris" | "bank_transfer" | "credit_card" | "cstore" | "other";
+
+const paymentMethods: Record<string, PaymentMethodKey> = {
+  gopay: "gopay",
+  shopeepay: "shopeepay",
+  qris: "qris",
+  bank_transfer: "bank_transfer",
+  echannel: "bank_transfer",
+  permata: "bank_transfer",
+  credit_card: "credit_card",
+  cstore: "cstore",
+};
+
+/** The word to show for Midtrans' payment_type (B8), or null when the order has none. */
+export function paymentMethodKey(type: string | null): PaymentMethodKey | null {
+  if (type === null) return null;
+  return Object.hasOwn(paymentMethods, type) ? paymentMethods[type] : "other";
+}
+
+/** The agency's share of the price in whole percent ("Imbalan agensi (70%)"), or null for a free order. */
+export function agencyPercent(feeIdr: number, priceIdr: number): number | null {
+  return priceIdr > 0 ? Math.round((feeIdr * 100) / priceIdr) : null;
 }
 
 /** The order's help chat with the latest message, if the customer asked about this order. */

@@ -8,11 +8,13 @@ import { getSlotLabels } from "@/components/customer/slot-labels";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ClientMessages } from "@/i18n/client-messages";
 import { Link } from "@/i18n/navigation";
-import { addCleaner } from "@/lib/agency/actions";
-import { AgencyError, getMyAgency, listAgencySlots, type AgencySlot } from "@/lib/agency/agency";
+import { addCleaner, updateCleanerDetails } from "@/lib/agency/actions";
+import { AgencyError, getMyAgency, listAgencySlots, type AgencySlot, type MyAgency } from "@/lib/agency/agency";
+import { getServiceAreas } from "@/lib/catalog/cached";
 import { JobsError, listAgencyCleaners, listAgencyJobs, type AgencyCleaner, type AgencyJob } from "@/lib/jobs/jobs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { AddCleanerForm } from "./add-cleaner-form";
+import { CleanerRow } from "./cleaner-row";
 import { availabilityGrid, cleanerWeekJobs, formatAgencyDate, jakartaWeek, type AvailabilityCell } from "./agency-views";
 import { Panel } from "./agency-ui";
 import { NoAgency } from "./no-agency";
@@ -21,15 +23,14 @@ import { panel, secondaryButton } from "./styles";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
-const cell = "px-4 py-3 align-middle";
 const headCell = "px-4 py-3 text-left text-xs font-semibold text-ink-muted";
 const weekLink = "inline-flex size-11 items-center justify-center rounded-full border border-border-control bg-card text-ink transition-colors duration-150 ease-out-quart";
 
-type Read = { cleaners: AgencyCleaner[]; jobs: AgencyJob[]; slots: AgencySlot[] } | null;
+type Read = { agency: MyAgency; cleaners: AgencyCleaner[]; jobs: AgencyJob[]; slots: AgencySlot[] } | null;
 
 // "Petugas dan ketersediaan" (D2, after the mock Partner-Cleaners; T28): the agency's own cleaners with
-// their photo (initials without one), whether each is at a job now, and how many jobs each has this
-// week; then the week's arrival windows as a grid of days and start times, with the free places of each
+// their photo (initials without one), phone and area (changed in place with "Ubah", B11), whether each
+// is at a job now, and how many jobs each has this week; then the week's arrival windows as a grid of days and start times, with the free places of each
 // (?week= moves a week at a time, over the 60 days the database lists), linking to "Jadwal" where they
 // are changed; then the form that adds a cleaner. The schedule belongs to the agency, not to one
 // cleaner: the database keeps places per window, not who is free (docs/redesign-gaps-partner.md). Read
@@ -45,7 +46,8 @@ export async function CleanersContent({ searchParams }: { searchParams: Promise<
   let data: Read;
   try {
     const client = await createSupabaseServerClient({ writeCookies: false });
-    if (!(await getMyAgency(client))) data = null;
+    const agency = await getMyAgency(client);
+    if (!agency) data = null;
     else {
       // From the week's Monday, so this week's earlier days show their windows too.
       const [cleaners, jobs, slots] = await Promise.all([
@@ -53,7 +55,7 @@ export async function CleanersContent({ searchParams }: { searchParams: Promise<
         listAgencyJobs(client),
         listAgencySlots(client, new Date(`${week.from}T00:00:00+07:00`).toISOString()),
       ]);
-      data = { cleaners, jobs, slots };
+      data = { agency, cleaners, jobs, slots };
     }
   } catch (error) {
     if (!(error instanceof AgencyError || error instanceof JobsError)) throw error;
@@ -69,7 +71,9 @@ export async function CleanersContent({ searchParams }: { searchParams: Promise<
   const { cleaners, jobs } = data;
   const atWork = (cleanerId: string) => jobs.some((job) => job.cleanerId === cleanerId && job.checkedInAt && !job.completedAt);
   const grid = availabilityGrid(data.slots, week);
-  const labels = await getSlotLabels(locale);
+  const [labels, allAreas] = await Promise.all([getSlotLabels(locale), getServiceAreas()]);
+  // The agency's own areas, by name, in the catalog's order: the only areas a cleaner can have.
+  const areas = allAreas.filter((area) => data.agency.areaIds.includes(area.id)).map((area) => ({ id: area.id, name: area.name[locale] }));
   const span = { from: formatAgencyDate(week.from, locale, "short"), to: formatAgencyDate(week.to, locale, "short") };
   const weekHref = (next: number) => (next === 0 ? "/agency/cleaners#availability-title" : { pathname: "/agency/cleaners", query: { week: String(next) }, hash: "availability-title" });
 
@@ -96,11 +100,20 @@ export async function CleanersContent({ searchParams }: { searchParams: Promise<
                 <th scope="col" className={headCell}>
                   {t("table.cleaner")}
                 </th>
+                <th scope="col" className={`${headCell} hidden lg:table-cell`}>
+                  {t("table.phone")}
+                </th>
+                <th scope="col" className={`${headCell} hidden lg:table-cell`}>
+                  {t("table.area")}
+                </th>
                 <th scope="col" className={`${headCell} hidden sm:table-cell`}>
                   {t("table.status")}
                 </th>
-                <th scope="col" className={`${headCell} text-right`}>
+                <th scope="col" className={`${headCell} hidden text-right sm:table-cell`}>
                   {t("table.week")}
+                </th>
+                <th scope="col" className={headCell}>
+                  <span className="sr-only">{t("table.edit")}</span>
                 </th>
               </tr>
             </thead>
@@ -112,20 +125,15 @@ export async function CleanersContent({ searchParams }: { searchParams: Promise<
                   <StatusPill Icon={Moon} pill="bg-sunken text-ink-muted" label={t("notAtWork")} />
                 );
                 return (
-                  <tr key={cleaner.id} data-cleaner={cleaner.id} className="border-t border-border">
-                    <td className={cell}>
-                      <span className="flex items-center gap-3">
-                        <CleanerPhoto name={cleaner.fullName} photoUrl={cleaner.photoUrl} alt={t("photoAlt", { name: cleaner.fullName })} />
-                        <span className="flex min-w-0 flex-col gap-1">
-                          <span className="font-semibold text-ink">{cleaner.fullName}</span>
-                          {cleaner.photoUrl ? null : <span className="text-xs text-ink-muted">{t("noPhoto")}</span>}
-                          <span className="sm:hidden">{status}</span>
-                        </span>
-                      </span>
-                    </td>
-                    <td className={`${cell} hidden sm:table-cell`}>{status}</td>
-                    <td className={`${cell} text-right text-ink tabular-nums`}>{cleanerWeekJobs(jobs, cleaner.id, thisWeek)}</td>
-                  </tr>
+                  <CleanerRow
+                    key={cleaner.id}
+                    cleaner={{ id: cleaner.id, fullName: cleaner.fullName, phone: cleaner.phone, areaId: cleaner.areaId }}
+                    areas={areas}
+                    photo={<CleanerPhoto name={cleaner.fullName} photoUrl={cleaner.photoUrl} alt={t("photoAlt", { name: cleaner.fullName })} />}
+                    status={status}
+                    weekJobs={cleanerWeekJobs(jobs, cleaner.id, thisWeek)}
+                    updateCleanerDetails={updateCleanerDetails}
+                  />
                 );
               })}
             </tbody>

@@ -32,6 +32,7 @@ export function useServiceForm(mode: ServiceFormMode, initial: ServiceFormValues
     const key = errors[field];
     return key ? t(`errors.${key}`) : undefined;
   };
+  const photoError = errors.photo ? t(`errors.${errors.photo}`) : undefined;
   const formMessage = state?.formError
     ? t(`formErrors.${state.formError}`)
     : errorCount > 0
@@ -47,6 +48,8 @@ export function useServiceForm(mode: ServiceFormMode, initial: ServiceFormValues
     /** What admin typed after a failed save, otherwise the starting values. */
     values: state?.values ?? initial,
     errorOf,
+    /** The server's refusal of the chosen photo, in words. */
+    photoError,
     formMessage,
     /** The last answer was a refusal, so the form must stay in view. */
     failed: Boolean(state?.formError) || errorCount > 0,
