@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { attachRecording, clipFolder, RecordingError, recordingsBucket } from "@/lib/recordings/attach";
+import { attachRecording, clipFolder, pickClip, RecordingError, recordingsBucket } from "@/lib/recordings/attach";
 import { seedCompletedJobs, uploadClips } from "../../scripts/seed.mjs";
 import { adminClient, createTestUser, deleteTestUsers, testProject, visitorClient, type TestUser } from "./test-project";
 
@@ -23,6 +23,19 @@ let stranger: TestUser | undefined;
 let agencyId = "";
 let nextWindow = Date.UTC(2031, 2, 3, 1);
 const filesMade: string[] = [];
+
+/**
+ * The bytes of the library clip the app copies for this order (pickClip). The library is shared: besides
+ * the stand-in it may hold the real demo clip that `npm run db:seed -- test` uploads, so the expected
+ * file is read from the library rather than assumed to be the stand-in.
+ */
+async function libraryClipFor(orderId: string): Promise<Uint8Array> {
+  const files = adminClient().storage.from(recordingsBucket);
+  const { data: list } = await files.list(clipFolder, { limit: 100 });
+  const clip = pickClip((list ?? []).map((file) => file.name).filter((name) => /\.(mp4|webm)$/.test(name)), orderId);
+  const { data } = await files.download(`${clipFolder}/${clip}`);
+  return new Uint8Array((await data?.arrayBuffer()) ?? new ArrayBuffer(0));
+}
 
 function user(u: TestUser | undefined): TestUser {
   if (!u) throw new Error("The test user was not created (see beforeAll).");
@@ -101,7 +114,7 @@ describe("attachRecording", { timeout: 30_000 }, () => {
     expect(row).toMatchObject({ order_id: orderId, agency_id: agencyId, file_path: recording.filePath });
 
     const { data: file } = await adminClient().storage.from(recordingsBucket).download(recording.filePath);
-    expect(new Uint8Array((await file?.arrayBuffer()) ?? new ArrayBuffer(0))).toEqual(clipBytes);
+    expect(new Uint8Array((await file?.arrayBuffer()) ?? new ArrayBuffer(0))).toEqual(await libraryClipFor(orderId));
   });
 
   it("gives the same recording when it runs again, so a repeated check-out is harmless", async () => {
@@ -178,11 +191,12 @@ describe("recordings stay private", { timeout: 30_000 }, () => {
   });
 
   it("serves the file through a signed link made with the secret key", async () => {
-    const { filePath } = await attach(await order());
+    const orderId = await order();
+    const { filePath } = await attach(orderId);
     const { data } = await adminClient().storage.from(recordingsBucket).createSignedUrl(filePath, 60);
     const response = await fetch(data?.signedUrl ?? "");
     expect(response.ok).toBe(true);
-    expect(new Uint8Array(await response.arrayBuffer())).toEqual(clipBytes);
+    expect(new Uint8Array(await response.arrayBuffer())).toEqual(await libraryClipFor(orderId));
   });
 
   it("refuses a file that is not a video", async () => {
