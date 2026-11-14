@@ -18,6 +18,8 @@ export type AgencySummary = {
   jobsCount: number;
   avgFeeIdr: number;
   pendingIdr: number;
+  /** The fees of the same number of days before the period (B5), for "up 6% from the previous 30 days". */
+  previousTotalFeeIdr: number;
 };
 
 export type AgencyFeesDailyRow = {
