@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { attachRecording, recordingsBucket } from "../src/lib/recordings/attach";
 import { adminClient, testProject, visitorClient } from "../tests/integration/test-project";
-import { createJobWorld, jobArea, sessionOf, type JobWorld } from "./job-test-data";
+import { createJobWorld, jobArea, jobService, sessionOf, type JobWorld } from "./job-test-data";
 import { standInClip } from "./recording-test-data";
 import type { StorageState } from "./setup/auth-state";
 
@@ -15,7 +15,10 @@ import type { StorageState } from "./setup/auth-state";
 //   sees the cleaner's name and photo as Petugas HomeKlin, with no agency anywhere.
 // - Since D2 (the partner mocks): its summary (Ringkasan) with the range in the address, incoming jobs
 //   with counts, a status filter and a search, each job's own page (another agency's answers "not
-//   found"), finished jobs with their recordings, and HomeKlin's services, read-only.
+//   found"), finished jobs with their recordings, and HomeKlin's services.
+// - Since the Phase 15 wiring: each job's order number, the agency's fee ("perkiraan" until check-out)
+//   and the customer's note; the services the agency offers, chosen with "Ubah pilihan" (B12); and a
+//   cleaner's phone and area (B11).
 // - Rekaman: it watches its own cleaner's live stream (the status is polled) and replays its own
 //   recordings; a deleted one says so. Another agency's job, stream and recording are refused.
 // The spec makes two agencies of its own serving Jakarta Timur, their cleaners and paid jobs a few
@@ -48,6 +51,8 @@ let agency: Awaited<ReturnType<JobWorld["agency"]>>;
 let other: Awaited<ReturnType<JobWorld["agency"]>>;
 const sessions: { agency?: StorageState; customer?: StorageState } = {};
 const jobs: Record<keyof typeof address, string> = {} as never;
+const codes: Partial<Record<keyof typeof address, string>> = {};
+const note = "Uji catatan: kunci ada di pos satpam.";
 const recordings: { own?: string; expired?: string; other?: string } = {};
 const newCleaner = { name: "Uji Petugas Baru", email: `homeklin-t27-cleaner-${Date.now()}@example.com`, id: "" };
 
@@ -100,6 +105,15 @@ test.beforeAll(async ({ browser, baseURL }) => {
     .single<{ id: string }>();
   if (expired.error) throw new Error(`Could not add the expired recording: ${expired.error.message}`);
   recordings.expired = expired.data.id;
+
+  // The order numbers, and a customer's note on the job under way, as booking writes it (B7).
+  const { data: codeRows, error: codeError } = await admin.from("orders").select("id, code").in("id", Object.values(jobs));
+  if (codeError) throw new Error(`Could not read the order numbers: ${codeError.message}`);
+  for (const [key, id] of Object.entries(jobs) as [keyof typeof address, string][]) {
+    codes[key] = (codeRows as { id: string; code: string }[]).find((row) => row.id === id)?.code;
+  }
+  const noted = await admin.from("orders").update({ customer_note: note }).eq("id", jobs.live);
+  if (noted.error) throw new Error(`Could not add the note: ${noted.error.message}`);
 
   sessions.agency = await sessionOf(browser, baseURL, agency.user);
   sessions.customer = await sessionOf(browser, baseURL, world.customer);
@@ -254,6 +268,9 @@ test.describe("the agency", () => {
     await expect(jobRow(table, address.other)).toHaveCount(0); // never another agency's job
     const row = jobRow(table, address.open);
     await expect(row).toContainText("Perlu petugas");
+    // Its order number and the agency's expected fee (70% of Rp 150.000) until check-out.
+    await expect(row).toContainText(codes.open ?? "missing");
+    await expect(row).toContainText(/Rp\s105\.000\s*perkiraan/);
     await row.getByRole("combobox", { name: "Petugas untuk pesanan ini" }).selectOption({ label: newCleaner.name });
     await row.getByRole("button", { name: "Tugaskan" }).click();
     await expect(row.getByRole("status")).toHaveText(`Ditugaskan ke ${newCleaner.name}.`, { timeout: 20_000 });
@@ -289,6 +306,12 @@ test.describe("the agency", () => {
     await expect(page).toHaveURL(/\/agency\/orders\?q=Uji\+Siaran$/);
     await expect(jobRow(table, address.live)).toHaveCount(1);
     await expect(jobRow(table, address.open)).toHaveCount(0);
+
+    // The order number finds the job too.
+    await page.getByRole("searchbox", { name: "Cari pekerjaan" }).fill(codes.open ?? "missing");
+    await page.getByRole("button", { name: "Cari", exact: true }).click();
+    await expect(jobRow(table, address.open)).toHaveCount(1);
+    await expect(jobRow(table, address.live)).toHaveCount(0);
   });
 
   test("opens its own job, under way and finished, and is refused another agency's", async ({ page }) => {
@@ -296,6 +319,10 @@ test.describe("the agency", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Pembersihan Rutin" })).toBeVisible();
     await expect(page.getByRole("main")).toContainText(address.live);
     await expect(page.getByRole("main")).toContainText("Berlangsung");
+    await expect(page.getByText(new RegExp(`^Pesanan ${codes.live}, `))).toBeVisible();
+    const facts = page.getByRole("region", { name: "Detail pesanan" });
+    await expect(facts).toContainText(note);
+    await expect(facts).toContainText(/Imbalan agensi\s*Rp\s105\.000 \(perkiraan/);
     await expect(page.getByRole("region", { name: "Siaran langsung" }).locator("video")).toHaveCount(1);
     await expect(page.getByRole("link", { name: "Kembali ke pekerjaan masuk" })).toHaveAttribute("href", "/agency/orders");
 
@@ -304,6 +331,7 @@ test.describe("the agency", () => {
     const src = (await recording.locator("video").getAttribute("src")) ?? "";
     expect(src.startsWith(`${signedLink("jobs")}${jobs.finished}.`)).toBe(true);
     await expect(page.getByRole("region", { name: "Status pekerjaan" })).toContainText("Check-in di alamat");
+    await expect(page.getByRole("region", { name: "Detail pesanan" })).toContainText("Tidak ada catatan.");
 
     await page.goto(`/agency/orders/job?order=${jobs.other}`);
     await expect(page.getByRole("heading", { name: "Pesanan tidak ditemukan" })).toBeVisible();
@@ -316,6 +344,9 @@ test.describe("the agency", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Pesanan selesai" })).toBeVisible();
     const table = page.getByRole("table", { name: "Pesanan selesai agensi Anda" });
     await expect(jobRow(table, address.finished)).toContainText("Tersedia sampai");
+    await expect(jobRow(table, address.finished)).toContainText(codes.finished ?? "missing");
+    // No fee row in this test data (check-out writes it), so the fee is still the expected one.
+    await expect(jobRow(table, address.finished)).toContainText(/Rp\s105\.000\s*perkiraan/);
     await expect(jobRow(table, address.expired)).toContainText("Dihapus setelah 7 hari");
     await expect(jobRow(table, address.none)).toContainText("Tidak ada rekaman");
     await expect(jobRow(table, address.open)).toHaveCount(0);
@@ -325,12 +356,81 @@ test.describe("the agency", () => {
     await expect(jobRow(table, address.finished)).toHaveCount(0);
   });
 
-  test("reads HomeKlin's services, without a way to change them", async ({ page }) => {
+  test("chooses the services it offers, and can offer every service again", async ({ page }) => {
     await page.goto("/agency/services");
     const table = page.getByRole("table", { name: "Layanan HomeKlin dan harganya" });
-    await expect(table.getByRole("row").filter({ hasText: "Pembersihan Rutin" })).toContainText("Ditawarkan");
-    await expect(page.getByRole("main").getByRole("button")).toHaveCount(0);
+    const row = table.getByRole("row").filter({ hasText: jobService.name });
+    await expect(row).toContainText("Ditawarkan");
     await expect(page.getByRole("main").getByRole("checkbox")).toHaveCount(0);
+
+    // Batal leaves everything as it was.
+    await page.getByRole("button", { name: "Ubah pilihan" }).click();
+    await expect(page.getByText("Mode ubah aktif")).toBeVisible();
+    const offerAll = page.getByRole("checkbox", { name: "Tawarkan semua layanan, juga layanan baru dari HomeKlin" });
+    await expect(offerAll).toBeChecked();
+    await offerAll.uncheck();
+    await row.getByRole("checkbox", { name: `Tawarkan ${jobService.name}` }).uncheck();
+    await page.getByRole("button", { name: "Batal" }).click();
+    await expect(row).toContainText("Ditawarkan");
+    await expect(page.getByRole("button", { name: "Ubah pilihan" })).toBeFocused();
+
+    // Not offering one service is saved for this agency only.
+    await page.getByRole("button", { name: "Ubah pilihan" }).click();
+    await offerAll.uncheck();
+    await row.getByRole("checkbox", { name: `Tawarkan ${jobService.name}` }).uncheck();
+    await page.getByRole("button", { name: "Simpan pilihan" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Pilihan layanan disimpan." })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole("button", { name: "Ubah pilihan" })).toBeVisible();
+    await expect(row).toContainText("Tidak ditawarkan");
+    const admin = adminClient();
+    const restricted = await admin.from("agencies").select("services_restricted").eq("id", agency.id).single<{ services_restricted: boolean }>();
+    expect(restricted.data?.services_restricted).toBe(true);
+    const offered = await admin.from("agency_services").select("service_id").eq("agency_id", agency.id);
+    expect((offered.data ?? []).map((item) => item.service_id)).not.toContain(jobService.id);
+    const otherChoice = await admin.from("agencies").select("services_restricted").eq("id", other.id).single<{ services_restricted: boolean }>();
+    expect(otherChoice.data?.services_restricted).toBe(false);
+
+    // Every service again, also the ones admin adds later.
+    await page.getByRole("button", { name: "Ubah pilihan" }).click();
+    await offerAll.check();
+    await page.getByRole("button", { name: "Simpan pilihan" }).click();
+    // The edit mode closes only once the server saved the choice.
+    await expect(page.getByRole("button", { name: "Ubah pilihan" })).toBeVisible({ timeout: 20_000 });
+    await expect(row).toContainText("Ditawarkan");
+    await expect(row).not.toContainText("Tidak ditawarkan");
+    const again = await admin.from("agencies").select("services_restricted").eq("id", agency.id).single<{ services_restricted: boolean }>();
+    expect(again.data?.services_restricted).toBe(false);
+  });
+
+  test("sets a cleaner's phone and area, one of its own areas", async ({ page }) => {
+    await page.goto("/agency/cleaners");
+    const list = page.getByRole("table", { name: "Petugas Anda" });
+    const row = list.locator("tr[data-cleaner]").filter({ hasText: "Uji Petugas Siaran" });
+    await expect(row).toContainText("Nomor HP belum diisi");
+    await row.getByRole("button", { name: "Ubah nomor HP dan area Uji Petugas Siaran" }).click();
+    const form = page.getByRole("form", { name: "Nomor HP dan area Uji Petugas Siaran" });
+    await expect(form.getByLabel("Nomor HP")).toBeFocused();
+    // Only the agency's own area is offered, besides "not chosen".
+    await expect(form.getByLabel("Area").locator("option")).toHaveCount(2);
+
+    await form.getByLabel("Nomor HP").fill("12345");
+    await form.getByRole("button", { name: "Simpan" }).click();
+    await expect(form.getByRole("alert")).toHaveText("Periksa nomor HP, misalnya 0812 3456 7890.", { timeout: 20_000 });
+
+    await form.getByLabel("Nomor HP").fill("0812 1111 2222");
+    await form.getByLabel("Area").selectOption({ index: 1 });
+    await form.getByRole("button", { name: "Simpan" }).click();
+    await expect(form).toHaveCount(0, { timeout: 20_000 });
+    await expect(row).toContainText("+6281211112222");
+    await expect(row).toContainText("Jakarta Timur");
+    await expect(row.getByRole("status")).toHaveText("Data Uji Petugas Siaran disimpan.");
+    const { data } = await adminClient()
+      .from("cleaners")
+      .select("phone, area_id")
+      .eq("agency_id", agency.id)
+      .eq("full_name", "Uji Petugas Siaran")
+      .single<{ phone: string; area_id: string }>();
+    expect(data).toEqual({ phone: "+6281211112222", area_id: jobArea });
   });
 
   test("cannot assign another agency's job, nor another agency's cleaner", async () => {
@@ -409,6 +509,11 @@ test.describe("the agency", () => {
 
     await page.goto("/en/agency/cleaners");
     await expect(page.getByRole("form", { name: "Add a cleaner" })).toContainText("6-digit code");
+    await expect(page.getByRole("button", { name: "Edit the phone and area of Uji Petugas Siaran" })).toBeVisible();
+
+    await page.goto("/en/agency/services");
+    await expect(page.getByRole("button", { name: "Change choice" })).toBeVisible();
+    await expect(page.getByRole("table", { name: "HomeKlin services and their prices" })).toContainText("Offered");
 
     await page.goto("/en/agency/orders");
     const table = page.getByRole("table", { name: "Your agency’s incoming jobs" });

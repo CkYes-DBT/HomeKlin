@@ -17,7 +17,8 @@ import { listAllServices } from "@/lib/catalog/admin";
 import { aboutDuration } from "@/lib/catalog/admin-duration";
 import { getServiceAreas } from "@/lib/catalog/cached";
 import { CatalogError } from "@/lib/catalog/catalog";
-import { formatRupiah } from "@/lib/format";
+import { formatJakartaDay } from "@/lib/catalog/slots-days";
+import { getAdminOrderDetail } from "@/lib/jobs/admin-order";
 import { JobsError } from "@/lib/jobs/jobs";
 import { listLiveStreams, StreamError, type LiveStream } from "@/lib/stream/streams";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -43,7 +44,9 @@ type Params = PageProps<"/[locale]/admin/orders/[code]">["params"];
 // the order number on each live monitor card: /admin/orders/HK-1042. Admins only (T5): everything,
 // the title too (it is the service's name), renders inside the page's own role check, and every read
 // uses the admin's own session, so the database decides what admin may see: admin_jobs() (paid
-// orders), live_streams(), the ticket inbox, and the full service list. The order number is checked
+// orders, to find the order and its recording), admin_order_detail() (B2: address, note, customer,
+// price split, payment method and status times), live_streams(), the ticket inbox, and the full
+// service list. The order number is checked
 // against its format before any lookup. The params are runtime data, so they are read inside
 // <Suspense> (node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/dynamic-routes.md).
 export default function AdminOrderPage({ params }: PageProps<"/[locale]/admin/orders/[code]">) {
@@ -67,14 +70,16 @@ async function OrderContent({ params }: { params: Params }) {
   const supabase = await createSupabaseServerClient({ writeCookies: false });
 
   let job;
+  let order;
   try {
     job = code ? (await getAdminJobs()).find((candidate) => candidate.orderCode === code) : undefined;
+    order = job ? await getAdminOrderDetail(supabase, job.id) : null;
   } catch (error) {
     if (!readFailed(error)) throw error;
-    console.error("[order] could not read the jobs:", error);
+    console.error("[order] could not read the order:", error);
     return <ErrorNotice title={t("errorTitle")} body={t("errorBody")} back={t("back")} />;
   }
-  if (!job) return <NotFound title={t("notFoundTitle")} body={t("notFoundBody")} back={t("back")} />;
+  if (!job || !order) return <NotFound title={t("notFoundTitle")} body={t("notFoundBody")} back={t("back")} />;
 
   // The stream, the chat and the services are extras: the page still shows the order when one fails.
   const [streams, inbox, services] = await Promise.allSettled([listLiveStreams(supabase), listInbox(supabase), listAllServices(supabase)]);
@@ -93,21 +98,28 @@ async function OrderContent({ params }: { params: Params }) {
     getTranslations("AdminMonitorPage"),
   ]);
   const now = new Date();
+  const jobDay = jakartaDayOf(job.startsAt, now).date;
+  // A step on the job's own day shows its time; one on another day (booked or paid earlier) its date too.
+  const stamp = (iso: string) => {
+    const day = jakartaDayOf(iso, now).date;
+    return day === jobDay ? labels.time(iso) : t("timeline.dated", { date: formatJakartaDay(day, locale).date, time: labels.time(iso) });
+  };
 
   return (
     <ClientMessages namespaces={["AdminMonitorPage"]}>
       <OrderDetail
         job={job}
+        order={order}
         stream={stream}
         serviceName={service?.name[locale] ?? tMonitor("serviceFallback")}
         duration={service ? aboutDuration(service.durationMinutes, tDuration) : null}
-        listPrice={service ? formatRupiah(service.priceIdr, locale) : null}
         areaName={areas.find((area) => area.id === job.areaId)?.name[locale]}
         day={labels.day({ date: jakartaDayOf(job.startsAt, now).date, relative: null })}
         window={labels.window(job)}
         time={labels.time}
+        stamp={stamp}
         recording={adminRecordingState(job, now)}
-        ticket={ticket ? { id: ticket.id, customerName: ticket.customerName } : null}
+        ticket={ticket ? { id: ticket.id } : null}
       />
     </ClientMessages>
   );

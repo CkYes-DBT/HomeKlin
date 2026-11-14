@@ -5,7 +5,9 @@ import {
   CircleCheck,
   CircleStop,
   Clock,
+  CircleDashed,
   MessageCircle,
+  Phone,
   ShieldCheck,
   UserRoundX,
   Wrench,
@@ -13,14 +15,16 @@ import {
   WifiOff,
   type LucideIcon,
 } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Suspense, type ReactNode } from "react";
 import { initialsOf } from "@/components/auth/user-avatar";
 import { Link } from "@/i18n/navigation";
+import { formatRupiah } from "@/lib/format";
+import type { AdminOrderDetail } from "@/lib/jobs/admin-order";
 import type { AdminJob } from "@/lib/jobs/jobs";
 import type { LiveStream } from "@/lib/stream/streams";
 import type { AdminRecordingState } from "./admin-console";
-import { orderState, orderTimeline, type OrderState, type TimelineStep } from "./admin-order";
+import { agencyPercent, orderState, orderTimeline, paymentMethodKey, type OrderState, type TimelineStep } from "./admin-order";
 import { FeedCard } from "./feed-card";
 import { FeedOpen } from "./feed-open";
 import { FeedStatus } from "./feed-status";
@@ -29,37 +33,42 @@ import { StatusPill } from "./status-pill";
 
 export type OrderDetailProps = {
   job: AdminJob;
+  /** The order's own facts from admin_order_detail() (B2): address, note, customer, price split, times. */
+  order: AdminOrderDetail;
   /** The order's live stream, if it has one now (live_streams()). */
   stream: LiveStream | null;
   serviceName: string;
   /** "Sekitar 2 jam" from the service's duration, or null when the service is gone. */
   duration: string | null;
-  /** The list price now, already written as rupiah, or null when the service is gone. */
-  listPrice: string | null;
   areaName: string | undefined;
   /** "Kamis, 5 November" and "09.00-11.00", in Jakarta time. */
   day: string;
   window: string;
   /** Jakarta clock time of an ISO time, "09.04". */
   time: (iso: string) => string;
+  /** A status step's time: "09.04" on the job's day, "4 Nov, 14.20" on another day. */
+  stamp: (iso: string) => string;
   recording: AdminRecordingState;
-  /** The help chat about this order, if the customer opened one: its address and the customer's name. */
-  ticket: { id: string; customerName: string | null } | null;
+  /** The help chat about this order, if the customer opened one. */
+  ticket: { id: string } | null;
 };
 
 // The admin order detail page (D1), after the user's mocks "Admin-Order" (in progress) and
 // "Admin-Order-Issue" (disconnected): a way back to the monitor; the service as the title with the
 // job's status chip, the order number and its window; "Buka obrolan pelanggan" when the customer has a
-// help chat about the order; then the live video and the order's facts on the left, and the customer,
-// the cleaner and agency, the payment and the status steps on the right. Only what admin_jobs(),
-// live_streams(), the catalog and the ticket inbox give admins; what the mock shows beyond that (the
-// address, the customer's note and phone, the price paid and the fee split) is listed in
-// docs/redesign-gaps.md. With a live stream the page sits inside FeedCard, so the chip under the title
+// help chat about the order; then the live video and the order's facts (with the address and the
+// customer's note) on the left, and the customer, the cleaner and agency, the payment (booked price,
+// agency fee, HomeKlin income and the method) and the status steps with their times on the right, from
+// admin_order_detail() (B2). With a live stream the page sits inside FeedCard, so the chip under the title
 // and the video frame follow the stream's status as it is polled. Needs the AdminMonitorPage client
 // messages (the video, the chip and "Buka").
 export async function OrderDetail(props: OrderDetailProps) {
-  const { job, stream } = props;
-  const t = await getTranslations("AdminOrderPage");
+  const { job, order, stream } = props;
+  const [t, locale] = await Promise.all([getTranslations("AdminOrderPage"), getLocale()]);
+  const money = (amount: number) => formatRupiah(amount, locale);
+  const percent = agencyPercent(order.agencyFeeIdr, order.priceIdr);
+  const method = paymentMethodKey(order.paymentMethod);
+  const estimate = order.agencyFeeFinal ? null : t("payment.estimate");
   const live = stream && stream.status !== "ended" && !job.completedAt ? stream : null;
   const state = orderState(job, live?.status ?? null);
 
@@ -97,16 +106,32 @@ export async function OrderDetail(props: OrderDetailProps) {
               <Fact term={t("details.schedule")}>{t("details.scheduleValue", { day: props.day, window: props.window })}</Fact>
               {props.duration ? <Fact term={t("details.duration")}>{props.duration}</Fact> : null}
               {props.areaName ? <Fact term={t("details.area")}>{props.areaName}</Fact> : null}
+              <Fact term={t("details.address")}>{order.address}</Fact>
+              <Fact term={t("details.note")} wide>
+                {order.customerNote ? (
+                  <span className="whitespace-pre-line">{order.customerNote}</span>
+                ) : (
+                  <span className="text-ink-muted">{t("details.noNote")}</span>
+                )}
+              </Fact>
             </dl>
           </Card>
         </div>
 
         <aside aria-label={t("asideLabel")} className="flex min-w-0 flex-col gap-6">
-          {props.ticket?.customerName ? (
-            <Card id="order-customer" title={t("customer.title")}>
-              <Person name={props.ticket.customerName} detail={t("customer.fromChat")} />
-            </Card>
-          ) : null}
+          <Card id="order-customer" title={t("customer.title")}>
+            <Person name={order.customerName || t("customer.fallback")} detail={order.contactPhone ? null : t("customer.noPhone")} />
+            {order.contactPhone ? (
+              <a
+                href={`tel:${order.contactPhone}`}
+                className="inline-flex min-h-touch w-fit items-center gap-2 rounded-full border-[1.5px] border-outline px-5 text-sm font-semibold whitespace-nowrap text-ink tabular-nums transition-[background-color,transform] duration-150 ease-out-quart hover:bg-field active:scale-[0.98] active:bg-sunken"
+              >
+                <Phone className="size-4.5 shrink-0" aria-hidden="true" />
+                <span className="sr-only">{t("customer.call")} </span>
+                {order.contactPhone}
+              </a>
+            ) : null}
+          </Card>
 
           <Card id="order-cleaner" title={t("cleaner.title")}>
             {job.cleanerName ? (
@@ -121,21 +146,28 @@ export async function OrderDetail(props: OrderDetailProps) {
           </Card>
 
           <Card id="order-payment" title={t("payment.title")}>
-            {props.listPrice ? (
-              <dl className="flex flex-col gap-2.5">
-                <div className="flex justify-between gap-3">
-                  <dt className="text-ink-muted">{t("payment.listPrice")}</dt>
-                  <dd className="font-semibold text-ink tabular-nums">{props.listPrice}</dd>
-                </div>
-              </dl>
-            ) : null}
-            <p className="text-xs text-ink-muted">{t("payment.note")}</p>
-            {/* admin_jobs() lists paid orders only, so every order here is paid. */}
-            <StatusPill Icon={CircleCheck} pill="w-fit bg-success-surface text-success" label={t("payment.paid")} />
+            <dl className="flex flex-col gap-2.5">
+              <Amount term={t("payment.price")} value={money(order.priceIdr)} />
+              <Amount
+                term={percent === null ? t("payment.agencyFee") : t("payment.agencyFeePercent", { percent: String(percent) })}
+                hint={estimate}
+                value={money(order.agencyFeeIdr)}
+              />
+              <Amount term={t("payment.income")} hint={estimate} value={money(order.homeklinIncomeIdr)} strong />
+            </dl>
+            {estimate ? <p className="text-xs text-ink-muted">{t("payment.estimateNote")}</p> : null}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              {order.status === "paid" ? (
+                <StatusPill Icon={CircleCheck} pill="w-fit bg-success-surface text-success" label={t("payment.paid")} />
+              ) : (
+                <StatusPill Icon={CircleDashed} pill="w-fit bg-sunken text-ink" label={t(`payment.status.${order.status}`)} />
+              )}
+              {method ? <span className="text-ink-muted">{t("payment.method", { method: t(`payment.methods.${method}`) })}</span> : null}
+            </div>
           </Card>
 
           <Card id="order-status" title={t("timeline.title")}>
-            <Timeline steps={orderTimeline(job, live ? { status: live.status, updatedAt: live.updatedAt } : null)} time={props.time} />
+            <Timeline steps={orderTimeline(order, live ? { status: live.status, updatedAt: order.streamUpdatedAt ?? live.updatedAt } : null)} stamp={props.stamp} />
           </Card>
         </aside>
       </div>
@@ -184,16 +216,29 @@ function Card({ id, title, children }: { id: string; title: string; children: Re
   );
 }
 
-function Fact({ term, children }: { term: string; children: ReactNode }) {
+function Fact({ term, wide = false, children }: { term: string; wide?: boolean; children: ReactNode }) {
   return (
-    <div className="flex min-w-0 flex-col gap-0.5">
+    <div className={`flex min-w-0 flex-col gap-0.5 ${wide ? "sm:col-span-2" : ""}`}>
       <dt className="text-xs font-medium text-ink-muted">{term}</dt>
       <dd className="break-words text-ink">{children}</dd>
     </div>
   );
 }
 
-function Person({ name, detail }: { name: string; detail: string }) {
+/** One line of the payment: the word (with "perkiraan" before check-out) and the amount. */
+function Amount({ term, hint = null, value, strong = false }: { term: string; hint?: string | null; value: string; strong?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className="min-w-0 text-ink-muted">
+        {term}
+        {hint ? <span className="ml-1.5 text-xs">({hint})</span> : null}
+      </dt>
+      <dd className={`whitespace-nowrap text-ink tabular-nums ${strong ? "font-semibold" : ""}`}>{value}</dd>
+    </div>
+  );
+}
+
+function Person({ name, detail }: { name: string; detail: string | null }) {
   return (
     <div className="flex items-center gap-3">
       <span aria-hidden="true" className="flex size-touch shrink-0 items-center justify-center rounded-full bg-lime-wash text-sm font-semibold text-on-lime-wash">
@@ -201,7 +246,7 @@ function Person({ name, detail }: { name: string; detail: string }) {
       </span>
       <span className="flex min-w-0 flex-col leading-snug">
         <span className="font-semibold break-words text-ink">{name}</span>
-        <span className="text-sm break-words text-ink-muted">{detail}</span>
+        {detail ? <span className="text-sm break-words text-ink-muted">{detail}</span> : null}
       </span>
     </div>
   );
@@ -293,7 +338,7 @@ const stepIcons: Record<TimelineStep["state"], { Icon: LucideIcon; tone: string 
 };
 
 /** The status steps in order, each with an icon, its word and its time (or "Belum"). */
-async function Timeline({ steps, time }: { steps: TimelineStep[]; time: (iso: string) => string }) {
+async function Timeline({ steps, stamp }: { steps: TimelineStep[]; stamp: (iso: string) => string }) {
   const t = await getTranslations("AdminOrderPage.timeline");
   return (
     <ol className="flex flex-col gap-3.5">
@@ -307,7 +352,7 @@ async function Timeline({ steps, time }: { steps: TimelineStep[]; time: (iso: st
               {step.state === "pending" ? null : <span className="sr-only">, {t(`states.${step.state}`)}</span>}
             </span>
             <span className="text-xs text-ink-muted tabular-nums">
-              {step.at ? time(step.at) : step.state === "pending" ? t("notYet") : null}
+              {step.at ? stamp(step.at) : step.state === "pending" ? t("notYet") : null}
             </span>
           </li>
         );

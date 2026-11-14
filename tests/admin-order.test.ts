@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { findOrderTicket, orderState, orderTimeline, parseOrderCode } from "@/components/back-office/admin-order";
+import {
+  agencyPercent,
+  findOrderTicket,
+  orderState,
+  orderTimeline,
+  parseOrderCode,
+  paymentMethodKey,
+  type TimelineOrder,
+} from "@/components/back-office/admin-order";
 import type { AdminJob } from "@/lib/jobs/jobs";
 
 // The admin order detail page (D1, after the user's mocks "Admin-Order" and "Admin-Order-Issue"): which
@@ -60,38 +68,96 @@ describe("orderState", () => {
 });
 
 describe("orderTimeline", () => {
-  it("marks the steps done so far, with the times the database keeps", () => {
-    expect(orderTimeline(job({ checkedInAt: at(4) }), null)).toEqual([
-      { key: "assigned", state: "done", at: null },
+  const order = (overrides: Partial<TimelineOrder> = {}): TimelineOrder => ({
+    status: "paid",
+    createdAt: at(-1440),
+    paidAt: at(-1430),
+    assignedAt: at(-600),
+    cleanerName: "Uji Petugas",
+    checkedInAt: null,
+    completedAt: null,
+    ...overrides,
+  });
+
+  it("marks the steps done so far, each with the time the database keeps", () => {
+    expect(orderTimeline(order({ checkedInAt: at(4) }), null)).toEqual([
+      { key: "created", state: "done", at: at(-1440) },
+      { key: "paid", state: "done", at: at(-1430) },
+      { key: "assigned", state: "done", at: at(-600) },
       { key: "checkedIn", state: "done", at: at(4) },
       { key: "completed", state: "pending", at: null },
     ]);
   });
 
-  it("has nothing done before a cleaner is assigned", () => {
-    expect(orderTimeline(job({ cleanerName: null }), null).map((step) => step.state)).toEqual(["pending", "pending", "pending"]);
+  it("has only the booking and the payment done before a cleaner is assigned", () => {
+    expect(orderTimeline(order({ cleanerName: null, assignedAt: null }), null).map((step) => step.state)).toEqual([
+      "done",
+      "done",
+      "pending",
+      "pending",
+      "pending",
+    ]);
   });
 
-  it("adds a stream problem as its own step, at its last report", () => {
+  it("keeps a paid order paid when the database has no payment time (older orders)", () => {
+    expect(orderTimeline(order({ paidAt: null }), null)[1]).toEqual({ key: "paid", state: "done", at: null });
+    expect(orderTimeline(order({ status: "pending_payment", paidAt: null }), null)[1]).toEqual({ key: "paid", state: "pending", at: null });
+  });
+
+  it("shows an assignment without a time when it was made before the time was kept", () => {
+    expect(orderTimeline(order({ assignedAt: null }), null)[2]).toEqual({ key: "assigned", state: "done", at: null });
+  });
+
+  it("adds a stream problem as its own step, at the stream's last change", () => {
     const stream = { status: "disconnected" as const, updatedAt: at(41) };
-    expect(orderTimeline(job({ checkedInAt: at(2) }), stream)).toEqual([
-      { key: "assigned", state: "done", at: null },
+    expect(orderTimeline(order({ checkedInAt: at(2) }), stream).slice(3)).toEqual([
       { key: "checkedIn", state: "done", at: at(2) },
       { key: "disconnected", state: "problem", at: at(41) },
       { key: "completed", state: "pending", at: null },
     ]);
-    expect(orderTimeline(job({ checkedInAt: at(2) }), { status: "weak", updatedAt: at(30) })[2]).toEqual({
+    expect(orderTimeline(order({ checkedInAt: at(2) }), { status: "weak", updatedAt: at(30) })[4]).toEqual({
       key: "weak",
       state: "problem",
       at: at(30),
     });
-    expect(orderTimeline(job({ checkedInAt: at(2) }), { status: "active", updatedAt: at(30) })).toHaveLength(3);
+    expect(orderTimeline(order({ checkedInAt: at(2) }), { status: "active", updatedAt: at(30) })).toHaveLength(5);
   });
 
   it("ends with the finish time", () => {
-    const steps = orderTimeline(job({ checkedInAt: at(2), completedAt: at(118) }), { status: "ended", updatedAt: at(118) });
+    const steps = orderTimeline(order({ checkedInAt: at(2), completedAt: at(118) }), { status: "ended", updatedAt: at(118) });
     expect(steps.at(-1)).toEqual({ key: "completed", state: "done", at: at(118) });
-    expect(steps).toHaveLength(3);
+    expect(steps).toHaveLength(5);
+  });
+});
+
+describe("paymentMethodKey", () => {
+  it("names the ways Midtrans reports a payment", () => {
+    expect(paymentMethodKey("gopay")).toBe("gopay");
+    expect(paymentMethodKey("qris")).toBe("qris");
+    expect(paymentMethodKey("bank_transfer")).toBe("bank_transfer");
+    expect(paymentMethodKey("echannel")).toBe("bank_transfer");
+    expect(paymentMethodKey("permata")).toBe("bank_transfer");
+    expect(paymentMethodKey("credit_card")).toBe("credit_card");
+    expect(paymentMethodKey("shopeepay")).toBe("shopeepay");
+    expect(paymentMethodKey("cstore")).toBe("cstore");
+  });
+
+  it("calls anything else another method, and nothing when the order has none", () => {
+    expect(paymentMethodKey("akulaku")).toBe("other");
+    expect(paymentMethodKey("toString")).toBe("other");
+    expect(paymentMethodKey(null)).toBeNull();
+  });
+});
+
+describe("agencyPercent", () => {
+  it("is the agency's share of the price, rounded", () => {
+    expect(agencyPercent(105000, 150000)).toBe(70);
+    expect(agencyPercent(59500, 85000)).toBe(70);
+    expect(agencyPercent(100000, 300000)).toBe(33);
+  });
+
+  it("is null for a free order", () => {
+    expect(agencyPercent(0, 0)).toBeNull();
   });
 });
 

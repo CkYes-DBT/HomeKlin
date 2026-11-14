@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 // Agency staff only (T5): "Layanan" (D2, after the mock Partner-Services), HomeKlin's services as the
-// agency's cleaners do them, read-only. The title is prerendered; the list renders inside the page's
+// agency's cleaners do them, and which of them the agency offers (B12). The title is prerendered; the list renders inside the page's
 // own role check, like every page of the section.
 export default function AgencyServicesPage() {
   const t = useTranslations("AgencyServicesPage");

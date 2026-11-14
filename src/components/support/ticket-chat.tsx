@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleAlert, ClipboardList, Headset, LoaderCircle, Lock, SendHorizontal, TriangleAlert } from "lucide-react";
+import { Check, CheckCheck, CircleAlert, ClipboardList, Headset, LoaderCircle, Lock, SendHorizontal, TriangleAlert, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import {
@@ -16,9 +16,10 @@ import {
 } from "react";
 import { Link } from "@/i18n/navigation";
 import { postTicketMessage, type SupportFormState } from "@/lib/support/actions";
+import { markTicketRead } from "@/lib/support/guest-actions";
 import type { TicketMessage, TicketStatus, TicketUrgency } from "@/lib/support/support";
 import { LiveStatus } from "./live-status";
-import { mergeMessages, messageFromChange, statusFromChange } from "./ticket-messages";
+import { isReadBy, mergeMessages, messageFromChange, readTimeFromChange, statusFromChange } from "./ticket-messages";
 import { TicketStatusPill, UrgentPill } from "./ticket-pills";
 import { useRealtime, type Change, type ChangeFilter } from "./use-realtime";
 
@@ -37,6 +38,13 @@ type TicketChatProps = {
    * Pembersihan Rutin, Kamis 5 November 09.00" and the order's detail page for "Buka pekerjaan".
    */
   order?: { line: string; href: string };
+  /**
+   * When the customer last read the chat (customer_read_at, B13), for admin's "Terkirim" or "Terbaca"
+   * under each of admin's messages. Realtime brings a newer time while the chat is open.
+   */
+  customerReadAt?: string | null;
+  /** Admin's view: the chat was opened without an account (B13), with the email the guest gave, if any. */
+  guest?: { email: string | null } | null;
 };
 
 const jakarta = "Asia/Jakarta";
@@ -65,7 +73,9 @@ function messageTime(iso: string, locale: string): string {
 // again, which covers anything sent while the connection was down; the two lists merge by id.
 // Sending goes through postTicketMessage, which checks the user and the ticket on the server. The
 // draft stays in the box if sending fails, and an empty message is stopped before it is sent.
-export function TicketChat({ viewer, ticket, messages, customerName, actions, order }: TicketChatProps) {
+// Opening the chat, and every new message from the other side while it is open, marks it read for this
+// side (markTicketRead, mark_ticket_read), which the other side sees as "Terbaca" (B13).
+export function TicketChat({ viewer, ticket, messages, customerName, actions, order, customerReadAt = null, guest = null }: TicketChatProps) {
   const t = useTranslations("SupportChat");
   const locale = useLocale();
   const router = useRouter();
@@ -75,6 +85,9 @@ export function TicketChat({ viewer, ticket, messages, customerName, actions, or
   const [liveStatus, setLiveStatus] = useState<{ value: TicketStatus; over: TicketStatus } | null>(null);
   const status = liveStatus && liveStatus.over === ticket.status ? liveStatus.value : ticket.status;
   const shown = mergeMessages(messages, liveMessages);
+  // The customer's read time from Realtime counts until the server's own one catches up.
+  const [liveRead, setLiveRead] = useState<string | null>(null);
+  const readAt = latest(customerReadAt, liveRead);
 
   const changes: ChangeFilter[] = [
     { event: "INSERT", table: "ticket_messages", filter: `ticket_id=eq.${ticket.id}` },
@@ -88,10 +101,23 @@ export function TicketChat({ viewer, ticket, messages, customerName, actions, or
       } else {
         const next = statusFromChange(change.new, ticket.id);
         if (next) setLiveStatus({ value: next, over: ticket.status });
+        const read = readTimeFromChange(change.new, ticket.id, "customer");
+        if (read) setLiveRead(read);
       }
     },
     onJoin: () => router.refresh(),
   });
+
+  // This side has seen the chat: on opening it, and again when the other side writes while it is open.
+  const fromOtherSide = shown.filter((message) => message.fromAdmin === (viewer === "customer")).length;
+  useEffect(() => {
+    markTicketRead(ticket.id).then(
+      (result) => {
+        if (result?.formError) console.error(`[support] could not mark the chat read: ${result.formError}`);
+      },
+      (error: unknown) => console.error("[support] could not mark the chat read:", error),
+    );
+  }, [ticket.id, fromOtherSide]);
 
   // A new message scrolls into view; the first render does not move the page.
   const lastMessage = useRef<HTMLLIElement>(null);
@@ -115,6 +141,8 @@ export function TicketChat({ viewer, ticket, messages, customerName, actions, or
         order={order}
         actions={actions}
         author={author}
+        readAt={readAt}
+        guest={guest}
       />
     );
   }
@@ -194,6 +222,13 @@ export function TicketChat({ viewer, ticket, messages, customerName, actions, or
       </footer>
     </section>
   );
+}
+
+/** The later of two read times; null when there is neither. */
+function latest(a: string | null, b: string | null): string | null {
+  if (!a) return b;
+  if (!b) return a;
+  return Date.parse(a) >= Date.parse(b) ? a : b;
 }
 
 function Composer({ ticketId, viewer }: { ticketId: string; viewer: "customer" | "admin" }) {
@@ -355,6 +390,9 @@ type AdminChatProps = {
   order: TicketChatProps["order"];
   actions: ReactNode;
   author: (message: TicketMessage) => string;
+  /** When the customer last read the chat, for "Terkirim" or "Terbaca" under admin's messages. */
+  readAt: string | null;
+  guest: TicketChatProps["guest"];
 };
 
 // Admin's chat in the redesign (D1, the user's mock "Admin-Support"): a dark forest header with the
@@ -363,7 +401,7 @@ type AdminChatProps = {
 // the cream panel, admin's own on the right in forest, the customer's on the left in white, an urgent
 // ticket marked at the top in words; and the composer at the foot. The heading starts with
 // "Percakapan dengan pelanggan" for screen readers, so the region keeps the name it always had.
-function AdminChat({ ticket, status, live, shown, lastMessage, customerName, order, actions, author }: AdminChatProps) {
+function AdminChat({ ticket, status, live, shown, lastMessage, customerName, order, actions, author, readAt, guest }: AdminChatProps) {
   const t = useTranslations("SupportChat");
   const locale = useLocale();
   const titleId = `chat-${ticket.id}`;
@@ -376,6 +414,15 @@ function AdminChat({ ticket, status, live, shown, lastMessage, customerName, ord
             <span className="sr-only">{t("titleAdmin")}: </span>
             {customerName}
           </h2>
+          {guest ? (
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-on-band-muted">
+              <span className="inline-flex items-center gap-1 font-semibold text-on-band">
+                <UserRound className="size-3.5 shrink-0" aria-hidden="true" />
+                {t("guest")}
+              </span>
+              <span className="break-all">{guest.email ?? t("guestNoEmail")}</span>
+            </p>
+          ) : null}
           <p className="text-sm text-on-band-muted">
             {order ? (
               order.line
@@ -438,10 +485,11 @@ function AdminChat({ ticket, status, live, shown, lastMessage, customerName, ord
               >
                 <p className={`text-xs font-medium ${own ? "text-on-band-muted" : "text-ink-muted"}`}>{author(message)}</p>
                 <p className="text-body break-words whitespace-pre-wrap">{message.body}</p>
-                <p className={`mt-0.5 self-end text-xs tabular-nums ${own ? "text-on-band-muted" : "text-ink-muted"}`}>
+                <p className={`mt-0.5 flex items-center gap-1.5 self-end text-xs tabular-nums ${own ? "text-on-band-muted" : "text-ink-muted"}`}>
                   <time dateTime={message.createdAt} suppressHydrationWarning>
                     {messageTime(message.createdAt, locale)}
                   </time>
+                  {own ? <ReadTick read={isReadBy(message, readAt)} label={t(isReadBy(message, readAt) ? "read" : "sent")} /> : null}
                 </p>
               </li>
             );
@@ -460,5 +508,17 @@ function AdminChat({ ticket, status, live, shown, lastMessage, customerName, ord
         )}
       </footer>
     </section>
+  );
+}
+
+/** Under admin's own message: "Terkirim" with one tick, or "Terbaca" with two. A word, never the ticks alone. */
+function ReadTick({ read, label }: { read: boolean; label: string }) {
+  const Icon = read ? CheckCheck : Check;
+  return (
+    <span data-read={read ? "read" : "sent"} className="inline-flex items-center gap-0.5">
+      <span aria-hidden="true">·</span>
+      <Icon className="size-3.5 shrink-0" aria-hidden="true" />
+      {label}
+    </span>
   );
 }

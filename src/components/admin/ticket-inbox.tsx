@@ -1,4 +1,4 @@
-import { MessageSquareText, Search, SearchX } from "lucide-react";
+import { MessageSquareText, Search, SearchX, UserRound } from "lucide-react";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { TicketStatusPill, UrgentPill } from "@/components/support/ticket-pills";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -28,8 +28,9 @@ export function inboxHref(filters: InboxFilters, ticketId?: string): string {
 // Admin's ticket inbox (T21; the redesign's "Kotak masuk" since D1, the user's mock "Admin-Support"):
 // a white card with its heading and the search, then one row per ticket, in the order the inbox
 // function gives: tickets waiting for HomeKlin first, urgent before normal, oldest first; then answered
-// and closed ones. Each row shows who asked, how long ago, the question (and its order number), its
-// urgency and status in words, and how many messages the chat has; the whole row opens the chat
+// and closed ones. Each row shows who asked (a chat opened without an account says "Tamu", B13), how
+// long ago, the question (and its order number), its urgency and status in words, and how many
+// messages the chat has; the whole row opens the chat
 // beside the list, keeping the filters. The open row has a forest bar on its left edge and
 // aria-current. The search is a plain GET form, so it works without JavaScript.
 export async function TicketInbox({ tickets, selectedId, filters, codes }: TicketInboxProps) {
@@ -104,6 +105,12 @@ export async function TicketInbox({ tickets, selectedId, filters, codes }: Ticke
                     {ticket.question}
                   </span>
                   <span className="flex flex-wrap items-center gap-1.5">
+                    {ticket.isGuest ? (
+                      <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full bg-sunken px-3 py-1 text-sm font-semibold text-ink">
+                        <UserRound className="size-4 shrink-0" aria-hidden="true" />
+                        {t("guest")}
+                      </span>
+                    ) : null}
                     {ticket.urgency === "urgent" ? <UrgentPill label={tChat("urgent")} /> : null}
                     <TicketStatusPill status={ticket.status} label={tChat(`status.${ticket.status}`)} />
                     <span className="inline-flex items-center gap-1 text-xs text-ink-muted tabular-nums">

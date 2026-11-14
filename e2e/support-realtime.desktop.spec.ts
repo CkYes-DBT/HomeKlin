@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
 import { adminClient, createTestUser, deleteTestUsers, type TestUser } from "../tests/integration/test-project";
 import { signInWithPassword } from "./order-test-data";
@@ -8,7 +8,9 @@ import { signedInAs } from "./setup/auth-state";
 // customer escalates a question on /support while the admin has the inbox open: the ticket appears in
 // the inbox without a reload. The admin opens it beside the list and replies; the reply appears on the
 // customer's chat without a reload, and the customer's answer appears for the admin the same way.
-// Closing the ticket reaches the customer at once too, and their send box goes away.
+// Closing the ticket reaches the customer at once too, and their send box goes away. B13: opening the
+// chat marks it read for that side, so admin's reply turns from "Terkirim" to "Terbaca" once the
+// customer has it on screen; a chat opened without an account is labelled as a guest's.
 // "Without a reload" is checked with a marker on window, which a page load would wipe.
 // The spec makes its own customer and deletes the ticket (its messages go with it) and the customer.
 
@@ -91,6 +93,16 @@ test("an escalation reaches the inbox, and replies flow both ways in real time",
   await expect(customerChat.getByText("Sudah dijawab")).toBeVisible();
   await stillSameDocument(customerPage);
 
+  // Admin opened the chat, so it is read on admin's side; the customer has the reply on screen, so
+  // admin's reply says "Terbaca" (with two ticks and the word), without a reload.
+  await expect
+    .poll(async () => (await adminClient().from("support_tickets").select("admin_read_at").eq("id", ticketId).single()).data?.admin_read_at ?? null)
+    .not.toBeNull();
+  const ownReply = adminChat.getByRole("list", { name: "Pesan" }).getByRole("listitem").last();
+  await expect(ownReply).toContainText("Terbaca", { timeout: 20_000 });
+  await expect(ownReply.locator("[data-read]")).toHaveAttribute("data-read", "read");
+  await stillSameDocument(adminPage);
+
   // The customer answers; the admin sees it without a reload.
   await customerChat.getByRole("textbox", { name: "Tulis pesan" }).fill(answer);
   await customerChat.getByRole("button", { name: "Kirim", exact: true }).click();
@@ -121,6 +133,32 @@ test("an escalation reaches the inbox, and replies flow both ways in real time",
 
 test.describe("the inbox", () => {
   test.use(signedInAs.admin);
+
+  test("labels a chat opened without an account as a guest's, with the email given", async ({ page }) => {
+    const guestQuestion = `Apakah saya perlu akun untuk memesan? (${randomUUID().slice(0, 6)})`;
+    const token = randomBytes(32).toString("hex");
+    const { data: guestTicket, error } = await adminClient().rpc("guest_open_ticket", {
+      p_name: "Uji Tamu",
+      p_email: "uji-tamu@example.com",
+      p_question: guestQuestion,
+      p_token_hash: createHash("sha256").update(token).digest("hex"),
+      p_ip_hash: createHash("sha256").update(`e2e-${randomUUID()}`).digest("hex"),
+    });
+    if (error) throw new Error(`Could not open the guest chat: ${error.message}`);
+    try {
+      await page.goto("/admin/tickets");
+      const row = page.locator(`a[href="/admin/tickets?ticket=${guestTicket}"]`);
+      await expect(row).toContainText("Uji Tamu");
+      await expect(row.getByText("Tamu", { exact: true })).toBeVisible();
+      await row.click();
+      const chat = page.getByRole("region", { name: "Percakapan dengan pelanggan" });
+      await expect(chat).toContainText("Tamu, tanpa akun");
+      await expect(chat).toContainText("uji-tamu@example.com");
+      await expect(chat.getByText(guestQuestion).first()).toBeVisible();
+    } finally {
+      await adminClient().from("support_tickets").delete().eq("id", guestTicket as string);
+    }
+  });
 
   test("an unknown ticket shows not found beside the list, and works in English", async ({ page }) => {
     await page.goto(`/admin/tickets?ticket=${randomUUID()}`);

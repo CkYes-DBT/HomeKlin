@@ -407,6 +407,57 @@ test.describe("an admin", () => {
 
   // R6: the pages of their own are gone. A bookmark of one, even for a service that does not exist,
   // leads to the list in the same language, never to a dead end.
+  test("adds a photo to a service with a preview, and removes it again (B10)", async ({ page }) => {
+    const service = testService();
+    await storeService(service);
+    const photoUrlOf = async () =>
+      (await adminClient().from("services").select("photo_url").eq("id", service.id).single<{ photo_url: string | null }>()).data?.photo_url ?? null;
+    // A real 1x1 PNG, so the browser can show the preview and the row's photo.
+    const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", "base64");
+    let uploaded: string | null = null;
+    try {
+      await page.goto("/admin/services");
+      let panel = await openRow(page, service.nameId);
+      const photo = panel.getByTestId("panel-photo");
+      await expect(photo).toContainText("Kartu layanan memakai foto bawaan HomeKlin atau ikon jenisnya.");
+      await expect(panel.getByLabel("Hapus foto layanan ini")).toHaveCount(0);
+
+      // A file of the wrong kind is refused before it is sent.
+      await panel.getByLabel("Tambah foto").setInputFiles({ name: "catatan.txt", mimeType: "text/plain", buffer: Buffer.from("bukan foto") });
+      await expect(photo.getByRole("alert")).toHaveText("Foto harus JPG, PNG atau WebP dan paling besar 2 MB.");
+
+      await panel.getByLabel("Tambah foto").setInputFiles({ name: "layanan.png", mimeType: "image/png", buffer: png });
+      await expect(photo.getByRole("img", { name: "Pratinjau foto layanan" })).toBeVisible();
+      await expect(photo.getByRole("alert")).toHaveCount(0);
+      await expect(photo).toContainText("Foto baru dipilih.");
+      await panel.getByRole("button", { name: "Simpan perubahan" }).click();
+      await expect(page).toHaveURL(`/admin/services?saved=${service.id}`);
+
+      uploaded = await photoUrlOf();
+      expect(uploaded).toMatch(/\/storage\/v1\/object\/public\/service-photos\/[0-9a-f-]{36}\.png$/);
+      // The row's picture (decorative there: the name sits beside it) is the new photo.
+      await expect(rowOf(page, service.nameId).locator("summary img")).toHaveAttribute("src", uploaded ?? "");
+
+      // Removing it: the card falls back to the type's icon, and the file leaves the bucket.
+      panel = await openRow(page, service.nameId);
+      await expect(panel.getByTestId("panel-photo")).toContainText("Foto ini tampil di kartu layanan pelanggan.");
+      await panel.getByLabel("Hapus foto layanan ini").check();
+      await expect(panel.getByTestId("panel-photo")).toContainText("Foto akan dihapus saat Anda menyimpan layanan.");
+      await panel.getByRole("button", { name: "Simpan perubahan" }).click();
+      // The address is already ?saved=<id> from the first save, so wait for the row to close instead.
+      await expect(rowOf(page, service.nameId).locator("details")).not.toHaveAttribute("open", { timeout: 20_000 });
+      await expect.poll(photoUrlOf).toBeNull();
+      const name = uploaded?.split("/").at(-1) ?? "";
+      const { data: left } = await adminClient().storage.from("service-photos").list("", { search: name });
+      expect((left ?? []).map((file) => file.name)).not.toContain(name);
+      uploaded = null;
+    } finally {
+      // A failed run leaves no file behind.
+      const name = uploaded?.split("/").at(-1);
+      if (name) await adminClient().storage.from("service-photos").remove([name]);
+    }
+  });
+
   test("an old address to add or change a service leads to the list, in the same language", async ({ page }) => {
     // Indonesian first: opening an English page remembers English (the language cookie), after which
     // an address without /en opens in English too.

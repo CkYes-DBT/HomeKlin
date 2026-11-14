@@ -41,7 +41,9 @@ type SearchParams = PageProps<"/[locale]/admin/tickets">["searchParams"];
 // The redesign (D1, the user's mock "Admin-Support"): "Tampilkan" in the header (every ticket, those
 // waiting for an answer, the closed ones) and a search in the inbox card, both as query parameters;
 // a chat about an order names it ("Pesanan HK-1042, ...") and links to its detail page, from
-// admin_jobs().
+// admin_jobs(). B13: a chat opened without an account is labelled "Tamu" (with the email the guest
+// gave), admin's messages say "Terkirim" or "Terbaca" from the customer's read time, and opening a chat
+// marks it read for admin (in the chat, after it is shown, so a prefetched link never marks it).
 export default function AdminTicketsPage({ searchParams }: PageProps<"/[locale]/admin/tickets">) {
   const t = useTranslations("AdminTicketsPage");
   return (
@@ -118,7 +120,8 @@ async function AdminTicketsContent({ searchParams }: { searchParams: SearchParam
     );
   }
 
-  const customerName = selected ? inbox.find((ticket) => ticket.id === selected.ticket.id)?.customerName : undefined;
+  const inboxRow = selected ? inbox.find((ticket) => ticket.id === selected.ticket.id) : undefined;
+  const customerName = inboxRow?.customerName;
 
   return (
     <>
@@ -162,6 +165,8 @@ async function AdminTicketsContent({ searchParams }: { searchParams: SearchParam
                 }}
                 messages={selected.messages}
                 customerName={customerName || t("customerFallback")}
+                customerReadAt={selected.ticket.customerReadAt}
+                guest={inboxRow?.isGuest ? { email: inboxRow.guestEmail } : null}
                 order={order}
                 actions={
                   <CloseTicket

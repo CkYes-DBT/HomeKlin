@@ -10,7 +10,6 @@ import { AgencyError, getMyAgency } from "@/lib/agency/agency";
 import { getCatalogServices, getServiceAreas } from "@/lib/catalog/cached";
 import { formatRupiah } from "@/lib/format";
 import { JobsError, listAgencyJobs, type AgencyJob } from "@/lib/jobs/jobs";
-import { listAgencyOrderFees, PayoutError } from "@/lib/payouts";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatAgencyDate, matchesSearch, parsePastRecording, parseSearch, pastJobs, type PastRecording } from "./agency-views";
 import { DetailArrow, FilterLinks, Initials, SearchField } from "./agency-ui";
@@ -42,14 +41,13 @@ export async function RecordingPill({ job, now }: { job: Pick<AgencyJob, "record
   return <StatusPill Icon={Icon} pill={pill} label={label} />;
 }
 
-type Read = { jobs: AgencyJob[]; fees: Map<string, number> | null } | null;
+type Read = { jobs: AgencyJob[] } | null;
 
 // "Pesanan selesai" (D2, after the mock Partner-Past): the jobs the agency's cleaners finished, latest
 // first, with who did them, where the recording stands (kept until when, deleted after 7 days, or
-// none) and the agency's fee for each, a recording filter (?recording=) and a search (?q=). Read with
-// the agency's own session: agency_jobs() lists its own jobs only, and its fee rows come from
-// order_fees under row-level security. When the fees cannot be read, the list still shows, without
-// that column, and says so.
+// none) and the agency's fee for each (from order_fees once check-out wrote it, else the expected fee,
+// marked "perkiraan"; B4), a recording filter (?recording=) and a search (?q=, also by order number).
+// Read with the agency's own session: agency_jobs() lists its own jobs only, with their fees.
 export async function PastContent({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const [t, locale, params] = await Promise.all([getTranslations("AgencyPastPage"), getLocale(), searchParams]);
   const recording = parsePastRecording(params.recording);
@@ -60,15 +58,7 @@ export async function PastContent({ searchParams }: { searchParams: Promise<Sear
     const client = await createSupabaseServerClient({ writeCookies: false });
     if (!(await getMyAgency(client))) data = null;
     else {
-      const jobs = await listAgencyJobs(client);
-      let fees: Map<string, number> | null = null;
-      try {
-        fees = await listAgencyOrderFees(client, jobs.filter((job) => job.completedAt).map((job) => job.id));
-      } catch (error) {
-        if (!(error instanceof PayoutError)) throw error;
-        console.error(error);
-      }
-      data = { jobs, fees };
+      data = { jobs: await listAgencyJobs(client) };
     }
   } catch (error) {
     // Only a failed read becomes a message; anything else (such as Next.js' own signals) goes on.
@@ -86,10 +76,9 @@ export async function PastContent({ searchParams }: { searchParams: Promise<Sear
   const [services, areas, labels] = await Promise.all([getCatalogServices(), getServiceAreas(), getSlotLabels(locale)]);
   const serviceName = (id: string) => services.find((service) => service.id === id)?.name[locale];
   const areaName = (id: string) => areas.find((area) => area.id === id)?.name[locale] ?? id;
-  const fees = data.fees;
 
   const rows = pastJobs(data.jobs, recording, now.getTime()).filter((job) =>
-    matchesSearch([serviceName(job.serviceId), areaName(job.areaId), job.address, job.cleanerName], query),
+    matchesSearch([serviceName(job.serviceId), areaName(job.areaId), job.address, job.cleanerName, job.orderCode], query),
   );
 
   const filterHref = (next: PastRecording | null) => ({
@@ -105,11 +94,6 @@ export async function PastContent({ searchParams }: { searchParams: Promise<Sear
 
   return (
     <>
-      {fees ? null : (
-        <Notice tone="info" title={t("feesErrorTitle")}>
-          {t("feesErrorBody")}
-        </Notice>
-      )}
       <section aria-labelledby="past-title" className={`${panel} flex min-w-0 flex-col overflow-hidden`}>
         <h2 id="past-title" className="sr-only">
           {t("listTitle")}
@@ -151,11 +135,9 @@ export async function PastContent({ searchParams }: { searchParams: Promise<Sear
                 <th scope="col" className={headCell}>
                   {t("table.recording")}
                 </th>
-                {fees ? (
-                  <th scope="col" className={`${headCell} text-right`}>
-                    {t("table.fee")}
-                  </th>
-                ) : null}
+                <th scope="col" className={`${headCell} text-right`}>
+                  {t("table.fee")}
+                </th>
                 <th scope="col" className={headCell}>
                   <span className="sr-only">{t("table.detail")}</span>
                 </th>
@@ -167,8 +149,8 @@ export async function PastContent({ searchParams }: { searchParams: Promise<Sear
                 const finished = job.completedAt ?? job.endsAt;
                 const day = formatAgencyDate(jakartaDayOf(finished, now).date, locale, "weekday");
                 const detail = { pathname: "/agency/past/job", query: { order: job.id } };
-                const fee = fees?.get(job.id);
-                const feeText = fee === undefined ? t("noFee") : formatRupiah(fee, locale);
+                const feeAmount = formatRupiah(job.agencyFeeIdr, locale);
+                const feeText = job.agencyFeeFinal ? feeAmount : t("feeEstimate", { fee: feeAmount });
                 const cleaner = job.cleanerName ? (
                   <span className="flex min-w-0 items-center gap-2.5">
                     <Initials name={job.cleanerName} />
@@ -183,13 +165,13 @@ export async function PastContent({ searchParams }: { searchParams: Promise<Sear
                       <Link href={detail} className="font-semibold text-ink underline decoration-border-control underline-offset-4 hover:decoration-primary">
                         {service}
                       </Link>
-                      <span className="mt-0.5 block text-xs text-ink-muted">{areaName(job.areaId)}</span>
+                      <span className="mt-0.5 block text-xs text-ink-muted">{`${job.orderCode}, ${areaName(job.areaId)}`}</span>
                       <span className="mt-0.5 block text-xs text-ink-muted">{job.address}</span>
                       <span className="mt-3 flex flex-col items-start gap-2 md:hidden">
                         <span className="text-ink tabular-nums">{t("finishedValue", { day, window: labels.window(job) })}</span>
                         {cleaner}
                         <RecordingPill job={job} now={now.getTime()} />
-                        {fees ? <span className="text-ink tabular-nums">{t("feeValue", { fee: feeText })}</span> : null}
+                        <span className="text-ink tabular-nums">{t("feeValue", { fee: feeText })}</span>
                       </span>
                     </td>
                     <td className={`${cell} hidden whitespace-nowrap text-ink tabular-nums md:table-cell`}>
@@ -201,7 +183,10 @@ export async function PastContent({ searchParams }: { searchParams: Promise<Sear
                     <td className={`${cell} hidden md:table-cell`}>
                       <RecordingPill job={job} now={now.getTime()} />
                     </td>
-                    {fees ? <td className={`${cell} hidden text-right whitespace-nowrap text-ink tabular-nums md:table-cell`}>{feeText}</td> : null}
+                    <td className={`${cell} hidden text-right whitespace-nowrap text-ink tabular-nums md:table-cell`}>
+                      {feeAmount}
+                      {job.agencyFeeFinal ? null : <span className="block text-xs text-ink-muted">{t("estimate")}</span>}
+                    </td>
                     <td className={`${cell} w-14 text-right`}>
                       <DetailArrow href={detail} label={t("detailFor", { service, day })} />
                     </td>
