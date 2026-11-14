@@ -35,6 +35,8 @@ export type CustomerOrder = {
   orderCode: string;
   /** When the agency gave the job to the cleaner (B3); null before that and on older orders. */
   assignedAt: string | null;
+  /** The customer's note for the cleaner (B7); empty when there is none. */
+  customerNote: string;
 };
 
 type OrderRow = {
@@ -57,6 +59,7 @@ type OrderRow = {
   recording_deleted: boolean | null;
   order_code: string;
   assigned_at: string | null;
+  customer_note: string | null;
 };
 
 const isoOrNull = (value: string | null) => (value ? new Date(value).toISOString() : null);
@@ -92,5 +95,6 @@ export async function listMyOrders(client: SupabaseClient): Promise<CustomerOrde
     recordingDeleted: row.recording_deleted === true,
     orderCode: row.order_code,
     assignedAt: isoOrNull(row.assigned_at),
+    customerNote: row.customer_note ?? "",
   }));
 }

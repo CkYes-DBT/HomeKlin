@@ -5,7 +5,8 @@ import { routing } from "@/i18n/routing";
 // The order form (T9, T9b), checked on the server before book_slot() sees it (markdown/CONSTRAINTS.md:
 // every Server Action parses its input with Zod). Each problem comes back as a message key per field
 // ("Booking.errors.<key>" in src/messages), so both languages show their own text. The limits match
-// the orders table (supabase/migrations/20261025090000_orders.sql, 20261025140000_order_contact.sql).
+// the orders table (supabase/migrations/20261025090000_orders.sql, 20261025140000_order_contact.sql,
+// 20261114140000_customer_note.sql).
 // A signed-in customer sends the order (parseBooking); a guest also sends the email that the code goes
 // to (parseGuestOrder), and then the code (parseCode).
 
@@ -20,9 +21,10 @@ export type BookingErrorKey =
   | "emailRequired"
   | "emailInvalid"
   | "consentRequired"
+  | "noteTooLong"
   | "codeInvalid";
 
-export type BookingField = "serviceId" | "areaId" | "startsAt" | "address" | "phone" | "email" | "consent" | "code";
+export type BookingField = "serviceId" | "areaId" | "startsAt" | "address" | "phone" | "email" | "consent" | "code" | "note";
 
 export type BookingInput = {
   serviceId: string;
@@ -32,6 +34,8 @@ export type BookingInput = {
   /** +628..., the cleaner's contact on the day. */
   phone: string;
   consent: true;
+  /** The customer's note for the cleaner (B7), trimmed, 0 to 300 characters; empty when there is none. */
+  note: string;
   locale: Locale;
 };
 
@@ -95,6 +99,8 @@ const bookingShape = {
   phone,
   // A checkbox sends "on" when ticked and nothing at all when not.
   consent: z.literal("on", { error: "consentRequired" }).transform(() => true as const),
+  // Optional (B7): the form may leave the field out; the limit is the orders table's (customer_note).
+  note: z.string().trim().max(300, { error: "noteTooLong" }),
   locale,
 };
 
@@ -117,7 +123,7 @@ function parse<Schema extends z.ZodObject>(schema: Schema, formData: FormData): 
     }),
   );
   // A missing text field reads as empty, so it reports its own message rather than a type error.
-  for (const name of ["serviceId", "areaId", "startsAt", "address", "phone", "email"]) {
+  for (const name of ["serviceId", "areaId", "startsAt", "address", "phone", "email", "note"]) {
     if (names.includes(name)) input[name] ??= "";
   }
 

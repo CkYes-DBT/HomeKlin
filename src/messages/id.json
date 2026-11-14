@@ -445,7 +445,8 @@
       "phoneInvalid": "Periksa nomor HP Anda, misalnya 0812 3456 7890.",
       "emailRequired": "Masukkan email Anda.",
       "emailInvalid": "Periksa penulisan email Anda, misalnya nama@domain.com.",
-      "codeInvalid": "Kode salah atau sudah tidak berlaku. Periksa email Anda atau kirim kode baru."
+      "codeInvalid": "Kode salah atau sudah tidak berlaku. Periksa email Anda atau kirim kode baru.",
+      "noteTooLong": "Catatan terlalu panjang. Persingkat menjadi paling banyak 300 karakter."
     },
     "formErrors": {
       "notCustomer": "Hanya akun pelanggan yang dapat memesan. Masuk dengan akun pelanggan Anda, lalu coba lagi.",

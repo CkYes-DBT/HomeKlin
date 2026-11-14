@@ -445,7 +445,8 @@
       "phoneInvalid": "Check your mobile number, for example 0812 3456 7890.",
       "emailRequired": "Enter your email.",
       "emailInvalid": "Check your email, for example name@domain.com.",
-      "codeInvalid": "The code is wrong or has expired. Check your email or send a new code."
+      "codeInvalid": "The code is wrong or has expired. Check your email or send a new code.",
+      "noteTooLong": "The note is too long. Shorten it to 300 characters at most."
     },
     "formErrors": {
       "notCustomer": "Only customer accounts can book. Sign in with your customer account, then try again.",

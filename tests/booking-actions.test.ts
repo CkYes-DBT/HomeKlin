@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { parseBooking } from "@/lib/validation/booking";
+import { parseBooking, parseGuestOrder } from "@/lib/validation/booking";
 
 // Ordering (T9, T9b): the signed-in customer's order (bookService), and the guest's order by emailed
 // code (sendOrderCode, placeOrder), in src/lib/booking/actions.ts, over book_slot(). The database rules
@@ -57,6 +57,7 @@ const bookArgs = {
   p_address: "Jl. Melati No. 10, Kebayoran Baru, Jakarta Selatan",
   p_phone: "+6281234567890",
   p_consent: true,
+  p_note: "",
 };
 
 beforeEach(() => {
@@ -80,6 +81,29 @@ describe("parseBooking", () => {
       address: "addressTooShort",
       startsAt: "slotInvalid",
       phone: "phoneRequired",
+    });
+  });
+});
+
+describe("the note for the cleaner (B7)", () => {
+  it("is optional, trimmed, and at most 300 characters", () => {
+    expect(parseBooking(form())).toMatchObject({ ok: true, data: { note: "" } });
+    expect(parseBooking(form({ note: "  Kunci di pos satpam.  " }))).toMatchObject({ ok: true, data: { note: "Kunci di pos satpam." } });
+    expect(parseBooking(form({ note: "a".repeat(300) }))).toMatchObject({ ok: true });
+    const tooLong = parseBooking(form({ note: "a".repeat(301) }));
+    expect(tooLong).toMatchObject({ ok: false, fieldErrors: { note: "noteTooLong" } });
+    expect(parseGuestOrder(form({ note: "Ada anjing." }))).toMatchObject({ ok: true, data: { note: "Ada anjing." } });
+  });
+
+  it("goes to book_slot, and is kept when the order is refused", async () => {
+    rpc.mockResolvedValue({ data: [placed], error: null });
+    await bookService(null, form({ note: " Bel rusak, telepon saja. " }));
+    expect(rpc).toHaveBeenCalledWith("book_slot", { ...bookArgs, p_note: "Bel rusak, telepon saja." });
+
+    rpc.mockResolvedValueOnce({ data: null, error: { message: "note_invalid", code: "P0001" } });
+    expect(await bookService(null, form({ note: "Ada anjing." }))).toMatchObject({
+      fieldErrors: { note: "noteTooLong" },
+      values: { note: "Ada anjing." },
     });
   });
 });

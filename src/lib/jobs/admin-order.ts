@@ -40,6 +40,8 @@ export type AdminOrderDetail = {
   /** The live stream's state and its last change, or null when the job never streamed. */
   streamStatus: StreamStatus | null;
   streamUpdatedAt: string | null;
+  /** The customer's note for the cleaner (B7); empty when there is none. */
+  customerNote: string;
 };
 
 type Row = {
@@ -68,6 +70,7 @@ type Row = {
   completed_at: string | null;
   stream_status: StreamStatus | null;
   stream_updated_at: string | null;
+  customer_note: string | null;
 };
 
 const iso = (value: string) => new Date(value).toISOString();
@@ -108,5 +111,6 @@ export async function getAdminOrderDetail(client: SupabaseClient, orderId: strin
     completedAt: isoOrNull(row.completed_at),
     streamStatus: row.stream_status,
     streamUpdatedAt: isoOrNull(row.stream_updated_at),
+    customerNote: row.customer_note ?? "",
   };
 }

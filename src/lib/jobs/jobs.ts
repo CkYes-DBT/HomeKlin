@@ -35,6 +35,8 @@ export type CleanerJob = {
   completedAt: string | null;
   /** The short order number, "HK-1042" (20261114100000_order_code_everywhere.sql). */
   orderCode: string;
+  /** The customer's note for the cleaner (B7); empty when there is none. */
+  customerNote: string;
 };
 
 type CleanerJobRow = {
@@ -50,6 +52,7 @@ type CleanerJobRow = {
   checked_in_at: string | null;
   completed_at: string | null;
   order_code: string;
+  customer_note: string | null;
 };
 
 /** The cleaner's jobs for today and later, and those finished in the last day, earliest first. */
@@ -67,6 +70,7 @@ export async function listMyJobs(client: SupabaseClient): Promise<CleanerJob[]> 
     checkedInAt: isoOrNull(row.checked_in_at),
     completedAt: isoOrNull(row.completed_at),
     orderCode: row.order_code,
+    customerNote: row.customer_note ?? "",
   }));
 }
 
@@ -91,6 +95,7 @@ export type BackOfficeJob = {
  * assignedAt: when the agency gave the job to the cleaner (B3); null before that and on older jobs.
  * agencyFeeIdr: the agency's fee (B4, 20261114120000_agency_fee_expected.sql): the real one once the
  * job is done (agencyFeeFinal true), before that the expected one at the agency's current percent.
+ * customerNote: the customer's note for the cleaner (B7); empty when there is none.
  */
 export type AgencyJob = BackOfficeJob & {
   address: string;
@@ -99,6 +104,7 @@ export type AgencyJob = BackOfficeJob & {
   assignedAt: string | null;
   agencyFeeIdr: number;
   agencyFeeFinal: boolean;
+  customerNote: string;
 };
 /** orderCode: the short order number, "HK-1042" (20261112100000_admin_jobs_code.sql). */
 export type AdminJob = BackOfficeJob & { agencyName: string; orderCode: string };
@@ -144,6 +150,7 @@ export async function listAgencyJobs(client: SupabaseClient): Promise<AgencyJob[
     assigned_at: string | null;
     agency_fee_idr: number;
     agency_fee_final: boolean;
+    customer_note: string | null;
   };
   return (await read<Row>(client, "agency_jobs")).map((row) => ({
     ...backOfficeJob(row),
@@ -153,6 +160,7 @@ export async function listAgencyJobs(client: SupabaseClient): Promise<AgencyJob[
     assignedAt: isoOrNull(row.assigned_at),
     agencyFeeIdr: Number(row.agency_fee_idr),
     agencyFeeFinal: row.agency_fee_final === true,
+    customerNote: row.customer_note ?? "",
   }));
 }
 
