@@ -34,7 +34,7 @@ vi.mock("@/lib/supabase/server", () => ({ createSupabaseServerClient: async () =
 vi.mock("@/lib/supabase/service", () => ({ createSupabaseServiceClient: makeService }));
 vi.mock("next/cache", () => ({ refresh: vi.fn() }));
 
-const { addCleaner, updateCleanerDetails } = await import("@/lib/agency/actions");
+const { addCleaner, updateCleanerDetails, saveAgencyServices } = await import("@/lib/agency/actions");
 const { createAdmin, removeAdmin, setAgencyStatus } = await import("@/lib/owner/actions");
 const { submitReview } = await import("@/lib/reviews/actions");
 
@@ -126,6 +126,36 @@ describe("updateCleanerDetails (B11)", () => {
       rpc.mockResolvedValueOnce({ data: null, error: { message } });
       expect(await updateCleanerDetails(null, form({ cleanerId, phone: "", areaId: "" })), message).toEqual({ formError: key });
     }
+  });
+});
+
+describe("saveAgencyServices (B12)", () => {
+  function services(ids: string[], offerAll = false) {
+    const data = new FormData();
+    for (const id of ids) data.append("serviceId", id);
+    if (offerAll) data.set("offerAll", "on");
+    return data;
+  }
+
+  it("saves the ticked services, none, or every service again", async () => {
+    user = { role: "agency" };
+    rpc.mockResolvedValue({ data: null, error: null });
+    expect(await saveAgencyServices(null, services(["regular", "deep"]))).toEqual({ ok: true });
+    expect(rpc).toHaveBeenLastCalledWith("set_agency_services", { p_services: ["regular", "deep"] });
+    await saveAgencyServices(null, services([]));
+    expect(rpc).toHaveBeenLastCalledWith("set_agency_services", { p_services: [] });
+    await saveAgencyServices(null, services(["regular"], true));
+    expect(rpc).toHaveBeenLastCalledWith("set_agency_services", { p_services: null });
+  });
+
+  it("refuses a malformed id before the database, an unknown one after it, and anyone but an agency", async () => {
+    user = { role: "agency" };
+    expect(await saveAgencyServices(null, services(["Regular Clean!"]))).toEqual({ formError: "serviceInvalid" });
+    expect(rpc).not.toHaveBeenCalled();
+    rpc.mockResolvedValueOnce({ data: null, error: { message: "service_invalid" } });
+    expect(await saveAgencyServices(null, services(["no-such"]))).toEqual({ formError: "serviceInvalid" });
+    user = { role: "admin" };
+    expect(await saveAgencyServices(null, services([]))).toEqual({ formError: "notAllowed" });
   });
 });
 

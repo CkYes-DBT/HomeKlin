@@ -128,13 +128,15 @@ const dayMs = 86_400_000;
 export async function listFreeSlots(
   client: SupabaseClient,
   areaId: string,
-  { days = 14, now = new Date() }: { days?: number; now?: Date } = {},
+  { days = 14, now = new Date(), serviceId }: { days?: number; now?: Date; serviceId?: string } = {},
 ): Promise<FreeSlot[]> {
   const span = Math.min(Math.max(Math.round(days), 1), 60);
   const { data, error } = await client.rpc("free_slots", {
     p_area: areaId,
     p_from: now.toISOString(),
     p_to: new Date(now.getTime() + span * dayMs).toISOString(),
+    // B12: only windows of agencies offering this service (20261114230000_agency_services.sql).
+    ...(serviceId ? { p_service: serviceId } : {}),
   });
   if (error) throw new CatalogError("free slots", error);
   return (data as SlotRow[]).map((row) => ({
@@ -151,13 +153,15 @@ export async function listFreeSlots(
 export async function listSlotWindows(
   client: SupabaseClient,
   areaId: string,
-  { days = 14, now = new Date() }: { days?: number; now?: Date } = {},
+  { days = 14, now = new Date(), serviceId }: { days?: number; now?: Date; serviceId?: string } = {},
 ): Promise<SlotWindow[]> {
   const span = Math.min(Math.max(Math.round(days), 1), 60);
   const { data, error } = await client.rpc("slot_windows", {
     p_area: areaId,
     p_from: now.toISOString(),
     p_to: new Date(now.getTime() + span * dayMs).toISOString(),
+    // B12: only windows of agencies offering this service (20261114230000_agency_services.sql).
+    ...(serviceId ? { p_service: serviceId } : {}),
   });
   if (error) throw new CatalogError("slot windows", error);
   return (data as (SlotRow & { is_full: boolean })[]).map((row) => ({

@@ -40,3 +40,22 @@ export async function listAgencySlots(client: SupabaseClient, from?: string): Pr
     booked: row.booked,
   }));
 }
+
+/**
+ * B12: the active services and whether the signed-in agency offers each (agency_service_choices in
+ * supabase/migrations/20261114230000_agency_services.sql). restricted is false while the agency has never
+ * chosen: it then offers every service.
+ */
+export type AgencyServiceChoice = { serviceId: string; name: { id: string; en: string }; offered: boolean; restricted: boolean };
+
+export async function listAgencyServiceChoices(client: SupabaseClient): Promise<AgencyServiceChoice[]> {
+  const { data, error } = await client.rpc("agency_service_choices");
+  if (error) throw new AgencyError(error);
+  type Row = { service_id: string; name_id: string; name_en: string; offered: boolean; restricted: boolean };
+  return (data as Row[]).map((row) => ({
+    serviceId: row.service_id,
+    name: { id: row.name_id, en: row.name_en },
+    offered: row.offered === true,
+    restricted: row.restricted === true,
+  }));
+}

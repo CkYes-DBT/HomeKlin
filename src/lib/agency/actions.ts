@@ -31,6 +31,7 @@ export type AgencyFailureKey =
   | "photoInvalid"
   | "phoneInvalid"
   | "cleanerNotFound"
+  | "serviceInvalid"
   | "unavailable";
 
 export type AgencyActionState = { ok?: true; formError?: AgencyFailureKey } | null;
@@ -47,6 +48,7 @@ const refusals: Record<string, AgencyFailureKey> = {
   phone_invalid: "phoneInvalid",
   area_invalid: "areaNotServed",
   cleaner_not_found: "cleanerNotFound",
+  service_invalid: "serviceInvalid",
 };
 
 const failure = (error: { message: string }): AgencyActionState => ({ formError: refusals[error.message] ?? "unavailable" });
@@ -213,6 +215,28 @@ export async function updateCleanerDetails(_previous: AgencyActionState, formDat
     p_phone: parsed.data.phone,
     p_area: parsed.data.areaId,
   });
+  if (error) return failure(error);
+  refresh();
+  return { ok: true };
+}
+
+// B12: the services the agency offers (Partner-Services). Form fields: "serviceId" once per ticked
+// service, or "offerAll" = "on" to offer every service again (also the ones admin adds later).
+const serviceChoiceInput = z.object({
+  offerAll: z.boolean(),
+  serviceIds: z.array(z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/).max(40)).max(200),
+});
+
+export async function saveAgencyServices(_previous: AgencyActionState, formData: FormData): Promise<AgencyActionState> {
+  if (!(await authorize(["agency"]))) return { formError: "notAllowed" };
+  const parsed = serviceChoiceInput.safeParse({
+    offerAll: formData.get("offerAll") === "on",
+    serviceIds: formData.getAll("serviceId").filter((entry): entry is string => typeof entry === "string"),
+  });
+  if (!parsed.success) return { formError: "serviceInvalid" };
+
+  const supabase = await createSupabaseServerClient({ writeCookies: true });
+  const { error } = await supabase.rpc("set_agency_services", { p_services: parsed.data.offerAll ? null : parsed.data.serviceIds });
   if (error) return failure(error);
   refresh();
   return { ok: true };

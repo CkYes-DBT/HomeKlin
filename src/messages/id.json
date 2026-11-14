@@ -961,6 +961,7 @@
     "photoInvalid": "Foto harus JPG, PNG atau WebP dan paling besar 2 MB.",
     "phoneInvalid": "Periksa nomor HP, misalnya 0812 3456 7890.",
     "cleanerNotFound": "Petugas ini bukan petugas agensi Anda. Muat ulang halaman.",
+    "serviceInvalid": "Pilih layanan dari daftar.",
     "unavailable": "Perubahan belum bisa disimpan. Coba lagi sebentar lagi."
   },
   "AgencyLiveStream": {
