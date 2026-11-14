@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { adminRecordingState, monitorCounts, parseRecordingParam, pastJobs, waitingForCheckIn } from "@/components/back-office/admin-console";
+import {
+  adminRecordingState,
+  filterMonitor,
+  monitorCounts,
+  parseMonitorFilters,
+  parseRecordingParam,
+  pastJobs,
+  waitingForCheckIn,
+} from "@/components/back-office/admin-console";
 import type { AdminJob } from "@/lib/jobs/jobs";
 
 // The admin console (T26): which past jobs the recordings page shows and what it says about each
@@ -108,5 +116,62 @@ describe("monitorCounts", () => {
 
   it("does not count a stream that has ended", () => {
     expect(monitorCounts([{ status: "ended" }, { status: "active" }], 0)).toEqual({ live: 1, troubled: 0, waiting: 0 });
+  });
+});
+
+describe("parseMonitorFilters", () => {
+  const areas = ["jakarta-timur", "jakarta-selatan"];
+
+  it("shows everything in every area by default", () => {
+    expect(parseMonitorFilters({}, areas)).toEqual({ view: "all", area: null });
+  });
+
+  it("reads the toggle and a known area", () => {
+    expect(parseMonitorFilters({ view: "troubled", area: "jakarta-selatan" }, areas)).toEqual({ view: "troubled", area: "jakarta-selatan" });
+  });
+
+  it("takes the first value of a field that appears twice (a pressed button before the hidden field)", () => {
+    expect(parseMonitorFilters({ view: ["all", "troubled"], area: ["jakarta-timur", "x"] }, areas)).toEqual({ view: "all", area: "jakarta-timur" });
+  });
+
+  it("ignores an unknown view or area instead of failing", () => {
+    expect(parseMonitorFilters({ view: "everything", area: "atlantis" }, areas)).toEqual({ view: "all", area: null });
+    expect(parseMonitorFilters({ area: "" }, areas)).toEqual({ view: "all", area: null });
+  });
+});
+
+describe("filterMonitor", () => {
+  const stream = (id: string, status: "active" | "weak" | "disconnected" | "ended", areaId: string) => ({ id, status, areaId });
+  const streams = [
+    stream("a", "active", "jakarta-timur"),
+    stream("w", "weak", "jakarta-timur"),
+    stream("d", "disconnected", "jakarta-selatan"),
+    stream("e", "ended", "jakarta-selatan"),
+  ];
+  const waiting = [job("late-timur", { areaId: "jakarta-timur" }), job("late-selatan", { areaId: "jakarta-selatan" })];
+  const ids = (list: readonly { id: string }[]) => list.map((item) => item.id);
+
+  it("keeps everything with no filter", () => {
+    const shown = filterMonitor({ streams, waiting }, { view: "all", area: null });
+    expect(ids(shown.streams)).toEqual(["a", "w", "d", "e"]);
+    expect(ids(shown.waiting)).toEqual(["late-timur", "late-selatan"]);
+  });
+
+  it("Terkendala keeps the weak and disconnected streams only, and no job waiting for check-in", () => {
+    const shown = filterMonitor({ streams, waiting }, { view: "troubled", area: null });
+    expect(ids(shown.streams)).toEqual(["w", "d"]);
+    expect(shown.waiting).toEqual([]);
+  });
+
+  it("an area keeps that area's cards only", () => {
+    const shown = filterMonitor({ streams, waiting }, { view: "all", area: "jakarta-selatan" });
+    expect(ids(shown.streams)).toEqual(["d", "e"]);
+    expect(ids(shown.waiting)).toEqual(["late-selatan"]);
+  });
+
+  it("the two filters combine, and the summary counts what is shown", () => {
+    const shown = filterMonitor({ streams, waiting }, { view: "troubled", area: "jakarta-timur" });
+    expect(ids(shown.streams)).toEqual(["w"]);
+    expect(monitorCounts(shown.streams, shown.waiting.length)).toEqual({ live: 1, troubled: 1, waiting: 0 });
   });
 });

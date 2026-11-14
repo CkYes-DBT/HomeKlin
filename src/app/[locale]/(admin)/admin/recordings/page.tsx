@@ -40,7 +40,7 @@ export default function AdminRecordingsPage({ searchParams }: PageProps<"/[local
   const t = useTranslations("AdminRecordingsPage");
   return (
     <>
-      <PageHeader title={t("title")} description={t("description")} />
+      <PageHeader size="compact" title={t("title")} description={t("description")} />
       <Suspense fallback={<GateFallback />}>
         <RoleGate roles={["admin"]}>
           <RecordingsContent searchParams={searchParams} />
@@ -83,7 +83,7 @@ async function RecordingsContent({ searchParams }: { searchParams: SearchParams 
     <>
       {selected ? <PlayerPanel recordingId={selected} job={chosenRow} labels={labels} now={now} /> : null}
       {rows.length === 0 ? (
-        <EmptyState icon={CirclePlay} title={t("emptyTitle")}>
+        <EmptyState tone="forest" icon={CirclePlay} title={t("emptyTitle")}>
           {t("emptyBody")}
         </EmptyState>
       ) : (
@@ -128,14 +128,14 @@ async function PlayerPanel({ recordingId, job, labels, now }: PlayerPanelProps) 
   const finishedAt = job?.completedAt ?? null;
 
   return (
-    <section aria-labelledby="player-title" className="rounded-xl border border-border bg-surface p-4 shadow-card md:p-5">
+    <section aria-labelledby="player-title" className="rounded-lg bg-card p-5 md:p-6">
       <div className="flex items-start justify-between gap-4">
         <h2 id="player-title" className="font-display text-lg font-semibold text-ink">
           {t("playerTitle")}
         </h2>
         <Link
           href="/admin/recordings"
-          className="-mt-2 -mr-2 inline-flex min-h-touch shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-ink-muted transition-colors duration-150 ease-out-quart hover:bg-surface-sunken hover:text-ink active:bg-brand-50"
+          className="-mt-2 -mr-2 inline-flex min-h-touch shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-ink-muted transition-colors duration-150 ease-out-quart hover:bg-sunken hover:text-ink active:bg-lime-wash"
         >
           <X className="size-4 shrink-0" aria-hidden="true" />
           {t("close")}
@@ -183,7 +183,7 @@ async function SignedPlayer({ recordingId, label, labels, now }: { recordingId: 
         {/* A plain link on purpose: a full page load makes the link again. */}
         <a
           href=""
-          className="mt-2 inline-flex min-h-touch items-center justify-center rounded-full border border-border-control bg-surface px-5 text-sm font-semibold text-ink transition-colors duration-150 ease-out-quart hover:bg-surface-sunken active:bg-brand-50"
+          className="mt-2 inline-flex min-h-touch items-center justify-center rounded-full border-[1.5px] border-outline px-5 text-sm font-semibold text-ink transition-colors duration-150 ease-out-quart hover:bg-card active:bg-sunken"
         >
           {t("retryPage")}
         </a>
@@ -200,11 +200,11 @@ async function SignedPlayer({ recordingId, label, labels, now }: { recordingId: 
         <AdminRecordingPlayer recordingId={recordingId} src={link.url} label={label} />
       </ClientMessages>
       <p className="flex items-start gap-2 text-sm text-ink">
-        <CalendarClock className="mt-0.5 size-4 shrink-0 text-brand-700" aria-hidden="true" />
+        <CalendarClock className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
         <span>{t("availableUntil", { day, time: labels.time(until) })}</span>
       </p>
       <p className="flex items-start gap-2 text-sm text-ink-muted">
-        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-700" aria-hidden="true" />
+        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
         <span>{t("privacy")}</span>
       </p>
     </div>
@@ -213,8 +213,8 @@ async function SignedPlayer({ recordingId, label, labels, now }: { recordingId: 
 
 function PanelNotice({ icon: Icon, title, body, children }: { icon: LucideIcon; title: string; body?: string; children?: ReactNode }) {
   return (
-    <div className="flex items-start gap-3 rounded-md bg-surface-sunken px-4 py-3">
-      <Icon className="mt-0.5 size-5 shrink-0 text-brand-700" aria-hidden="true" />
+    <div className="flex items-start gap-3 rounded-md bg-sunken px-4 py-3">
+      <Icon className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
       <div className="flex min-w-0 flex-col gap-1 text-sm">
         <p className="font-semibold text-ink">{title}</p>
         {body ? <p className="text-ink-muted">{body}</p> : null}
@@ -232,7 +232,7 @@ async function ExpiredNotice() {
 async function PlayerLoading() {
   const t = await getTranslations("AdminRecordingsPage");
   return (
-    <div role="status" className="flex aspect-video w-full items-center justify-center rounded-md bg-surface-sunken">
+    <div role="status" className="flex aspect-video w-full items-center justify-center rounded-md bg-frame">
       <span className="text-sm text-ink-muted">{t("loading")}</span>
     </div>
   );

@@ -378,7 +378,9 @@
       "notFound": "Pesanan atau percakapan itu tidak ditemukan di akun Anda.",
       "closed": "Percakapan ini sudah ditutup, jadi tidak bisa dibalas lagi.",
       "unavailable": "Pesan belum terkirim karena ada gangguan. Coba lagi sebentar lagi."
-    }
+    },
+    "openJob": "Buka pekerjaan",
+    "urgentBanner": "Mendesak, dikirim {time}"
   },
   "AccountPage": {
     "title": "Akun",
@@ -1021,7 +1023,22 @@
     "disconnected": "Siaran terputus",
     "ended": "Siaran ini sudah berakhir.",
     "retry": "Coba lagi",
-    "retrying": "Memuat ulang siaran…"
+    "retrying": "Memuat ulang siaran…",
+    "filters": {
+      "label": "Filter pemantauan",
+      "viewLabel": "Tampilkan",
+      "views": {
+        "all": "Semua",
+        "troubled": "Terkendala"
+      },
+      "areaLabel": "Area layanan",
+      "allAreas": "Semua area",
+      "apply": "Terapkan",
+      "showAll": "Tampilkan semua pekerjaan"
+    },
+    "filteredEmptyTitle": "Tidak ada pekerjaan yang cocok",
+    "filteredEmptyBody": "Tidak ada pekerjaan dengan filter ini saat ini.",
+    "orderLink": "Lihat detail pesanan {code}"
   },
   "AdminTicketsPage": {
     "title": "Obrolan bantuan",
@@ -1053,7 +1070,24 @@
       "cancel": "Batal",
       "pending": "Menutup…",
       "error": "Tiket belum bisa ditutup. Coba lagi sebentar lagi."
-    }
+    },
+    "inboxTitle": "Kotak masuk",
+    "search": {
+      "label": "Cari percakapan",
+      "placeholder": "Cari nama atau nomor pesanan",
+      "none": "Tidak ada percakapan yang cocok.",
+      "clear": "Tampilkan semua"
+    },
+    "show": {
+      "label": "Tampilkan",
+      "all": "Semua",
+      "waiting": "Perlu dijawab",
+      "closed": "Ditutup",
+      "withCount": "{view} ({count, number})",
+      "apply": "Terapkan"
+    },
+    "orderLine": "Pesanan {code}, {service}, {when}",
+    "orderLineShort": "Pesanan {code}, {when}"
   },
   "AdminRecordingsPage": {
     "title": "Rekaman",
@@ -1142,6 +1176,11 @@
     "create": {
       "title": "Layanan baru",
       "description": "Isi kedua bahasa. Layanan baru tersimpan sebagai Draf sampai Anda mencentang Tampilkan di situs pelanggan."
+    },
+    "photo": {
+      "title": "Foto layanan",
+      "shown": "Tampil di kartu layanan. Foto ditambahkan oleh tim pengembang.",
+      "none": "Belum ada foto, jadi kartu layanan menampilkan ikon jenisnya. Foto ditambahkan oleh tim pengembang."
     }
   },
   "AdminServiceForm": {
@@ -1198,7 +1237,36 @@
   "AdminFaqPage": {
     "title": "Pertanyaan umum",
     "emptyTitle": "Belum ada pertanyaan",
-    "emptyBody": "Pertanyaan umum yang tampil di halaman Bantuan pelanggan muncul di sini. Anda dapat menambah dan mengubahnya."
+    "emptyBody": "Pertanyaan umum yang tampil di halaman Bantuan pelanggan muncul di sini. Tambahkan yang pertama dengan Tambah pertanyaan.",
+    "description": "Pertanyaan dan jawaban yang tampil di halaman bantuan pelanggan. Isi dalam bahasa Indonesia dan Inggris.",
+    "counts": "{published, plural, other {# dipublikasikan}}, {drafts, plural, other {# draf}}.",
+    "add": "Tambah pertanyaan",
+    "loadErrorTitle": "Pertanyaan umum belum dapat dimuat.",
+    "loadErrorBody": "Muat ulang halaman ini sebentar lagi.",
+    "list": {
+      "label": "Daftar pertanyaan umum",
+      "order": "Urutan",
+      "question": "Pertanyaan",
+      "status": "Status",
+      "edit": "Ubah"
+    },
+    "row": {
+      "open": "Ubah pertanyaan",
+      "order": "Urutan",
+      "keywords": "Kata kunci: {keywords}",
+      "published": "Dipublikasikan",
+      "draft": "Draf"
+    },
+    "create": {
+      "title": "Pertanyaan baru",
+      "description": "Isi pertanyaan dan jawaban dalam dua bahasa."
+    },
+    "notice": {
+      "created": "{question} ditambahkan.",
+      "saved": "{question} disimpan.",
+      "live": "Pelanggan melihatnya di halaman Bantuan sekarang.",
+      "hidden": "Masih Draf, jadi belum tampil untuk pelanggan."
+    }
   },
   "OwnerDashboardPage": {
     "title": "Angka bisnis",
@@ -1488,5 +1556,122 @@
   },
   "GateFallback": {
     "loading": "Memuat…"
+  },
+  "AdminOrderPage": {
+    "title": "Detail pesanan",
+    "back": "Kembali ke pemantauan langsung",
+    "subtitle": "Pesanan {code}, {day}, {window}",
+    "openChat": "Buka obrolan pelanggan",
+    "asideLabel": "Pelanggan, petugas, pembayaran, status",
+    "notFoundTitle": "Pesanan tidak ditemukan",
+    "notFoundBody": "Nomor pesanan ini tidak ada atau belum dibayar. Pilih pekerjaan dari pemantauan langsung.",
+    "errorTitle": "Pesanan belum dapat dimuat.",
+    "errorBody": "Muat ulang halaman ini sebentar lagi.",
+    "state": {
+      "unassigned": "Belum ada petugas",
+      "assigned": "Belum check-in",
+      "active": "Sedang berlangsung",
+      "weak": "Sinyal lemah",
+      "disconnected": "Terputus",
+      "inProgress": "Sedang dikerjakan",
+      "completed": "Selesai"
+    },
+    "video": {
+      "title": "Siaran langsung",
+      "activeNote": "Siaran langsung aktif, check-in {time}.",
+      "activeNoteNoTime": "Siaran langsung aktif.",
+      "weakNote": "Sinyal siaran lemah, dilaporkan pukul {time}.",
+      "disconnectedNote": "Siaran terputus pukul {time}. Petugas belum tersambung kembali.",
+      "waitingNote": "Siaran dimulai setelah petugas check-in di alamat.",
+      "unassignedNote": "Agensi belum menugaskan petugas, jadi belum ada siaran.",
+      "noStreamFrame": "Belum ada siaran",
+      "noStreamNote": "Petugas check-in pukul {time}, tetapi belum memulai siaran.",
+      "endedFrame": "Siaran berakhir",
+      "completedNote": "Pekerjaan selesai pukul {time}.",
+      "playRecording": "Putar rekaman",
+      "recordingExpired": "Rekaman sudah dihapus setelah 7 hari.",
+      "recordingNone": "Pekerjaan ini tidak memiliki rekaman.",
+      "retention": "Rekaman tersimpan 7 hari setelah pekerjaan selesai, lalu dihapus otomatis."
+    },
+    "details": {
+      "title": "Detail pesanan",
+      "service": "Layanan",
+      "schedule": "Jadwal",
+      "scheduleValue": "{day}, {window}",
+      "duration": "Perkiraan durasi",
+      "area": "Area"
+    },
+    "customer": {
+      "title": "Pelanggan",
+      "fromChat": "Dari obrolan bantuan pesanan ini"
+    },
+    "cleaner": {
+      "title": "Petugas dan agensi",
+      "role": "Petugas {agency}",
+      "none": "Agensi belum menugaskan petugas.",
+      "agency": "Agensi",
+      "area": "Area layanan"
+    },
+    "payment": {
+      "title": "Pembayaran",
+      "listPrice": "Harga di daftar harga",
+      "note": "Harga sesuai daftar harga saat ini. Harga saat dipesan dan pembagian imbalan agensi tidak tampil di konsol admin.",
+      "paid": "Lunas"
+    },
+    "timeline": {
+      "title": "Status pekerjaan",
+      "steps": {
+        "assigned": "Ditugaskan",
+        "checkedIn": "Check-in di alamat",
+        "weak": "Sinyal lemah",
+        "disconnected": "Siaran terputus",
+        "completed": "Selesai"
+      },
+      "states": {
+        "done": "sudah",
+        "problem": "ada kendala",
+        "pending": "belum"
+      },
+      "notYet": "Belum"
+    }
+  },
+  "AdminFaqForm": {
+    "fields": {
+      "questionId": "Pertanyaan (Indonesia)",
+      "questionIdPlaceholder": "Tulis pertanyaan",
+      "questionEn": "Pertanyaan (Inggris)",
+      "questionEnPlaceholder": "Write the question",
+      "answerId": "Jawaban (Indonesia)",
+      "answerIdPlaceholder": "Tulis jawaban",
+      "answerEn": "Jawaban (Inggris)",
+      "answerEnPlaceholder": "Write the answer",
+      "keywords": "Kata kunci (pisahkan dengan koma)",
+      "keywordsHint": "Kata lain yang dicari pelanggan, dalam bahasa apa pun.",
+      "keywordsPlaceholder": "Contoh: pesan, jadwal, pembayaran",
+      "sortOrder": "Urutan",
+      "sortOrderHint": "Angka kecil tampil lebih dulu.",
+      "published": "Tampilkan di halaman bantuan",
+      "publishedHint": "Tanpa centang, pertanyaan menjadi Draf dan tidak tampil untuk pelanggan."
+    },
+    "submitCreate": "Simpan pertanyaan",
+    "submitEdit": "Simpan perubahan",
+    "pending": "Menyimpan…",
+    "cancel": "Batal",
+    "errorSummary": "{count, plural, other {Periksa # kolom yang ditandai.}}",
+    "errors": {
+      "questionRequired": "Masukkan pertanyaan.",
+      "questionTooShort": "Pertanyaan paling sedikit 5 karakter.",
+      "questionTooLong": "Pertanyaan paling banyak 200 karakter.",
+      "answerRequired": "Masukkan jawaban.",
+      "answerTooShort": "Jawaban paling sedikit 5 karakter.",
+      "answerTooLong": "Jawaban paling banyak 2.000 karakter.",
+      "keywordsTooLong": "Kata kunci paling banyak 300 karakter.",
+      "sortOrderInvalid": "Tulis urutan sebagai angka bulat dari 0 sampai 9999."
+    },
+    "formErrors": {
+      "forbidden": "Hanya admin yang dapat mengubah pertanyaan umum. Masuk dengan akun admin, lalu coba lagi.",
+      "notFound": "Pertanyaan ini tidak ditemukan lagi. Muat ulang daftar, lalu coba lagi.",
+      "unavailable": "Perubahan belum dapat disimpan. Coba lagi sebentar lagi."
+    }
   }
 }

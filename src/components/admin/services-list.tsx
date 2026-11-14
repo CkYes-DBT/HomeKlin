@@ -1,5 +1,6 @@
-import { Check, ChevronDown, Pencil, Plus } from "lucide-react";
+import { Check, ChevronDown, ImageOff, Pencil, Plus } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { servicePhoto } from "@/components/customer/service-photos";
 import { ServiceVisual } from "@/components/customer/service-visual";
 import type { AdminService } from "@/lib/catalog/admin";
 import { aboutDuration } from "@/lib/catalog/admin-duration";
@@ -50,6 +51,7 @@ export function ServicesList({ services, categories, create, renderId }: Service
             initial={create}
             categories={categories}
             summary={<CreateSummary />}
+            photo={<PhotoRow />}
             // For the eye the summary says what the panel is; this is the heading to jump to.
             heading={<h2 className="sr-only">{t("create.title")}</h2>}
           />
@@ -78,6 +80,7 @@ export function ServicesList({ services, categories, create, renderId }: Service
                     initial={serviceToFormValues(service)}
                     categories={categories}
                     summary={<ServiceSummary service={service} />}
+                    photo={<PhotoRow service={service} />}
                   />
                 </li>
               );
@@ -173,6 +176,31 @@ function ServiceSummary({ service }: { service: AdminService }) {
         <ChevronDown className="size-5" strokeWidth={2} />
       </span>
     </summary>
+  );
+}
+
+/**
+ * The service's photo in the panel (D1, the mock "Admin-ServiceNew"): what the service card shows, its
+ * photo or its type's icon. Photos are files in the app (service-photos.ts), not uploads, so the row
+ * says how a photo is added instead of offering an upload button (docs/redesign-gaps.md).
+ */
+function PhotoRow({ service }: { service?: AdminService }) {
+  const t = useTranslations("AdminServicesPage.photo");
+  const hasPhoto = service ? servicePhoto(service.id) !== null : false;
+  return (
+    <div data-testid="panel-photo" className="flex items-center gap-3 rounded-md border border-dashed border-border-control bg-field px-3 py-2">
+      {service ? (
+        <ServiceVisual service={service} tone="sunken" sizes="44px" className="size-touch rounded-sm" iconClassName="size-5" />
+      ) : (
+        <span aria-hidden="true" className="flex size-touch shrink-0 items-center justify-center rounded-sm bg-sunken text-ink-muted">
+          <ImageOff className="size-5" strokeWidth={1.75} />
+        </span>
+      )}
+      <span className="flex min-w-0 flex-col leading-snug">
+        <span className="text-sm font-semibold text-ink">{t("title")}</span>
+        <span className="text-xs text-ink-muted">{hasPhoto ? t("shown") : t("none")}</span>
+      </span>
+    </div>
   );
 }
 

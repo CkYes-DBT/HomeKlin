@@ -1,17 +1,25 @@
 import type { Metadata } from "next";
-import { MonitorPlay, RefreshCw } from "lucide-react";
+import { MonitorPlay, RefreshCw, SearchX } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import { cache, Suspense } from "react";
 import { Notice } from "@/components/admin/notice";
 import { GateFallback } from "@/components/auth/gate-fallback";
 import { RoleGate } from "@/components/auth/role-gate";
-import { monitorCounts, waitingForCheckIn } from "@/components/back-office/admin-console";
+import {
+  filterMonitor,
+  monitorCounts,
+  parseMonitorFilters,
+  waitingForCheckIn,
+  type MonitorFilters,
+} from "@/components/back-office/admin-console";
 import { CheckInTile, FeedTile } from "@/components/back-office/feed-tile";
+import { MonitorFiltersForm } from "@/components/back-office/monitor-filters";
 import { getSlotLabels } from "@/components/customer/slot-labels";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { ClientMessages } from "@/i18n/client-messages";
+import { Link } from "@/i18n/navigation";
 import { getCatalogServices, getServiceAreas } from "@/lib/catalog/cached";
 import { JobsError, listAdminJobs, type AdminJob } from "@/lib/jobs/jobs";
 import { listLiveStreams, StreamError, type LiveStream } from "@/lib/stream/streams";
@@ -30,9 +38,11 @@ export async function generateMetadata(): Promise<Metadata> {
 // keeps everyone else out, and each video link is made for this admin by stream_for_viewer()
 // (src/components/back-office/feed-tile.tsx). The list is read when the page opens; "Perbarui daftar"
 // reads it again, while each live card keeps its status current on its own.
-// The title is prerendered; the summary, the refresh link and the cards render inside role checks
-// (a layout's check would not protect them).
-export default function AdminMonitorPage() {
+// The filters (M2): "Semua / Terkendala" and the service area, as ?view= and ?area= in the address,
+// so they work without JavaScript; the summary line counts what the filters leave.
+// The title is prerendered; the summary, the filters, the refresh link and the cards render inside
+// role checks (a layout's check would not protect them).
+export default function AdminMonitorPage({ searchParams }: PageProps<"/[locale]/admin/monitor">) {
   const t = useTranslations("AdminMonitorPage");
   return (
     <>
@@ -42,26 +52,28 @@ export default function AdminMonitorPage() {
         description={
           <Suspense fallback={null}>
             <RoleGate roles={["admin"]}>
-              <MonitorSummary />
+              <MonitorSummary searchParams={searchParams} />
             </RoleGate>
           </Suspense>
         }
         action={
           <Suspense fallback={<GateFallback variant="action" />}>
             <RoleGate roles={["admin"]}>
-              <RefreshLink />
+              <MonitorActions searchParams={searchParams} />
             </RoleGate>
           </Suspense>
         }
       />
       <Suspense fallback={<GateFallback />}>
         <RoleGate roles={["admin"]}>
-          <MonitorCards />
+          <MonitorCards searchParams={searchParams} />
         </RoleGate>
       </Suspense>
     </>
   );
 }
+
+type SearchParams = PageProps<"/[locale]/admin/monitor">["searchParams"];
 
 type MonitorData = {
   /** null when the streams could not be read. */
@@ -85,11 +97,25 @@ const readMonitor = cache(async (): Promise<MonitorData> => {
   };
 });
 
+/** The served areas (the filter's options) and the filters the address asks for. */
+async function readFilters(searchParams: SearchParams): Promise<{ filters: MonitorFilters; areas: { id: string; name: string }[] }> {
+  const [params, locale, all] = await Promise.all([searchParams, getLocale(), getServiceAreas()]);
+  const areas = all.filter((area) => area.isServed).map((area) => ({ id: area.id, name: area.name[locale] }));
+  return { filters: parseMonitorFilters(params, areas.map((area) => area.id)), areas };
+}
+
+/** The cards the filters leave: the streams and today's jobs not checked in yet. */
+async function shownCards(searchParams: SearchParams) {
+  const [{ streams, waiting }, { filters }] = await Promise.all([readMonitor(), readFilters(searchParams)]);
+  const shown = filterMonitor({ streams: streams ?? [], waiting: waiting ?? [] }, filters);
+  return { streams, waiting, filters, shown };
+}
+
 /** "6 pekerjaan sedang berlangsung. 2 terkendala." and, when there are any, "1 belum check-in." */
-async function MonitorSummary() {
-  const [t, { streams, waiting }] = await Promise.all([getTranslations("AdminMonitorPage"), readMonitor()]);
+async function MonitorSummary({ searchParams }: { searchParams: SearchParams }) {
+  const [t, { streams, shown }] = await Promise.all([getTranslations("AdminMonitorPage"), shownCards(searchParams)]);
   if (!streams) return null;
-  const counts = monitorCounts(streams, waiting?.length ?? 0);
+  const counts = monitorCounts(shown.streams, shown.waiting.length);
   return (
     <span data-testid="monitor-summary">
       {t("summary", counts)}
@@ -98,7 +124,19 @@ async function MonitorSummary() {
   );
 }
 
-// A plain link on purpose: a full page load reads the list again and makes fresh video links.
+/** The filters and the refresh link, right of the title from 640 px, under it on a phone. */
+async function MonitorActions({ searchParams }: { searchParams: SearchParams }) {
+  const { filters, areas } = await readFilters(searchParams);
+  return (
+    <div className="flex flex-wrap items-end gap-3">
+      <MonitorFiltersForm filters={filters} areas={areas} />
+      <RefreshLink />
+    </div>
+  );
+}
+
+// A plain link on purpose: a full page load reads the list again (with the same filters, an empty
+// href keeps the address) and makes fresh video links.
 async function RefreshLink() {
   const t = await getTranslations("AdminMonitorPage");
   return (
@@ -112,8 +150,12 @@ async function RefreshLink() {
   );
 }
 
-async function MonitorCards() {
-  const [t, locale, { streams, waiting }] = await Promise.all([getTranslations("AdminMonitorPage"), getLocale(), readMonitor()]);
+async function MonitorCards({ searchParams }: { searchParams: SearchParams }) {
+  const [t, locale, { streams, waiting, shown }] = await Promise.all([
+    getTranslations("AdminMonitorPage"),
+    getLocale(),
+    shownCards(searchParams),
+  ]);
 
   const notices = (
     <>
@@ -130,8 +172,23 @@ async function MonitorCards() {
     </>
   );
 
-  const live = streams ?? [];
-  const late = waiting ?? [];
+  const live = shown.streams;
+  const late = shown.waiting;
+  const anything = (streams?.length ?? 0) + (waiting?.length ?? 0) > 0;
+  if (anything && live.length === 0 && late.length === 0) {
+    // There are jobs, but none the filters leave: say so plainly and offer the way back.
+    return (
+      <>
+        {notices}
+        <EmptyState tone="forest" icon={SearchX} title={t("filteredEmptyTitle")}>
+          {t("filteredEmptyBody")}{" "}
+          <Link href="/admin/monitor" className="font-semibold text-primary underline underline-offset-4 hover:decoration-2">
+            {t("filters.showAll")}
+          </Link>
+        </EmptyState>
+      </>
+    );
+  }
   if (live.length === 0 && late.length === 0) {
     return (
       <>

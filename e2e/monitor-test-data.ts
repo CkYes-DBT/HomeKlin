@@ -15,6 +15,8 @@ export type MonitorJob = { id: string; code: string; cleaner: string; startsAt: 
 
 export type MonitorWorld = {
   world: JobWorld;
+  /** The run's own agency, for a spec that adds jobs of its own (e2e/admin-order.desktop.spec.ts). */
+  agencyId: string;
   agencyName: string;
   live: { active: MonitorJob; weak: MonitorJob; disconnected: MonitorJob };
   waiting: MonitorJob;
@@ -117,6 +119,7 @@ export async function createMonitorWorld(label: string): Promise<MonitorWorld> {
     const staff = await world.admin("Uji Admin Pantau");
     return {
       world,
+      agencyId: agency.id,
       agencyName,
       live: {
         active: card(live.active, names.active),

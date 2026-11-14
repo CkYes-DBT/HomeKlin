@@ -22,7 +22,7 @@ type RecordingsTableProps = {
 };
 
 const cell = "px-4 py-3 align-top";
-const headCell = "px-4 py-3 text-left text-xs font-semibold text-ink-muted";
+const headCell = "px-4 py-3 text-left text-xs font-semibold text-ink";
 
 const stateIcons: Record<AdminRecordingState, { Icon: LucideIcon; tone: string }> = {
   available: { Icon: CalendarClock, tone: "text-ink" },
@@ -82,7 +82,7 @@ export async function RecordingsTable({ rows, playing, labels, now }: Recordings
     return (
       <Link
         href={`/admin/recordings?recording=${row.recordingId}`}
-        className="-ml-3 inline-flex min-h-touch items-center gap-1.5 rounded-full px-3 text-sm font-semibold whitespace-nowrap text-brand-700 transition-colors duration-150 ease-out-quart hover:bg-surface-sunken hover:text-brand-800 active:bg-brand-50"
+        className="-ml-3 inline-flex min-h-touch items-center gap-1.5 rounded-full px-3 text-sm font-semibold whitespace-nowrap text-primary underline decoration-1 underline-offset-4 transition-colors duration-150 ease-out-quart hover:bg-sunken hover:decoration-2 active:bg-lime-wash"
       >
         <CirclePlay className="size-4 shrink-0" aria-hidden="true" />
         {t("play")}
@@ -92,10 +92,10 @@ export async function RecordingsTable({ rows, playing, labels, now }: Recordings
   };
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-surface">
+    <div className="overflow-x-auto rounded-lg bg-card">
       <table className="w-full border-collapse text-sm">
         <caption className="sr-only">{t("tableCaption")}</caption>
-        <thead className="bg-surface-sunken">
+        <thead className="bg-sunken">
           <tr>
             <th scope="col" className={headCell}>
               {t("table.finished")}
@@ -119,7 +119,7 @@ export async function RecordingsTable({ rows, playing, labels, now }: Recordings
             <tr
               key={row.id}
               data-job={row.id}
-              className={`transition-colors duration-150 ease-out-quart hover:bg-canvas ${row.recordingId !== null && row.recordingId === playing ? "bg-brand-50" : ""}`}
+              className={`transition-colors duration-150 ease-out-quart hover:bg-field ${row.recordingId !== null && row.recordingId === playing ? "bg-field" : ""}`}
             >
               <td className={`${cell} text-ink tabular-nums`}>
                 {finished(row)}

@@ -378,7 +378,9 @@
       "notFound": "That order or chat was not found in your account.",
       "closed": "This chat is closed, so it cannot be answered any more.",
       "unavailable": "Your message was not sent because of a problem on our side. Please try again shortly."
-    }
+    },
+    "openJob": "Open job",
+    "urgentBanner": "Urgent, sent {time}"
   },
   "AccountPage": {
     "title": "Account",
@@ -1021,7 +1023,22 @@
     "disconnected": "Stream disconnected",
     "ended": "This stream has ended.",
     "retry": "Try again",
-    "retrying": "Reloading the stream…"
+    "retrying": "Reloading the stream…",
+    "filters": {
+      "label": "Monitoring filters",
+      "viewLabel": "Show",
+      "views": {
+        "all": "All",
+        "troubled": "Having trouble"
+      },
+      "areaLabel": "Service area",
+      "allAreas": "All areas",
+      "apply": "Apply",
+      "showAll": "Show all jobs"
+    },
+    "filteredEmptyTitle": "No matching jobs",
+    "filteredEmptyBody": "No jobs match these filters right now.",
+    "orderLink": "View order {code} details"
   },
   "AdminTicketsPage": {
     "title": "Support chats",
@@ -1053,7 +1070,24 @@
       "cancel": "Cancel",
       "pending": "Closing…",
       "error": "The ticket could not be closed. Please try again shortly."
-    }
+    },
+    "inboxTitle": "Inbox",
+    "search": {
+      "label": "Search chats",
+      "placeholder": "Search a name or order number",
+      "none": "No matching chats.",
+      "clear": "Show all"
+    },
+    "show": {
+      "label": "Show",
+      "all": "All",
+      "waiting": "Needs an answer",
+      "closed": "Closed",
+      "withCount": "{view} ({count, number})",
+      "apply": "Apply"
+    },
+    "orderLine": "Order {code}, {service}, {when}",
+    "orderLineShort": "Order {code}, {when}"
   },
   "AdminRecordingsPage": {
     "title": "Recordings",
@@ -1142,6 +1176,11 @@
     "create": {
       "title": "New service",
       "description": "Fill in both languages. A new service is saved as a Draft until you tick Show on the customer site."
+    },
+    "photo": {
+      "title": "Service photo",
+      "shown": "Shown on the service card. Photos are added by the development team.",
+      "none": "No photo yet, so the service card shows its type's icon. Photos are added by the development team."
     }
   },
   "AdminServiceForm": {
@@ -1198,7 +1237,36 @@
   "AdminFaqPage": {
     "title": "FAQ",
     "emptyTitle": "No questions yet",
-    "emptyBody": "The common questions shown on the customer Help page appear here. You can add and edit them."
+    "emptyBody": "The questions shown on the customer Help page appear here. Add the first one with Add question.",
+    "description": "Questions and answers shown on the customer help page. Write them in Indonesian and English.",
+    "counts": "{published, plural, other {# published}}, {drafts, plural, one {# draft} other {# drafts}}.",
+    "add": "Add question",
+    "loadErrorTitle": "The FAQ could not be loaded.",
+    "loadErrorBody": "Reload this page in a moment.",
+    "list": {
+      "label": "FAQ list",
+      "order": "Order",
+      "question": "Question",
+      "status": "Status",
+      "edit": "Edit"
+    },
+    "row": {
+      "open": "Edit question",
+      "order": "Order",
+      "keywords": "Keywords: {keywords}",
+      "published": "Published",
+      "draft": "Draft"
+    },
+    "create": {
+      "title": "New question",
+      "description": "Write the question and answer in both languages."
+    },
+    "notice": {
+      "created": "{question} added.",
+      "saved": "{question} saved.",
+      "live": "Customers see it on the Help page now.",
+      "hidden": "Still a draft, so customers do not see it yet."
+    }
   },
   "OwnerDashboardPage": {
     "title": "Business numbers",
@@ -1488,5 +1556,122 @@
   },
   "GateFallback": {
     "loading": "Loading…"
+  },
+  "AdminOrderPage": {
+    "title": "Order details",
+    "back": "Back to live monitoring",
+    "subtitle": "Order {code}, {day}, {window}",
+    "openChat": "Open customer chat",
+    "asideLabel": "Customer, cleaner, payment, status",
+    "notFoundTitle": "Order not found",
+    "notFoundBody": "This order number does not exist or is not paid yet. Choose a job from live monitoring.",
+    "errorTitle": "The order could not be loaded.",
+    "errorBody": "Reload this page in a moment.",
+    "state": {
+      "unassigned": "No cleaner yet",
+      "assigned": "Not checked in",
+      "active": "In progress",
+      "weak": "Weak signal",
+      "disconnected": "Disconnected",
+      "inProgress": "Being cleaned",
+      "completed": "Finished"
+    },
+    "video": {
+      "title": "Live stream",
+      "activeNote": "Live stream on, checked in at {time}.",
+      "activeNoteNoTime": "Live stream on.",
+      "weakNote": "Weak stream signal, reported at {time}.",
+      "disconnectedNote": "The stream dropped at {time}. The cleaner has not reconnected yet.",
+      "waitingNote": "The stream starts once the cleaner checks in at the address.",
+      "unassignedNote": "The agency has not assigned a cleaner yet, so there is no stream.",
+      "noStreamFrame": "No stream yet",
+      "noStreamNote": "The cleaner checked in at {time} but has not started the stream.",
+      "endedFrame": "Stream ended",
+      "completedNote": "The job finished at {time}.",
+      "playRecording": "Play recording",
+      "recordingExpired": "The recording was deleted after 7 days.",
+      "recordingNone": "This job has no recording.",
+      "retention": "Recordings are kept for 7 days after the job, then deleted automatically."
+    },
+    "details": {
+      "title": "Order details",
+      "service": "Service",
+      "schedule": "Schedule",
+      "scheduleValue": "{day}, {window}",
+      "duration": "Estimated duration",
+      "area": "Area"
+    },
+    "customer": {
+      "title": "Customer",
+      "fromChat": "From this order's help chat"
+    },
+    "cleaner": {
+      "title": "Cleaner and agency",
+      "role": "Cleaner at {agency}",
+      "none": "The agency has not assigned a cleaner yet.",
+      "agency": "Agency",
+      "area": "Service area"
+    },
+    "payment": {
+      "title": "Payment",
+      "listPrice": "Price list",
+      "note": "The price on today's price list. The price at booking and the agency fee split are not shown in the admin console.",
+      "paid": "Paid"
+    },
+    "timeline": {
+      "title": "Job status",
+      "steps": {
+        "assigned": "Assigned",
+        "checkedIn": "Checked in at the address",
+        "weak": "Weak signal",
+        "disconnected": "Stream dropped",
+        "completed": "Finished"
+      },
+      "states": {
+        "done": "done",
+        "problem": "having trouble",
+        "pending": "not yet"
+      },
+      "notYet": "Not yet"
+    }
+  },
+  "AdminFaqForm": {
+    "fields": {
+      "questionId": "Question (Indonesian)",
+      "questionIdPlaceholder": "Tulis pertanyaan",
+      "questionEn": "Question (English)",
+      "questionEnPlaceholder": "Write the question",
+      "answerId": "Answer (Indonesian)",
+      "answerIdPlaceholder": "Tulis jawaban",
+      "answerEn": "Answer (English)",
+      "answerEnPlaceholder": "Write the answer",
+      "keywords": "Keywords (separate with commas)",
+      "keywordsHint": "Other words customers search for, in either language.",
+      "keywordsPlaceholder": "For example: book, schedule, payment",
+      "sortOrder": "Order",
+      "sortOrderHint": "Lower numbers show first.",
+      "published": "Show on the help page",
+      "publishedHint": "Unticked, the question is a draft and customers do not see it."
+    },
+    "submitCreate": "Save question",
+    "submitEdit": "Save changes",
+    "pending": "Saving…",
+    "cancel": "Cancel",
+    "errorSummary": "{count, plural, one {Check the marked field.} other {Check the # marked fields.}}",
+    "errors": {
+      "questionRequired": "Enter the question.",
+      "questionTooShort": "A question needs at least 5 characters.",
+      "questionTooLong": "A question can have at most 200 characters.",
+      "answerRequired": "Enter the answer.",
+      "answerTooShort": "An answer needs at least 5 characters.",
+      "answerTooLong": "An answer can have at most 2,000 characters.",
+      "keywordsTooLong": "Keywords can have at most 300 characters.",
+      "sortOrderInvalid": "Write the order as a whole number from 0 to 9999."
+    },
+    "formErrors": {
+      "forbidden": "Only admins can change the FAQ. Sign in with an admin account and try again.",
+      "notFound": "This question no longer exists. Reload the list and try again.",
+      "unavailable": "The change could not be saved yet. Try again in a moment."
+    }
   }
 }

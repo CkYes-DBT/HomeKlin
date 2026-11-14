@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, CircleAlert } from "lucide-react";
+import { Check, ChevronDown, CircleAlert, Info } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
 import { appLook, panelLook } from "@/components/auth/form-controls";
 
@@ -133,12 +133,20 @@ export function TextAreaField({ id, label, hint, error, rows = 3, look = "app", 
   );
 }
 
-type CheckboxFieldProps = { id: string; name: string; label: string; hint?: string; defaultChecked: boolean };
+type CheckboxFieldProps = {
+  id: string;
+  name: string;
+  label: string;
+  hint?: string;
+  /** Shows the hint as the mock's lime-wash note with an info icon (D1, "Admin-ServiceNew"), still tied to the box. */
+  hintAsNote?: boolean;
+  defaultChecked: boolean;
+};
 
 // A 24 px box inside a label that is at least 44 px tall, so the whole line is the target. The box sits
 // on the panel's fill, so it is white; ticked, it is forest green.
-export function CheckboxField({ id, name, label, hint, defaultChecked }: CheckboxFieldProps) {
-  const { describedBy } = notesFor(id, { hint });
+export function CheckboxField({ id, name, label, hint, hintAsNote = false, defaultChecked }: CheckboxFieldProps) {
+  const { describedBy, hintId } = notesFor(id, { hint });
   return (
     <div className="flex flex-col gap-1">
       <label
@@ -162,7 +170,14 @@ export function CheckboxField({ id, name, label, hint, defaultChecked }: Checkbo
         </span>
         <span className="text-sm font-semibold text-ink">{label}</span>
       </label>
-      <FieldNotes id={id} hint={hint} look="panel" />
+      {hint && hintAsNote ? (
+        <p id={hintId} className="mt-2 flex items-start gap-2 rounded-md bg-lime-wash px-3.5 py-2.5 text-sm text-on-lime-wash">
+          <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <span>{hint}</span>
+        </p>
+      ) : (
+        <FieldNotes id={id} hint={hint} look="panel" />
+      )}
     </div>
   );
 }

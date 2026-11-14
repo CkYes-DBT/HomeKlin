@@ -68,8 +68,8 @@ export function AdminRecordingPlayer({ recordingId, src: firstSrc, label }: { re
 
   if (problem === "expired") {
     return (
-      <div className="flex items-start gap-3 rounded-md bg-surface-sunken px-4 py-3">
-        <ShieldCheck className="mt-0.5 size-5 shrink-0 text-brand-700" aria-hidden="true" />
+      <div className="flex items-start gap-3 rounded-md bg-sunken px-4 py-3">
+        <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
         <div className="flex min-w-0 flex-col gap-1 text-sm">
           <p className="font-semibold text-ink">{t("expiredTitle")}</p>
           <p className="text-ink-muted">{t("expiredBody")}</p>
@@ -90,7 +90,7 @@ export function AdminRecordingPlayer({ recordingId, src: firstSrc, label }: { re
         aria-label={label}
         onError={handleError}
         onLoadedMetadata={resume}
-        className="aspect-video w-full rounded-md bg-surface-sunken object-contain"
+        className="aspect-video w-full rounded-md bg-frame object-contain"
       >
         <p className="p-4 text-sm text-ink-muted">{t("unsupported")}</p>
       </video>
@@ -110,7 +110,7 @@ export function AdminRecordingPlayer({ recordingId, src: firstSrc, label }: { re
               type="button"
               onClick={() => void reload()}
               disabled={reloading}
-              className="inline-flex min-h-touch shrink-0 items-center justify-center gap-2 rounded-full border border-border-control bg-surface px-5 text-sm font-semibold text-ink transition-colors duration-150 ease-out-quart hover:bg-surface-sunken active:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-touch shrink-0 items-center justify-center gap-2 rounded-full border-[1.5px] border-outline px-5 text-sm font-semibold text-ink transition-colors duration-150 ease-out-quart hover:bg-card active:bg-sunken disabled:cursor-not-allowed disabled:border-border-control disabled:text-ink-muted"
             >
               <RotateCw className="size-4 shrink-0" aria-hidden="true" />
               {t("reload")}

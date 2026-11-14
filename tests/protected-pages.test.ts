@@ -151,6 +151,7 @@ describe("the page finder (the test's own helpers)", () => {
         "/agency/recordings",
         "/admin",
         "/admin/monitor",
+        "/admin/orders/[code]",
         "/admin/tickets",
         "/admin/recordings",
         "/admin/services",

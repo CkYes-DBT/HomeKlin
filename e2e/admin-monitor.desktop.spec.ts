@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { adminClient } from "../tests/integration/test-project";
 import { jakartaClock } from "./job-test-data";
 import { createMonitorWorld, makeTestVideo, serveTestVideo, type MonitorWorld } from "./monitor-test-data";
 import { signedInAs } from "./setup/auth-state";
@@ -137,4 +138,117 @@ test("reads in English", async ({ page }) => {
   await expect(waiting).toContainText("Not checked in");
   await expect(waiting).toContainText(`Starts at ${jakartaClock(data.waiting.startsAt)} WIB`);
   await expect(page.getByRole("link", { name: "Refresh list" })).toBeVisible();
+});
+
+// M2: the filters are query parameters of one plain GET form, so they work without JavaScript and
+// combine; the summary line counts what they leave.
+test.describe("filters", () => {
+  test("Terkendala keeps the troubled streams only, and the summary counts what is shown", async ({ page }) => {
+    await page.goto("/admin/monitor");
+    const toggle = page.getByRole("group", { name: "Tampilkan" });
+    await expect(toggle.getByRole("button", { name: "Semua" })).toHaveAttribute("aria-pressed", "true");
+    await toggle.getByRole("button", { name: "Terkendala" }).click();
+    await expect(page).toHaveURL(/[?&]view=troubled/);
+    await expect(page.getByRole("group", { name: "Tampilkan" }).getByRole("button", { name: "Terkendala" })).toHaveAttribute("aria-pressed", "true");
+
+    await expect(feed(page, data.live.weak.id)).toBeVisible();
+    await expect(feed(page, data.live.disconnected.id)).toBeVisible();
+    await expect(feed(page, data.live.active.id)).toHaveCount(0);
+    await expect(page.locator("[data-waiting]")).toHaveCount(0);
+    // Every card left has trouble.
+    await expect(page.locator("[data-feed][data-initial-status='active']")).toHaveCount(0);
+
+    const shown = await page.locator("[data-feed]").count();
+    expect(await summaryNumbers(page.getByTestId("monitor-summary"))).toEqual([shown, shown]);
+    await expect(page.getByTestId("monitor-summary")).not.toContainText("belum check-in");
+  });
+
+  test("the area select keeps that area's cards and combines with the toggle", async ({ page }) => {
+    await page.goto("/admin/monitor");
+    const area = page.getByLabel("Area layanan");
+    await expect(area).toHaveValue("");
+    await expect(area.locator("option").first()).toHaveText("Semua area");
+    await area.selectOption({ label: "Jakarta Timur" });
+    await expect(page).toHaveURL(/[?&]area=jakarta-timur/);
+    await expect(page.getByLabel("Area layanan")).toHaveValue("jakarta-timur");
+    for (const id of [data.live.active.id, data.live.weak.id, data.live.disconnected.id]) await expect(feed(page, id)).toBeVisible();
+    await expect(page.locator(`[data-waiting="${data.waiting.id}"]`)).toBeVisible();
+    // Every card left is in Jakarta Timur.
+    for (const card of await page.locator("[data-feed], [data-waiting]").all()) await expect(card).toContainText("Jakarta Timur");
+
+    // The toggle keeps the area.
+    await page.getByRole("group", { name: "Tampilkan" }).getByRole("button", { name: "Terkendala" }).click();
+    await expect(page).toHaveURL(/view=troubled/);
+    await expect(page).toHaveURL(/area=jakarta-timur/);
+    await expect(feed(page, data.live.weak.id)).toBeVisible();
+    await expect(feed(page, data.live.active.id)).toHaveCount(0);
+  });
+
+  test("a filter that leaves nothing says so plainly, with the way back", async ({ page }) => {
+    // A served area without a troubled stream: the select's areas, less those where a weak or
+    // disconnected stream runs now (the test project's demo data and other specs have some).
+    await page.goto("/admin/monitor");
+    const areas = (await page.getByLabel("Area layanan").locator("option").evaluateAll((options) => options.map((option) => (option as HTMLOptionElement).value))).filter(Boolean);
+    const { data: troubled, error } = await adminClient()
+      .from("stream_sessions")
+      .select("orders!inner(area_id)")
+      .in("status", ["weak", "disconnected"]);
+    if (error) throw new Error(`Could not read the streams: ${error.message}`);
+    const busy = new Set((troubled as unknown as { orders: { area_id: string } }[]).map((row) => row.orders.area_id));
+    const quiet = areas.find((area) => !busy.has(area));
+    expect(quiet, "a served area with no troubled stream").toBeDefined();
+    await page.goto(`/admin/monitor?view=troubled&area=${quiet}`);
+    await expect(feed(page, data.live.weak.id)).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Tidak ada pekerjaan yang cocok" })).toBeVisible();
+    await expect(page.getByTestId("monitor-summary")).toHaveText("0 pekerjaan sedang berlangsung. 0 terkendala.");
+    await page.getByRole("link", { name: "Tampilkan semua pekerjaan" }).click();
+    await expect(page).toHaveURL("/admin/monitor");
+    await expect(feed(page, data.live.active.id)).toBeVisible();
+  });
+
+  test("an unknown filter value shows everything instead of failing", async ({ page }) => {
+    await page.goto("/admin/monitor?view=everything&area=atlantis");
+    await expect(feed(page, data.live.active.id)).toBeVisible();
+    await expect(page.getByLabel("Area layanan")).toHaveValue("");
+  });
+
+  // The role-checked part of the page streams in behind <Suspense>, which needs JavaScript to show,
+  // so a browser without it cannot be tested here; the form itself is checked to be a plain GET form
+  // whose fields name the query parameters, which is what lets the filters work as links and reloads.
+  test("the filters are a plain GET form of the address's parameters", async ({ page }) => {
+    await page.goto("/admin/monitor?view=troubled&area=jakarta-timur");
+    const form = page.getByRole("form", { name: "Filter pemantauan" });
+    await expect(form).toHaveAttribute("method", "get");
+    await expect(form).toHaveAttribute("action", "/admin/monitor");
+    const toggle = form.getByRole("group", { name: "Tampilkan" });
+    for (const [name, value] of [["Semua", "all"], ["Terkendala", "troubled"]] as const) {
+      const button = toggle.getByRole("button", { name });
+      await expect(button).toHaveAttribute("type", "submit");
+      await expect(button).toHaveAttribute("name", "view");
+      await expect(button).toHaveAttribute("value", value);
+    }
+    await expect(form.locator('input[type="hidden"][name="view"]')).toHaveValue("troubled");
+    await expect(form.getByLabel("Area layanan")).toHaveAttribute("name", "area");
+    await expect(form.getByLabel("Area layanan")).toHaveValue("jakarta-timur");
+    // Without JavaScript a changed select is sent with this button.
+    await expect(form.locator("noscript")).toHaveCount(1);
+  });
+
+  test("reads in English", async ({ page }) => {
+    await page.goto("/en/admin/monitor?view=troubled");
+    const toggle = page.getByRole("group", { name: "Show" });
+    await expect(toggle.getByRole("button", { name: "Having trouble" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByLabel("Service area").locator("option").first()).toHaveText("All areas");
+  });
+});
+
+test("the order number on a card opens the order's detail page", async ({ page }) => {
+  await page.goto("/admin/monitor");
+  const link = feed(page, data.live.active.id).getByRole("link", { name: `Lihat detail pesanan ${data.live.active.code}` });
+  await expect(link).toHaveText(data.live.active.code);
+  const box = await link.boundingBox();
+  expect(box?.height).toBeGreaterThanOrEqual(44);
+  await link.click();
+  await expect(page).toHaveURL(`/admin/orders/${data.live.active.code}`);
+  await expect(page.getByRole("heading", { level: 1, name: "Pembersihan Rutin" })).toBeVisible();
 });

@@ -74,3 +74,40 @@ export function monitorCounts(streams: readonly { status: StreamStatus }[], wait
     waiting,
   };
 }
+
+/** The live monitor's filters (M2): every card or only the troubled streams, and one area or all. */
+export type MonitorView = "all" | "troubled";
+export type MonitorFilters = { view: MonitorView; area: string | null };
+
+const firstOf = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+
+/**
+ * The filters from the address (?view=troubled&area=jakarta-timur). The first value of a field counts:
+ * the pressed toggle button comes before the hidden field that carries the current view. An unknown
+ * view or area is ignored, so an old or edited link still shows the monitor.
+ */
+export function parseMonitorFilters(
+  params: { view?: string | string[]; area?: string | string[] },
+  areaIds: readonly string[],
+): MonitorFilters {
+  const view = firstOf(params.view) === "troubled" ? "troubled" : "all";
+  const area = firstOf(params.area);
+  return { view, area: area && areaIds.includes(area) ? area : null };
+}
+
+/**
+ * What the monitor shows under its filters. "Terkendala" keeps the streams with a weak signal or a
+ * lost connection, and none of the jobs waiting for check-in (they have no stream to be troubled); an
+ * area keeps that area's cards. The summary line counts what this returns.
+ */
+export function filterMonitor<S extends { status: StreamStatus; areaId: string }, W extends { areaId: string }>(
+  cards: { streams: readonly S[]; waiting: readonly W[] },
+  filters: MonitorFilters,
+): { streams: S[]; waiting: W[] } {
+  const inArea = (card: { areaId: string }) => filters.area === null || card.areaId === filters.area;
+  const troubled = filters.view === "troubled";
+  return {
+    streams: cards.streams.filter((stream) => inArea(stream) && (!troubled || stream.status === "weak" || stream.status === "disconnected")),
+    waiting: troubled ? [] : cards.waiting.filter(inArea),
+  };
+}

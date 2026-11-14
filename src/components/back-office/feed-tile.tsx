@@ -2,6 +2,7 @@ import { Clock } from "lucide-react";
 import { unstable_rethrow } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense, type ReactNode } from "react";
+import { Link } from "@/i18n/navigation";
 import type { AdminJob } from "@/lib/jobs/jobs";
 import { StreamError, watchStream, type LiveStream } from "@/lib/stream/streams";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -48,7 +49,7 @@ export async function FeedTile({ stream, serviceName, areaName }: { stream: Live
           areaName={areaName}
           agencyName={stream.agencyName}
           action={<FeedOpen name={cleaner} />}
-          labels={{ orderCode: t("orderCode"), agency: t("agency") }}
+          labels={{ orderLink: t("orderLink", { code: stream.orderCode }), agency: t("agency") }}
         />
       </FeedCard>
     </li>
@@ -83,7 +84,7 @@ export async function CheckInTile({ job, serviceName, areaName, startsAt }: { jo
         service={serviceName ?? t("serviceFallback")}
         areaName={areaName}
         agencyName={job.agencyName}
-        labels={{ orderCode: t("orderCode"), agency: t("agency") }}
+        labels={{ orderLink: t("orderLink", { code: job.orderCode }), agency: t("agency") }}
       />
     </li>
   );
@@ -99,8 +100,8 @@ type CardProps = {
   areaName: string | undefined;
   agencyName: string;
   action?: ReactNode;
-  /** The words a screen reader hears before the order number and the agency. */
-  labels: { orderCode: string; agency: string };
+  /** The words a screen reader hears for the order link and before the agency. */
+  labels: { orderLink: string; agency: string };
 };
 
 // The values of the mock: a white lg card with 12 px padding and 12 px between its parts; the rows
@@ -111,10 +112,15 @@ function Card({ titleId, frame, chip, orderCode, cleaner, service, areaName, age
       {frame}
       <div className="flex flex-wrap items-center justify-between gap-2 px-1">
         {chip}
-        <p className="text-xs text-ink-muted">
-          <span className="sr-only">{labels.orderCode}: </span>
+        {/* The order number opens the order's detail page (D1); "Buka" stays the full-screen video. A
+            full 44 px target that keeps the row's height (the negative margin). */}
+        <Link
+          href={`/admin/orders/${orderCode}`}
+          aria-label={labels.orderLink}
+          className="-my-2.5 inline-flex min-h-touch items-center rounded-full px-1.5 text-xs text-ink-muted underline decoration-1 underline-offset-4 transition-colors duration-150 ease-out-quart hover:bg-sunken hover:text-ink hover:decoration-2 active:bg-lime-wash"
+        >
           {orderCode}
-        </p>
+        </Link>
       </div>
       <div className="mt-auto flex items-end justify-between gap-2 px-1 pb-1">
         <div className="flex min-w-0 flex-col leading-snug">
@@ -134,8 +140,8 @@ function Card({ titleId, frame, chip, orderCode, cleaner, service, areaName, age
 }
 
 // The viewer's own session asks the database whether this admin may watch (stream_for_viewer); only
-// then does the server sign a link to the demo clip.
-async function SignedFeed({ orderId, label }: { orderId: string; label: string }) {
+// then does the server sign a link to the demo clip. Also the order detail page's video (D1).
+export async function SignedFeed({ orderId, label }: { orderId: string; label: string }) {
   let src: string | null = null;
   let ended = false;
   try {
@@ -154,7 +160,7 @@ async function SignedFeed({ orderId, label }: { orderId: string; label: string }
 
 // The frame as it waits for its link: the mock's pale green frame with the white video circle. Not a
 // status region: the card's one status is the stream's own (FeedStatus).
-function VideoLoading({ label }: { label: string }) {
+export function VideoLoading({ label }: { label: string }) {
   return (
     <div aria-busy="true" className="flex aspect-video w-full flex-col items-center justify-center gap-1.5 rounded-md bg-frame">
       <span className="text-xs text-ink-muted">{label}</span>
