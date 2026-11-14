@@ -288,6 +288,7 @@ Conventions for every task: tests written first; `npm run typecheck`, `npm run l
   - Accept: unit tests cover fee formula, rounding, idempotency; integration tests cover RLS isolation (agency A cannot read agency B), role gates (`mark_payout_paid` owner only), `p_days` validation, `generate_payouts` idempotency, customer order row leaks no fee; `tests/protected-pages.test.ts` updated if needed; no skipped tests; if `TEST_SUPABASE_*` keys absent, states so and does not skip.
   - Verify: `npm run check`; integration tests pass.
   - Deps: T41, T42, T43.
+  - Fix 2026-11-14: agencies could not read their own fees (permission denied); select granted on `order_fees`/`payouts` under the existing RLS, the four agency fee functions made security definer for the caller's agency, daily fees by Jakarta date (`20261114160000_agency_fee_reads.sql`, `tests/integration/agency-fee-reads.test.ts`).
 
 ### Checkpoint 10: Agency fees backend complete
 - [x] `npm run check` passes (0 TS errors, 0 lint errors, 756/756 tests pass); migrations applied to test project; done checklist listed in Progress.md. — 2026-11-11
