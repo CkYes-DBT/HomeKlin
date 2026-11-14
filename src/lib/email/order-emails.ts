@@ -1,5 +1,6 @@
 import type { Locale } from "next-intl";
 import { routing } from "@/i18n/routing";
+import { createOrderLink } from "@/lib/orders/order-link";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { cleanerAssignedEmail, recordingReadyEmail } from "./order-templates";
 import { orderConfirmationEmail, sendAppEmail, type SendResult } from "./send";
@@ -30,7 +31,9 @@ type Facts = {
 
 const siteUrl = () => (process.env.SITE_URL ?? "https://home-klin.vercel.app").replace(/\/+$/, "");
 const localePrefix = (locale: Locale) => (locale === routing.defaultLocale ? "" : `/${locale}`);
-const orderUrl = (orderId: string, locale: Locale) => `${siteUrl()}${localePrefix(locale)}/orders?order=${orderId}`;
+/** The order's private page (B14a, opens without signing in), else the signed-in orders page. */
+const orderUrl = async (orderId: string, locale: Locale) =>
+  (await createOrderLink(orderId, locale)) ?? `${siteUrl()}${localePrefix(locale)}/orders?order=${orderId}`;
 /** A site image (/images/...) as an address mail apps can load; an https address as it is. */
 const absolute = (url: string | null) => (!url ? null : url.startsWith("/") ? `${siteUrl()}${url}` : url);
 
@@ -61,7 +64,7 @@ export function emailCleanerAssigned(orderId: string, locale: Locale = routing.d
         endsAt: facts.ends_at,
         cleanerName: facts.cleaner_name,
         cleanerPhotoUrl: absolute(facts.cleaner_photo_url),
-        orderUrl: orderUrl(orderId, locale),
+        orderUrl: await orderUrl(orderId, locale),
       },
       locale,
     );
@@ -78,7 +81,7 @@ export function emailRecordingReady(orderId: string, locale: Locale = routing.de
         orderCode: facts.order_code,
         serviceName: locale === "en" ? facts.service_name_en : facts.service_name_id,
         expiresAt: facts.recording_expires_at,
-        orderUrl: orderUrl(orderId, locale),
+        orderUrl: await orderUrl(orderId, locale),
       },
       locale,
     );
@@ -96,7 +99,7 @@ export function emailOrderAgain(orderId: string, locale: Locale): Promise<OrderE
         endsAt: facts.ends_at,
         address: facts.address,
         priceIdr: facts.price_idr,
-        orderUrl: `${siteUrl()}${localePrefix(locale)}/orders?booked=${orderId}`,
+        orderUrl: (await createOrderLink(orderId, locale)) ?? `${siteUrl()}${localePrefix(locale)}/orders?booked=${orderId}`,
       },
       locale,
     );

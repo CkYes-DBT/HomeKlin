@@ -36,3 +36,19 @@ export async function resendOrderEmail(_previous: ResendState, formData: FormDat
   const result = await emailOrderAgain(parsed.data.orderId, parsed.data.locale);
   return result.sent ? { ok: true } : { formError: "unavailable" };
 }
+
+/**
+ * B14a: the customer revokes every private link of their own order (the links in its emails), for
+ * example after forwarding an email by mistake. New emails carry new links.
+ */
+export async function revokeOrderLinks(_previous: ResendState, formData: FormData): Promise<ResendState> {
+  if (!(await authorize(["customer"]))) return { formError: "notCustomer" };
+  const entry = formData.get("orderId");
+  const parsed = z.uuid().safeParse(typeof entry === "string" ? entry : undefined);
+  if (!parsed.success) return { formError: "notFound" };
+
+  const supabase = await createSupabaseServerClient({ writeCookies: true });
+  const { error } = await supabase.rpc("revoke_order_links", { p_order: parsed.data });
+  if (error) return { formError: error.message === "order_not_found" ? "notFound" : error.message === "not_customer" ? "notCustomer" : "unavailable" };
+  return { ok: true };
+}
