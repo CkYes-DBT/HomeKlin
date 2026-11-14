@@ -30,6 +30,11 @@ const pageGroups = [
       "/admin/faq",
     ],
   },
+  {
+    who: "the owner",
+    session: signedInAs.owner,
+    paths: ["/owner", "/owner/agencies", "/owner/agencies/new", "/owner/admins", "/owner/admins/new"],
+  },
 ];
 
 for (const { who, session, paths: indonesianPages } of pageGroups) {

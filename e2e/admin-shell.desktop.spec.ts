@@ -4,9 +4,8 @@ import { expectAccountFitsAvatar } from "./admin-account";
 
 // R2 on a desk: the admin sidebar is the redesign's dark-green band (markdown/design.md, Layout, "Agency
 // and admin back office"): 256 px of `band`, a role card, 44 px items with the current one in lime on
-// `band-raised`, and the language switch and the signed-in user at the bottom. The owner sidebar keeps
-// the light T3b panel (it shares SidebarShell with its default tone); the agency moved to the forest
-// tone at D2 (e2e/agency-shell.desktop.spec.ts).
+// `band-raised`, and the language switch and the signed-in user at the bottom. The agency (D2) and the
+// owner (D3) moved to the forest tone too (e2e/agency-shell.desktop.spec.ts, e2e/owner-shell.desktop.spec.ts).
 
 const band = "rgb(19, 42, 31)";
 const lime = "rgb(216, 239, 107)";
@@ -94,28 +93,3 @@ test.describe("the admin sidebar at 1440 px", () => {
     await expect(link).toHaveCSS("outline-color", lime);
   });
 });
-
-for (const { role, path } of [
-  { role: "owner", path: "/owner" },
-] as const) {
-  test.describe(`the ${role} sidebar`, () => {
-    test.use({ ...signedInAs[role], viewport: { width: 1440, height: 900 } });
-
-    test("keeps its light T3b panel", async ({ page }) => {
-      await page.goto(path);
-      const sidebar = page.locator("aside");
-      await expect(sidebar).toBeVisible();
-      // The T3b --color-panel, resolved by the browser the same way as the sidebar's own background.
-      const { background, panel } = await sidebar.evaluate((element) => {
-        const probe = document.createElement("span");
-        probe.style.backgroundColor = "var(--color-panel)";
-        element.append(probe);
-        const panel = getComputedStyle(probe).backgroundColor;
-        probe.remove();
-        return { background: getComputedStyle(element).backgroundColor, panel };
-      });
-      expect(background).not.toBe(band);
-      expect(background).toBe(panel);
-    });
-  });
-}

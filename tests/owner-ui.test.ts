@@ -1,47 +1,64 @@
 import { describe, expect, it } from "vitest";
-import { barPercent, niceMax, shortDate, statusRows, trendSummary } from "@/components/owner/numbers";
+import { growth, monthYear, payoutShares, signInDay, statusRows } from "@/components/owner/numbers";
 
-// The owner dashboard's arithmetic (T29b): the trend chart's scale and bar heights, the 30-day totals,
-// and orders by status with their share. Pure rules; the page renders what these return.
+// The owner pages' arithmetic (T29b; D3, after the mocks Owner-Overview, Owner-Partners and
+// Owner-Admins): the growth against the period before, the payouts per partner agency with their
+// share, orders by status with their share, the "since" month and an admin's last sign-in day. Pure
+// rules; the pages render what these return.
 
-const day = (date: string, orders: number, revenueIdr = 0) => ({ date, orders, revenueIdr });
-
-describe("niceMax", () => {
-  it("rounds the largest value up to 1, 2 or 5 times a power of ten", () => {
-    expect(niceMax(1)).toBe(1);
-    expect(niceMax(2)).toBe(2);
-    expect(niceMax(3)).toBe(5);
-    expect(niceMax(7)).toBe(10);
-    expect(niceMax(12)).toBe(20);
-    expect(niceMax(50)).toBe(50);
-    expect(niceMax(51)).toBe(100);
+describe("growth", () => {
+  it("says how much a total rose or fell against the period before, in whole percent", () => {
+    expect(growth(108, 100)).toEqual({ direction: "up", percent: 8 });
+    expect(growth(97, 100)).toEqual({ direction: "down", percent: 3 });
+    expect(growth(48_250_000, 44_675_926)).toEqual({ direction: "up", percent: 8 });
   });
 
-  it("keeps a scale of 1 when there is nothing to show, so no bar divides by zero", () => {
-    expect(niceMax(0)).toBe(1);
-  });
-});
-
-describe("barPercent", () => {
-  it("gives a bar its share of the scale", () => {
-    expect(barPercent(5, 10)).toBe(50);
-    expect(barPercent(10, 10)).toBe(100);
-    expect(barPercent(0, 10)).toBe(0);
+  it("calls a change under half a percent the same", () => {
+    expect(growth(1002, 1000)).toEqual({ direction: "same", percent: 0 });
+    expect(growth(0, 0)).toEqual({ direction: "none", percent: 0 });
   });
 
-  it("keeps a small non-zero day visible", () => {
-    expect(barPercent(1, 500)).toBe(2);
+  it("has nothing to compare with when the period before had nothing", () => {
+    expect(growth(5000, 0)).toEqual({ direction: "none", percent: 0 });
   });
 });
 
-describe("trendSummary", () => {
-  it("adds up the orders and revenue and finds the busiest day", () => {
-    const trend = [day("2026-11-02", 1, 100_000), day("2026-11-03", 3, 250_000), day("2026-11-04", 2, 0)];
-    expect(trendSummary(trend)).toEqual({ orders: 6, revenueIdr: 350_000, busiest: trend[1], max: 5 });
+describe("payoutShares", () => {
+  const row = (id: string, name: string, amountIdr: number) => ({ id, name, amountIdr });
+
+  it("lists the agencies that were paid, largest first, with their share of the total", () => {
+    const shares = payoutShares([row("a", "Kilap", 100_000), row("b", "Asri", 300_000), row("c", "Baru", 0)]);
+    expect(shares.totalIdr).toBe(400_000);
+    expect(shares.rows).toEqual([
+      { id: "b", name: "Asri", amountIdr: 300_000, sharePercent: 75 },
+      { id: "a", name: "Kilap", amountIdr: 100_000, sharePercent: 25 },
+    ]);
   });
 
-  it("has no busiest day when no order came in", () => {
-    expect(trendSummary([day("2026-11-03", 0), day("2026-11-04", 0)])).toEqual({ orders: 0, revenueIdr: 0, busiest: null, max: 1 });
+  it("rounds a share to one decimal and orders equal amounts by name", () => {
+    const shares = payoutShares([row("z", "Zamrud", 100_000), row("a", "Asri", 100_000), row("m", "Melati", 100_000)]);
+    expect(shares.rows.map((share) => [share.name, share.sharePercent])).toEqual([
+      ["Asri", 33.3],
+      ["Melati", 33.3],
+      ["Zamrud", 33.3],
+    ]);
+  });
+
+  it("has no rows when nothing was paid", () => {
+    expect(payoutShares([row("a", "Asri", 0)])).toEqual({ totalIdr: 0, rows: [] });
+  });
+});
+
+describe("signInDay", () => {
+  // 14 Nov 2026, 10:00 in Jakarta.
+  const now = new Date("2026-11-14T03:00:00.000Z");
+
+  it("tells today and yesterday apart by the Jakarta calendar", () => {
+    expect(signInDay("2026-11-14T01:02:00.000Z", now)).toBe("today");
+    // 13 Nov 23:30 UTC is already 14 Nov in Jakarta.
+    expect(signInDay("2026-11-13T23:30:00.000Z", now)).toBe("today");
+    expect(signInDay("2026-11-13T10:40:00.000Z", now)).toBe("yesterday");
+    expect(signInDay("2026-10-29T03:00:00.000Z", now)).toBe("earlier");
   });
 });
 
@@ -60,10 +77,12 @@ describe("statusRows", () => {
   });
 });
 
-describe("shortDate", () => {
-  it("writes a Jakarta date as day and short month in either language", () => {
-    expect(shortDate("2026-11-04", "id")).toBe("4 Nov");
-    expect(shortDate("2026-08-17", "id")).toBe("17 Agu");
-    expect(shortDate("2026-08-17", "en")).toBe("17 Aug");
+describe("monthYear", () => {
+  it("writes when a partner joined as a short month and year in Jakarta, in either language", () => {
+    expect(monthYear("2026-03-10T05:00:00.000Z", "id")).toBe("Mar 2026");
+    expect(monthYear("2026-08-01T03:00:00.000Z", "id")).toBe("Agu 2026");
+    expect(monthYear("2026-08-01T03:00:00.000Z", "en")).toBe("Aug 2026");
+    // 31 May 20:00 UTC is already 1 June in Jakarta.
+    expect(monthYear("2026-05-31T20:00:00.000Z", "id")).toBe("Jun 2026");
   });
 });

@@ -58,3 +58,50 @@ Built in D1 (2026-11-14). Mocks: `Admin-Live`, `Admin-Order`, `Admin-Order-Issue
 ### Menu
 
 The mock menu has four items; the app keeps "Rekaman" as a fifth (user decision). `/admin/recordings` got the same card and header styling.
+
+## Owner
+
+Built in D3 (2026-11-14). Mocks: `Owner-Overview`, `Owner-Partners`, `Owner-PartnerNew`, `Owner-Admins`, `Owner-AdminNew`. Uses Phase 15 B5: `owner_numbers(p_days)` (the 7, 30 and 90 day toggle, growth against the period before, 14 daily bars, payouts per agency), the 30-day partner numbers of `owner_agencies` and the last sign-in of `owner_admins`.
+
+### Overview (`Owner-Overview`), page `/owner`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| "Contoh" badge next to the title | Left out: the page shows real data | None |
+| "Data per 5 Nov 2026" in the description | Left out; the numbers are read on every visit | None |
+| Not in the mock | "Pesanan menurut status" (all time) kept: SPEC (Owner) requires orders by status | None |
+| Mark a payout as paid (`markPayoutPaid`) | Not built; no mock shows it either | `markPayoutPaid` needs a payout id, and the owner has no reader that lists payouts (`owner_payouts_overview()` gives totals only; the `payouts` table has no grant for signed-in users) |
+
+### Partner agencies (`Owner-Partners`), page `/owner/agencies`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| Status "Menunggu persetujuan" and "Approve" | Only Aktif and Ditangguhkan | A pending status on `agencies` and an approve function (B14, not approved) |
+| "View" per partner | Left out: there is no partner detail page | A partner detail page and its reader (not planned) |
+| Suspend in one click | Suspend and reactivate ask once more in place first (kept from T29c) | None |
+| Not in the mock | Areas, cleaners and whether the partner has a sign-in, under the name | None |
+
+### Add a partner (`Owner-PartnerNew`), page `/owner/agencies/new`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| Nama penanggung jawab, Email, Nomor WhatsApp | Not asked; the form has the name and the areas served (the areas are not in the mock, but the partner needs them to get bookings) | Contact columns on `agencies` and `owner_add_agency` arguments (B14, not approved) |
+| "Kirim undangan", invitation email, status "Menunggu persetujuan" | "Tambah mitra": the partner is active at once; its sign-in is linked by the development team as before | Invitation email and a pending status (B14, not approved) |
+
+### Admin accounts (`Owner-Admins`), page `/owner/admins`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| "Contoh" badge | Left out | None |
+| "Dibuat oleh Rizky Pratama, Pemilik" | Left out; the details show the email, the creation date and the access | Who created the account (a `created_by` on the admin, or the auth log) |
+| "Hapus akun ... Tindakan ini tidak bisa dibatalkan" | "Hapus admin": the admin role is taken away and the account stays as an ordinary account, which the question says (unchanged `removeAdmin`) | Deleting the account itself would need a decision on its tickets and messages |
+
+### Create an admin (`Owner-AdminNew`), page `/owner/admins/new`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| "Kata sandi sementara ... Admin mengganti kata sandi saat pertama masuk" | "Kata sandi awal", with the note to share it privately; the admin can also sign in with an emailed code | A forced password change at first sign-in (B14, not approved) |
+
+### Menu and shell
+
+The owner layout uses the forest shell as in the mocks: the role card "Dasbor pemilik" over "Pemilik HomeKlin", the three sections, the language switch and the signed-in owner at the bottom. The menu item "Angka bisnis" is now "Ringkasan". No gap.

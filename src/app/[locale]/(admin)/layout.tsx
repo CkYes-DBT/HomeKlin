@@ -7,7 +7,7 @@ import { SidebarShell } from "@/components/shell/sidebar-shell";
 // the redesign's fonts (src/app/fonts-forest.ts). The sidebar is fixed, but it is a descendant of the
 // wrapper, so it inherits both. The forest tone (R2) draws the shell as the redesign's dark-green band.
 // The wordmark leads to live monitoring, the console's start page (R2b: /admin redirects there too).
-// The agency and owner consoles share SidebarShell in its default tone and stay on T3b.
+// The agency (D2) and owner (D3) consoles use the same forest shell.
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslations("BackOfficeShell");
   const locale = useLocale();

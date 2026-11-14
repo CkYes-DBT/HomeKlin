@@ -54,7 +54,7 @@
     },
     "owner": {
       "label": "Owner navigation",
-      "numbers": "Business numbers",
+      "numbers": "Overview",
       "agencies": "Partner agencies",
       "admins": "Admin accounts"
     }
@@ -68,7 +68,11 @@
     "adminHome": "HomeKlin, to Live monitoring",
     "agencyDashboard": "Partner agency dashboard",
     "agencyFallback": "HomeKlin partner agency",
-    "agencyHome": "HomeKlin, to Summary"
+    "agencyHome": "HomeKlin, to Summary",
+    "ownerRole": "Owner",
+    "ownerDashboard": "Owner dashboard",
+    "ownerTitle": "HomeKlin owner",
+    "ownerHome": "HomeKlin, to Overview"
   },
   "MarketingHeader": {
     "nav": "Site navigation",
@@ -1498,74 +1502,77 @@
     }
   },
   "OwnerDashboardPage": {
-    "title": "Business numbers",
-    "description": "HomeKlin's revenue and orders, and the work of each partner agency. No customer personal data.",
-    "errorTitle": "The business numbers could not be loaded.",
+    "title": "Overview",
+    "description": "Revenue, orders and payouts to partner agencies. No customer personal data.",
+    "errorTitle": "The overview could not be loaded.",
     "errorBody": "Reload this page in a moment.",
-    "tiles": {
-      "label": "Summary",
+    "rangeLabel": "Time range",
+    "range": "{days, number} days",
+    "statsLabel": "Key numbers, last {days, number} days",
+    "stats": {
       "revenue": "Revenue",
-      "revenueHint": "From every paid order",
-      "paidOrders": "Paid orders",
-      "paidOrdersHint": "Orders whose payment is confirmed",
-      "completedJobs": "Completed jobs",
-      "completedJobsHint": "Of {paid, plural, one {# paid order} other {# paid orders}}"
+      "orders": "Orders",
+      "ordersHint": "paid orders",
+      "average": "Average order value",
+      "averageHint": "revenue divided by orders",
+      "paidOut": "Paid out to partner agencies",
+      "paidOutHint": "HomeKlin keeps {amount}"
+    },
+    "growth": {
+      "up": "up {percent, number}% from the previous {days, number} days",
+      "down": "down {percent, number}% from the previous {days, number} days",
+      "same": "the same as the previous {days, number} days",
+      "none": "nothing to compare with in the previous {days, number} days"
+    },
+    "daily": {
+      "title": "Daily revenue",
+      "description": "Last 14 days, {from} to {to}",
+      "sentence": "Revenue over the last {count, number} days: {total}. Highest {high} on {highDay}.",
+      "noneSentence": "No revenue in the last {count, number} days.",
+      "showTable": "See the numbers per day",
+      "tableCaption": "Revenue per day, last 14 days",
+      "day": "Date",
+      "revenue": "Revenue"
+    },
+    "payouts": {
+      "title": "Payouts per agency",
+      "description": "Last {days, number} days, total {total}",
+      "empty": "No partner agency fees in this range yet.",
+      "allPartners": "See all partners"
     },
     "status": {
       "title": "Orders by status",
-      "description": "Every order, including those not paid or not paid yet.",
-      "total": "{count, plural, one {# order} other {# orders}} in all",
+      "description": "Every order so far, including those not paid yet or not paid at all.",
+      "total": "{count, plural, one {# order} other {# orders}} in total",
       "share": "{percent, number}%",
       "paid": "Paid",
-      "pending_payment": "Awaiting payment",
+      "pending_payment": "Waiting for payment",
       "failed": "Failed",
       "cancelled": "Cancelled"
-    },
-    "trend": {
-      "title": "Last 30 days",
-      "description": "New orders per day by booking date (WIB). Revenue counts paid orders only.",
-      "summary": "{orders, plural, one {# order} other {# orders}} in the last 30 days, revenue {revenue}.",
-      "chartLabel": "Bar chart of orders per day: {orders, plural, one {# order} other {# orders}} in the last 30 days. {busiest}",
-      "busiest": "Busiest day {date}, {count, plural, one {# order} other {# orders}}.",
-      "none": "No orders in the last 30 days yet.",
-      "tooltip": "{date}: {orders, plural, one {# order} other {# orders}}, {revenue}",
-      "showTable": "Show as a table",
-      "tableCaption": "Orders per day",
-      "date": "Date",
-      "orders": "Orders",
-      "revenue": "Revenue"
-    },
-    "partners": {
-      "title": "Partner agency performance",
-      "description": "Jobs and revenue from paid orders, per partner.",
-      "name": "Partner",
-      "status": "Status",
-      "jobs": "Jobs",
-      "completed": "Completed",
-      "revenue": "Revenue",
-      "emptyTitle": "No partner agencies yet",
-      "emptyBody": "Add a partner on the Partner agencies page. Its performance appears here once it has orders."
-    },
-    "agencyStatus": {
-      "active": "Active",
-      "suspended": "Suspended"
     }
   },
   "OwnerAgenciesPage": {
     "title": "Partner agencies",
-    "description": "Partner agencies supply the cleaners and the schedule. A suspended partner gets no new bookings.",
+    "description": "The agencies that supply the cleaners. Customers never see an agency's name.",
     "summary": "{total, plural, one {# partner} other {# partners}}, {active, plural, other {# active}}",
     "addLink": "Add a partner",
     "errorTitle": "The partner list could not be loaded.",
     "errorBody": "Reload this page in a moment.",
+    "list": {
+      "title": "Partner list",
+      "description": "Numbers for the last 30 days. On time means the cleaner checked in by the start time."
+    },
     "table": {
       "caption": "Partner agency list",
-      "name": "Partner",
+      "name": "Agency",
       "status": "Status",
       "areas": "Areas",
       "cleaners": "Cleaners",
-      "jobs": "Jobs",
-      "revenue": "Revenue",
+      "completed": "Completed",
+      "onTime": "On time",
+      "cancelled": "Cancelled",
+      "paidOut": "Paid out",
+      "noOnTime": "None yet",
       "signIn": "Sign-in",
       "actions": "Actions",
       "since": "Since {date}",
@@ -1600,18 +1607,18 @@
     "cancel": "Cancel",
     "empty": {
       "title": "No partner agencies yet",
-      "body": "Add the first partner with the form below."
+      "body": "Add the first partner with the Add a partner button."
     },
     "form": {
-      "title": "Add a partner",
-      "description": "A new partner is active at once, but gets bookings only after its free windows are filled in.",
       "name": "Partner name",
       "nameHint": "The partner's business name, 2 to 120 characters.",
       "areas": "Areas served",
       "areasHint": "You can choose more than one, or choose later.",
       "submit": "Add partner",
       "pending": "Adding…",
-      "done": "{name} added."
+      "done": "{name} added.",
+      "cancel": "Cancel",
+      "toList": "See the partner list"
     },
     "errors": {
       "notAllowed": "Only the owner can change partners.",
@@ -1622,23 +1629,40 @@
       "unavailable": "The change was not saved. Try again in a moment."
     }
   },
+  "OwnerPartnerNewPage": {
+    "title": "Add a partner agency",
+    "description": "A new partner is active at once, but gets bookings only after its free windows are filled in.",
+    "back": "Back to partner agencies"
+  },
   "OwnerAdminsPage": {
     "title": "Admin accounts",
-    "description": "Admins run HomeKlin day to day: services and prices, monitoring, tickets and the FAQ. Only the owner creates and removes admin accounts.",
+    "description": "Only the owner can create or remove admin accounts.",
     "summary": "{count, plural, one {# admin account} other {# admin accounts}}",
-    "addLink": "Create an admin account",
+    "addLink": "Add an admin account",
     "errorTitle": "The admin list could not be loaded.",
     "errorBody": "Reload this page in a moment.",
-    "table": {
-      "caption": "Admin account list",
-      "name": "Name",
-      "email": "Email",
+    "list": {
+      "label": "Admin account list",
+      "nameEmail": "Name and email",
+      "role": "Role",
       "created": "Created",
-      "actions": "Actions"
+      "detail": "Details",
+      "roleAdmin": "Admin",
+      "open": "Account details for {name}",
+      "email": "Email",
+      "access": "Access",
+      "accessValue": "Live monitoring, services and prices, support chats, FAQ and recordings",
+      "lastSignIn": "Last sign-in",
+      "status": "Status",
+      "today": "Today, {time}",
+      "yesterday": "Yesterday, {time}",
+      "never": "Never signed in",
+      "active": "Active",
+      "notYet": "Not signed in yet"
     },
     "empty": {
       "title": "No admin accounts yet",
-      "body": "Create the first admin account with the form below."
+      "body": "Create the first admin account with the Add an admin account button."
     },
     "remove": {
       "button": "Remove admin",
@@ -1651,8 +1675,6 @@
       "done": "{name} is no longer an admin."
     },
     "form": {
-      "title": "Create an admin account",
-      "description": "The new account can open the admin console at once.",
       "fullName": "Full name",
       "email": "Email",
       "emailHint": "The admin signs in with this email.",
@@ -1663,7 +1685,9 @@
       "shareBody": "Give this password to the admin directly, for example by phone, not in a group chat or a shared mailbox. The admin can also sign in with a code sent to their email.",
       "submit": "Create admin account",
       "pending": "Creating account…",
-      "done": "The admin account for {email} is created. The admin can sign in now."
+      "done": "The admin account for {email} is created. The admin can sign in now.",
+      "cancel": "Cancel",
+      "toList": "See the admin list"
     },
     "errors": {
       "notAllowed": "Only the owner can manage admin accounts.",
@@ -1675,8 +1699,10 @@
       "unavailable": "The change was not saved. Try again in a moment."
     }
   },
-  "OwnerNavigation": {
-    "role": "Owner"
+  "OwnerAdminNewPage": {
+    "title": "Create an admin account",
+    "description": "Admins run the services, prices, live monitoring and support chats.",
+    "back": "Back to admin accounts"
   },
   "Reviews": {
     "title": "Review",

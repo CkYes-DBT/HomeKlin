@@ -1,38 +1,48 @@
 import type { Locale } from "next-intl";
-import type { BusinessNumbers, OrderStatusCounts } from "@/lib/owner/owner";
+import type { OrderStatusCounts } from "@/lib/owner/owner";
 
-// The arithmetic behind the owner dashboard (T29b): the trend chart's scale and bar heights, the
-// 30-day totals and the orders by status with their share. Pure, so tests/owner-ui.test.ts covers it.
+// The arithmetic behind the owner pages (T29b; D3, after the mocks Owner-Overview, Owner-Partners and
+// Owner-Admins): the growth against the period before, the payouts per partner agency and their share,
+// orders by status with their share, the month a partner joined and an admin's last sign-in day. Pure, so tests/owner-ui.test.ts covers it.
 
-export type TrendDay = BusinessNumbers["trend"][number];
 export type OrderStatus = keyof OrderStatusCounts;
 
-/** The top of the chart's scale: the largest value rounded up to 1, 2 or 5 times a power of ten. */
-export function niceMax(value: number): number {
-  if (value <= 1) return 1;
-  const power = 10 ** Math.floor(Math.log10(value));
-  for (const step of [1, 2, 5, 10]) {
-    if (value <= step * power) return step * power;
-  }
-  return 10 * power;
+export type Growth = { direction: "up" | "down" | "same" | "none"; percent: number };
+
+/**
+ * A period's total against the period before, in whole percent ("naik 8% dari 30 hari sebelumnya").
+ * "none" when the period before had nothing to compare with; "same" when the change rounds to 0%.
+ */
+export function growth(current: number, previous: number): Growth {
+  if (!(previous > 0)) return { direction: "none", percent: 0 };
+  const percent = Math.round(((current - previous) / previous) * 100);
+  if (percent === 0) return { direction: "same", percent: 0 };
+  return { direction: percent > 0 ? "up" : "down", percent: Math.abs(percent) };
 }
 
-/** A bar's height as a share of the scale; a non-zero day is never thinner than 2% so it stays visible. */
-export function barPercent(value: number, max: number): number {
-  if (value <= 0 || max <= 0) return 0;
-  return Math.max(Math.round((value / max) * 100), 2);
+export type PayoutShare = { id: string; name: string; amountIdr: number; sharePercent: number };
+
+/**
+ * What each partner agency earned in the period (owner_numbers' payouts_by_agency): only the agencies
+ * that earned something, largest first (by name when equal), each with its share of the total to one
+ * decimal.
+ */
+export function payoutShares(rows: readonly { id: string; name: string; amountIdr: number }[]): { totalIdr: number; rows: PayoutShare[] } {
+  const totalIdr = rows.reduce((sum, row) => sum + row.amountIdr, 0);
+  const paid = rows
+    .filter((row) => row.amountIdr > 0)
+    .sort((a, b) => b.amountIdr - a.amountIdr || a.name.localeCompare(b.name, "id"))
+    .map((row) => ({ ...row, sharePercent: Math.round((row.amountIdr / totalIdr) * 1000) / 10 }));
+  return { totalIdr, rows: paid };
 }
 
-export function trendSummary(trend: readonly TrendDay[]) {
-  let orders = 0;
-  let revenueIdr = 0;
-  let busiest: TrendDay | null = null;
-  for (const day of trend) {
-    orders += day.orders;
-    revenueIdr += day.revenueIdr;
-    if (day.orders > 0 && (!busiest || day.orders > busiest.orders)) busiest = day;
-  }
-  return { orders, revenueIdr, busiest, max: niceMax(busiest?.orders ?? 0) };
+const jakartaDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit" });
+
+/** Whether a moment falls on today or yesterday in Jakarta, or earlier ("Hari ini, 08.02"). */
+export function signInDay(moment: string, now: Date): "today" | "yesterday" | "earlier" {
+  const day = jakartaDay.format(new Date(moment));
+  if (day === jakartaDay.format(now)) return "today";
+  return day === jakartaDay.format(new Date(now.getTime() - 86_400_000)) ? "yesterday" : "earlier";
 }
 
 /** The statuses in the order the owner reads them: what earned money first. */
@@ -47,15 +57,14 @@ export function statusRows(byStatus: OrderStatusCounts) {
   }));
 }
 
-const shortDates = new Map<Locale, Intl.DateTimeFormat>();
+const monthYears = new Map<Locale, Intl.DateTimeFormat>();
 
-/** "2026-11-04" (a Jakarta date) -> "4 Nov". */
-export function shortDate(date: string, locale: Locale): string {
-  let format = shortDates.get(locale);
+/** A moment as its Jakarta month and year: "Mar 2026" ("Sejak Mar 2026" on the partner list). */
+export function monthYear(moment: string, locale: Locale): string {
+  let format = monthYears.get(locale);
   if (!format) {
-    format = new Intl.DateTimeFormat(locale === "id" ? "id-ID" : "en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
-    shortDates.set(locale, format);
+    format = new Intl.DateTimeFormat(locale === "id" ? "id-ID" : "en-GB", { month: "short", year: "numeric", timeZone: "Asia/Jakarta" });
+    monthYears.set(locale, format);
   }
-  const [year, month, day] = date.split("-").map(Number);
-  return format.format(new Date(Date.UTC(year, month - 1, day))).replace(".", "");
+  return format.format(new Date(moment)).replace(".", "");
 }

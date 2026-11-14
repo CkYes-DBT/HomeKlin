@@ -17,7 +17,7 @@ type SidebarShellProps = {
 } & (
   | { tone?: "default" }
   | {
-      /** The redesign's dark-green sidebar (the admin console, Phase 13; the agency console, D2; markdown/design.md). */
+      /** The redesign's dark-green sidebar (the admin console, Phase 13; the agency console, D2; the owner dashboard, D3; markdown/design.md). */
       tone: "forest";
       /** The card under the wordmark, in place of the role badge: "Admin Dashboard" over "Operasional HomeKlin". */
       roleCard: RoleCard;
@@ -37,7 +37,8 @@ type RoleCard = { label: string; labelLang?: string; title: ReactNode };
 // under the sections, where staff look for settings rather than for work. The account part reads the
 // session, so it streams in behind <Suspense> while the rest of the shell stays prerendered. The
 // back-office menus' messages are sent to the browser only from here.
-// The default tone is the light T3b sidebar (agency, owner); the forest tone is the redesign's dark band.
+// The default tone is the light T3b sidebar (no console uses it since D3); the forest tone is the
+// redesign's dark band, used by the agency, admin and owner consoles.
 export function SidebarShell(props: SidebarShellProps) {
   const { nav, roleLabel, children } = props;
   const forest = props.tone === "forest";
@@ -72,7 +73,7 @@ export function SidebarShell(props: SidebarShellProps) {
   );
 }
 
-// The T3b sidebar of the agency and owner consoles, unchanged.
+// The T3b sidebar, unchanged (the agency and owner consoles used it until D2 and D3).
 function LightSidebar({ nav, roleLabel }: { nav: BackOfficeNavKey; roleLabel: string }) {
   return (
     <aside className="fixed inset-y-0 left-0 z-(--z-sticky) hidden w-sidebar flex-col border-r border-border bg-panel lg:flex">

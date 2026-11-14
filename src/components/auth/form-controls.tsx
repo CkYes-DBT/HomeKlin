@@ -100,13 +100,16 @@ type PasswordFieldProps = Omit<FieldProps, "type"> & {
 };
 
 // On a phone a mistyped password is the most common reason a sign-in fails, so the password can be
-// shown. The button sits inside the pill, a full 44 px target, and never submits the form.
-export function PasswordField({ id, label, hint, error, showLabel, ...input }: PasswordFieldProps) {
+// shown. The button sits inside the field, a full 44 px target, and never submits the form.
+// look="panel": the redesign's back-office input (the owner's "Buat akun admin", D3).
+export function PasswordField({ id, label, hint, error, showLabel, look: lookName = "app", ...input }: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
   const notes = notesFor(id, hint, error);
+  const panel = lookName === "panel";
+  const look = panel ? panelLook : appLook;
   return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor={id} className="px-1 text-sm font-medium text-ink">
+    <div className={look.field}>
+      <label htmlFor={id} className={look.label}>
         {label}
       </label>
       <div className="relative">
@@ -115,7 +118,7 @@ export function PasswordField({ id, label, hint, error, showLabel, ...input }: P
           type={visible ? "text" : "password"}
           aria-invalid={error ? true : undefined}
           aria-describedby={notes.describedBy}
-          className={`${inputClass} pr-14`}
+          className={`${look.input} ${panel ? "pr-12" : "pr-14"}`}
           {...input}
         />
         <button
@@ -124,12 +127,16 @@ export function PasswordField({ id, label, hint, error, showLabel, ...input }: P
           aria-pressed={visible}
           aria-controls={id}
           onClick={() => setVisible((shown) => !shown)}
-          className="absolute top-1/2 right-0.5 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full text-ink-muted transition-colors duration-150 ease-out-quart hover:bg-surface-sunken hover:text-ink active:bg-brand-100"
+          className={
+            panel
+              ? "absolute top-1/2 right-0 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-sm text-ink-muted transition-colors duration-150 ease-out-quart hover:bg-sunken hover:text-ink active:bg-lime-wash"
+              : "absolute top-1/2 right-0.5 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full text-ink-muted transition-colors duration-150 ease-out-quart hover:bg-surface-sunken hover:text-ink active:bg-brand-100"
+          }
         >
           {visible ? <EyeOff className="size-5" aria-hidden="true" /> : <Eye className="size-5" aria-hidden="true" />}
         </button>
       </div>
-      <FieldNotes hint={hint} error={error} {...notes} />
+      <FieldNotes hint={hint} error={error} look={look} {...notes} />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { CircleHelp, History, LayoutGrid, MessageCircle, Video } from "lucide-react";
+import { Building2, ChartColumn, CircleHelp, History, LayoutGrid, MessageCircle, ShieldCheck, Video } from "lucide-react";
 import { describe, expect, it } from "vitest";
 import { isActivePath } from "@/components/shell/is-active-path";
 import { appNavigation } from "@/components/shell/app-navigation";
@@ -167,17 +167,19 @@ describe("navigation", () => {
     expect(backOfficeNavigation.admin.items.map((item) => item.icon)).toEqual([Video, LayoutGrid, MessageCircle, CircleHelp, History]);
   });
 
-  it("gives the owner the business numbers, the partner agencies and the admin accounts", () => {
+  it("gives the owner the overview, the partner agencies and the admin accounts, as in the mocks", () => {
     expect(items("owner", "id")).toEqual([
-      ["Angka bisnis", "/owner"],
+      ["Ringkasan", "/owner"],
       ["Mitra agensi", "/owner/agencies"],
       ["Akun admin", "/owner/admins"],
     ]);
     expect(items("owner", "en")).toEqual([
-      ["Business numbers", "/owner"],
+      ["Overview", "/owner"],
       ["Partner agencies", "/owner/agencies"],
       ["Admin accounts", "/owner/admins"],
     ]);
+    // The mocks' glyphs: bar chart, office building, shield with a tick.
+    expect(backOfficeNavigation.owner.items.map((item) => item.icon)).toEqual([ChartColumn, Building2, ShieldCheck]);
   });
 
   it("marks exactly one item as current on each item's own page", () => {

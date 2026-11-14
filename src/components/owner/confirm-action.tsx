@@ -1,12 +1,13 @@
 "use client";
 
-import { CircleAlert, CirclePause, CirclePlay, LoaderCircle, UserMinus } from "lucide-react";
+import { CircleAlert, CirclePause, CirclePlay, LoaderCircle, TriangleAlert, UserMinus } from "lucide-react";
+import { useActionState, useEffect, useId, useRef, useState } from "react";
+import { flushSync } from "react-dom";
+import { dangerButton, primaryButton, secondaryButton } from "@/components/agency/styles";
+import type { OwnerActionState, OwnerFailureKey } from "@/lib/owner/actions";
 
 // Icons by name: a component cannot be passed from the server page to this client component.
 const icons = { suspend: CirclePause, reactivate: CirclePlay, remove: UserMinus };
-import { useActionState, useEffect, useRef, useState } from "react";
-import { flushSync } from "react-dom";
-import type { OwnerActionState, OwnerFailureKey } from "@/lib/owner/actions";
 
 type ConfirmActionProps = {
   /** One of the owner's Server Actions (src/lib/owner/actions.ts). */
@@ -16,6 +17,8 @@ type ConfirmActionProps = {
   icon: keyof typeof icons;
   /** "danger" for a change that takes something away (suspend, remove); "default" otherwise. */
   tone: "danger" | "default";
+  /** "inline": at the end of a table row, the question opens under the button on the right (full width below 640 px); "block": in a panel, full width. */
+  layout?: "inline" | "block";
   labels: {
     /** The visible word ("Tangguhkan"). */
     button: string;
@@ -33,25 +36,29 @@ type ConfirmActionProps = {
   errors: Record<OwnerFailureKey, string>;
 };
 
-const outline =
-  "inline-flex min-h-touch items-center justify-center gap-2 rounded-full border border-border-control bg-surface px-4 text-sm font-semibold whitespace-nowrap text-ink transition-[background-color,border-color,transform] duration-150 ease-out-quart hover:border-brand-600 hover:bg-surface-sunken active:scale-[0.98] active:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60";
-
-const confirmTones = {
-  danger: "bg-danger hover:bg-danger/90",
-  default: "bg-brand-600 hover:bg-brand-700 active:bg-brand-800",
+const confirmButtons = {
+  danger: "inline-flex min-h-touch shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full bg-danger px-5 text-sm font-semibold whitespace-nowrap text-on-primary transition-[background-color,transform] duration-150 ease-out-quart hover:bg-danger/90 active:scale-[0.98] aria-disabled:cursor-progress aria-disabled:active:scale-100",
+  default: primaryButton,
 };
 
-// A change the owner makes from a list (T29c: suspend or reactivate a partner, remove an admin). It
-// asks once more in place, saying what the change does, before the action runs; the server checks the
-// owner role again. Cancel or a saved change closes the question and puts focus back on the button.
+const boxes = {
+  danger: "inset-ring-[1.5px] inset-ring-danger",
+  default: "inset-ring-[1.5px] inset-ring-border-control",
+};
+
+// A change the owner makes from a list (T29c: suspend or reactivate a partner, remove an admin; the
+// mocks' look since D3). It asks once more in place, in a white box with a warning glyph that says
+// what the change does, before the action runs; the server checks the owner role again. Cancel or a
+// saved change closes the question and puts focus back on the button.
 // Sources: https://react.dev/reference/react/useActionState and
 // https://react.dev/reference/react/useState#storing-information-from-previous-renders
-export function ConfirmAction({ action, fields, icon, tone, labels, errors }: ConfirmActionProps) {
+export function ConfirmAction({ action, fields, icon, tone, layout = "inline", labels, errors }: ConfirmActionProps) {
   const Icon = icons[icon];
   const [state, formAction, pending] = useActionState(action, null);
   const [asking, setAsking] = useState(false);
   const [seen, setSeen] = useState(state);
   const button = useRef<HTMLButtonElement>(null);
+  const questionId = useId();
 
   // A saved change closes the question (React's pattern for reacting to a new value during render)...
   if (state !== seen) {
@@ -69,16 +76,31 @@ export function ConfirmAction({ action, fields, icon, tone, labels, errors }: Co
   }
 
   const failure = state?.formError && !pending ? errors[state.formError] : null;
+  const inline = layout === "inline";
 
   return (
     // relative: the hidden status line stays inside the table's scrolling box.
-    <div className="relative flex flex-col items-end gap-2">
+    <div className={`relative flex flex-col gap-2 ${inline ? "items-start sm:items-end" : "items-start"}`}>
       {asking ? (
-        <form action={formAction} className="flex w-64 flex-col gap-3 rounded-md bg-surface-sunken p-3 text-left">
+        <form
+          action={formAction}
+          onSubmit={(event) => {
+            if (pending) event.preventDefault();
+          }}
+          aria-labelledby={questionId}
+          className={`flex flex-col gap-3 rounded-md bg-card p-4 text-left ${boxes[tone]} ${inline ? "w-full sm:w-72" : "w-full max-w-2xl"}`}
+        >
           {Object.entries(fields).map(([name, value]) => (
             <input key={name} type="hidden" name={name} value={value} />
           ))}
-          <p className="text-sm font-semibold text-ink">{labels.question}</p>
+          <p className="flex items-center gap-2.5">
+            <span aria-hidden="true" className={`flex size-8 shrink-0 items-center justify-center rounded-full ${tone === "danger" ? "bg-danger-surface text-danger" : "bg-lime-wash text-on-lime-wash"}`}>
+              <TriangleAlert className="size-4" />
+            </span>
+            <span id={questionId} className="font-display text-base font-semibold text-ink">
+              {labels.question}
+            </span>
+          </p>
           <p className="text-sm text-ink-muted">{labels.body}</p>
           <div role="alert" aria-atomic="true">
             {failure ? (
@@ -89,27 +111,23 @@ export function ConfirmAction({ action, fields, icon, tone, labels, errors }: Co
             ) : null}
           </div>
           <div className="flex flex-wrap gap-2">
-            <button
-              type="submit"
-              disabled={pending}
-              autoFocus
-              className={`inline-flex min-h-touch items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold text-on-brand transition-[background-color,transform] duration-150 ease-out-quart active:scale-[0.98] disabled:cursor-progress ${confirmTones[tone]}`}
-            >
-              {pending ? <LoaderCircle className="size-4 shrink-0 animate-spin" aria-hidden="true" /> : null}
+            <button type="submit" aria-disabled={pending || undefined} autoFocus className={confirmButtons[tone]}>
+              {pending ? <LoaderCircle className="size-4 shrink-0 animate-spin" aria-hidden="true" /> : <Icon className="size-4 shrink-0" aria-hidden="true" />}
               {pending ? labels.pending : labels.confirm}
             </button>
-            <button
-              type="button"
-              disabled={pending}
-              onClick={cancel}
-              className={outline}
-            >
+            <button type="button" disabled={pending} onClick={cancel} className={secondaryButton}>
               {labels.cancel}
             </button>
           </div>
         </form>
       ) : (
-        <button ref={button} type="button" aria-label={labels.buttonLabel} onClick={() => setAsking(true)} className={outline}>
+        <button
+          ref={button}
+          type="button"
+          aria-label={labels.buttonLabel}
+          onClick={() => setAsking(true)}
+          className={tone === "danger" ? dangerButton : secondaryButton}
+        >
           <Icon className="size-4 shrink-0" aria-hidden="true" />
           {labels.button}
         </button>
