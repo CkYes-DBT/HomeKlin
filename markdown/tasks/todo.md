@@ -380,7 +380,8 @@ Conventions for every task: tests written first; `npm run typecheck`, `npm run l
 - [x] **B5 Periods and growth** (M): `owner_numbers(p_days)` and `agency_summary(p_days)` also return the previous period's total; owner gets payouts per agency for the period; `owner_agencies` adds completed, on-time share (check-in by start time), cancelled and paid out for the last 30 days; `owner_admins` adds last sign-in. Screens: Owner-Overview, Owner-Partners, Owner-Admins, Partner-Summary.
   - Accept: 7, 30 and 90 only; customers' data never in owner numbers. Verify: integration tests.
   - Done 2026-11-14: `owner_numbers(p_days)` (default 30) adds `days`, `period`, `previous`, `daily`, `payouts_by_agency`; `agency_summary` adds `previous_total_fee_idr` and is security definer; `owner_agencies` adds `completed_30d`, `on_time_percent`, `cancelled_30d`, `paid_out_30d_idr`; `owner_admins` adds `last_sign_in_at` (`20261114200000_owner_periods.sql`, `tests/integration/owner-periods.test.ts`).
-- [ ] **B6 Cleaner stats** (S): `my_job_stats()`: hours this week, jobs today, completed this month. Screen: Cleaner-Home.
+- [x] **B6 Cleaner stats** (S): `my_job_stats()`: hours this week, jobs today, completed this month. Screen: Cleaner-Home.
+  - Done 2026-11-14: `my_job_stats()` returns `active_hours_week` (check-in to check-out since Monday, Jakarta time; in progress counts to now), `jobs_today`, `completed_month`; reader `getMyJobStats` (`20261114170000_cleaner_stats.sql`, `tests/integration/cleaner-stats.test.ts`).
 
 **Tier 2: small new behaviour**
 - [x] **B7 Customer note** (M): `orders.customer_note` (0-300), a new `book_slot` argument (race tests unchanged), returned to the customer, the assigned cleaner, the agency and admin. Screens: Customer-Booking, Customer-Orders, Cleaner-Job, Partner-Job, Admin-Order.

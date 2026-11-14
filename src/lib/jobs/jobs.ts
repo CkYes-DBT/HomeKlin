@@ -210,3 +210,20 @@ export function jobProgress(job: { cleanerName: string | null; checkedInAt: stri
   if (job.checkedInAt) return "inProgress";
   return job.cleanerName ? "assigned" : "unassigned";
 }
+
+/**
+ * The cleaner's home page numbers (B6, 20261114170000_cleaner_stats.sql), by Jakarta time: hours from
+ * check-in to check-out this week (Monday on; a job in progress counts until now), jobs starting today,
+ * and jobs completed this month.
+ */
+export type JobStats = { activeHoursWeek: number; jobsToday: number; completedMonth: number };
+
+export async function getMyJobStats(client: SupabaseClient): Promise<JobStats> {
+  type Row = { active_hours_week: number | string; jobs_today: number | string; completed_month: number | string };
+  const [row] = await read<Row>(client, "my_job_stats");
+  return {
+    activeHoursWeek: Number(row?.active_hours_week ?? 0),
+    jobsToday: Number(row?.jobs_today ?? 0),
+    completedMonth: Number(row?.completed_month ?? 0),
+  };
+}
