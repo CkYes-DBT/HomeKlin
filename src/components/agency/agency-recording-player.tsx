@@ -66,8 +66,8 @@ export function AgencyRecordingPlayer({ recordingId, src: firstSrc, label }: { r
 
   if (problem === "expired") {
     return (
-      <div className="flex items-start gap-3 rounded-md bg-surface-sunken px-4 py-3">
-        <ShieldCheck className="mt-0.5 size-5 shrink-0 text-brand-700" aria-hidden="true" />
+      <div className="flex items-start gap-3 rounded-md bg-sunken px-4 py-3">
+        <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
         <div className="flex min-w-0 flex-col gap-1 text-sm">
           <p className="font-semibold text-ink">{t("expiredTitle")}</p>
           <p className="text-ink-muted">{t("expiredBody")}</p>
@@ -88,7 +88,7 @@ export function AgencyRecordingPlayer({ recordingId, src: firstSrc, label }: { r
         aria-label={label}
         onError={handleError}
         onLoadedMetadata={resume}
-        className="aspect-video w-full rounded-md bg-surface-sunken object-contain"
+        className="aspect-video w-full rounded-md bg-sunken object-contain"
       >
         <p className="p-4 text-sm text-ink-muted">{t("unsupported")}</p>
       </video>

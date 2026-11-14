@@ -17,7 +17,7 @@ type SidebarShellProps = {
 } & (
   | { tone?: "default" }
   | {
-      /** The redesign's dark-green sidebar (the admin console, Phase 13, markdown/design.md). */
+      /** The redesign's dark-green sidebar (the admin console, Phase 13; the agency console, D2; markdown/design.md). */
       tone: "forest";
       /** The card under the wordmark, in place of the role badge: "Admin Dashboard" over "Operasional HomeKlin". */
       roleCard: RoleCard;
@@ -26,8 +26,11 @@ type SidebarShellProps = {
     }
 );
 
-/** The card under the wordmark. labelLang: the label's language, when it is not the page's. */
-type RoleCard = { label: string; labelLang?: string; title: string };
+/**
+ * The card under the wordmark. labelLang: the label's language, when it is not the page's. title may be
+ * a node: the agency console streams its own agency's name in behind <Suspense> (D2).
+ */
+type RoleCard = { label: string; labelLang?: string; title: ReactNode };
 
 // Agency and admin shell: desktop-first with a fixed sidebar; a top bar with a menu below 1024 px.
 // The sidebar closes with the account (who is signed in, and signing out) and the language switch,

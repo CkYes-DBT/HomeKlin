@@ -17,18 +17,18 @@ test.describe("back-office menu on a narrow screen", () => {
       await menu.click();
       await expect(menu).toHaveAttribute("aria-expanded", "true");
       const nav = page.getByRole("navigation", { name: "Navigasi agensi" });
-      await expect(nav.getByRole("link")).toHaveCount(5);
-      await expect(nav.getByRole("link", { name: "Dasbor" })).toHaveAttribute("aria-current", "page");
+      await expect(nav.getByRole("link")).toHaveCount(6);
+      await expect(nav.getByRole("link", { name: "Ringkasan" })).toHaveAttribute("aria-current", "page");
     });
 
     test("closes after choosing a section", async ({ page }) => {
       await page.goto("/agency");
       const menu = page.getByRole("button", { name: "Menu" });
       await menu.click();
-      await page.getByRole("navigation", { name: "Navigasi agensi" }).getByRole("link", { name: "Jadwal" }).click();
+      await page.getByRole("navigation", { name: "Navigasi agensi" }).getByRole("link", { name: "Pekerjaan masuk" }).click();
 
-      await expect(page).toHaveURL("/agency/schedule");
-      await expect(page.getByRole("heading", { level: 1, name: "Jadwal" })).toBeVisible();
+      await expect(page).toHaveURL("/agency/orders");
+      await expect(page.getByRole("heading", { level: 1, name: "Pekerjaan masuk" })).toBeVisible();
       await expect(menu).toHaveAttribute("aria-expanded", "false");
       await expect(page.getByRole("navigation", { name: "Navigasi agensi" })).toBeHidden();
     });

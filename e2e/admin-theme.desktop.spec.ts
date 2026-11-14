@@ -3,8 +3,9 @@ import { signedInAs } from "./setup/auth-state";
 
 // R1 on a desk: the admin console opts in to the redesign through the scoped `theme-forest` class
 // (src/app/[locale]/(admin)/layout.tsx), like the landing page: Inter text on the warm cream canvas,
-// in the main content and in the fixed sidebar. The agency and owner back offices keep the T3b look
-// (Figtree on the cool off-white) until their own migration (markdown/design.md, "Migration notes").
+// in the main content and in the fixed sidebar. The owner back office keeps the T3b look (Figtree on the
+// cool off-white) until its own migration (markdown/design.md, "Migration notes"); the agency opted in
+// at D2 (e2e/agency-shell.desktop.spec.ts).
 
 const cream = "rgb(243, 242, 234)";
 const interFamily = /^"?Inter"?[,\s]/;
@@ -44,7 +45,6 @@ test.describe("the admin console", () => {
 });
 
 for (const { role, path } of [
-  { role: "agency", path: "/agency" },
   { role: "owner", path: "/owner" },
 ] as const) {
   test.describe(`the ${role} back office`, () => {

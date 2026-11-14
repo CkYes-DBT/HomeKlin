@@ -99,3 +99,15 @@ export async function getOwnerPayoutsOverview(client: SupabaseClient): Promise<O
     lastPayoutDate: row.last_payout_date ? String(row.last_payout_date).slice(0, 10) : null,
   }));
 }
+
+/**
+ * The agency's fee for each of these finished orders (D2: "Imbalan agensi" on its completed orders),
+ * read from order_fees with the agency's own session, so RLS returns its own rows only. An order with
+ * no fee row (not finished through check-out) is missing from the map.
+ */
+export async function listAgencyOrderFees(client: SupabaseClient, orderIds: readonly string[]): Promise<Map<string, number>> {
+  if (orderIds.length === 0) return new Map();
+  const { data, error } = await client.from("order_fees").select("order_id, fee_idr").in("order_id", [...orderIds]);
+  if (error) throw new PayoutError(error);
+  return new Map(((data ?? []) as { order_id: string; fee_idr: number }[]).map((row) => [row.order_id, Number(row.fee_idr)]));
+}

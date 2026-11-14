@@ -100,7 +100,7 @@ export async function RecordingsContent({ searchParams }: { searchParams: Promis
       </section>
 
       {requested ? (
-        <section aria-labelledby="player-title" className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 md:p-6">
+        <section aria-labelledby="player-title" className="flex flex-col gap-4 rounded-lg bg-card p-5 md:p-6">
           <header className="flex flex-wrap items-start justify-between gap-3">
             <h2 id="player-title" className="font-display text-lg font-semibold text-ink">
               {playerTitle}
@@ -112,7 +112,7 @@ export async function RecordingsContent({ searchParams }: { searchParams: Promis
           </header>
           <Suspense
             fallback={
-              <div aria-busy="true" className="flex aspect-video w-full items-center justify-center rounded-md bg-surface-sunken">
+              <div aria-busy="true" className="flex aspect-video w-full items-center justify-center rounded-md bg-sunken">
                 <span className="text-sm text-ink-muted">{t("loading")}</span>
               </div>
             }
@@ -134,10 +134,10 @@ export async function RecordingsContent({ searchParams }: { searchParams: Promis
             {t("recordingsEmptyBody")}
           </EmptyState>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-border bg-surface">
+          <div className="overflow-x-auto rounded-lg bg-card">
             <table className="w-full border-collapse text-sm">
               <caption className="sr-only">{t("recordingsCaption")}</caption>
-              <thead className="bg-surface-sunken">
+              <thead className="bg-sunken">
                 <tr>
                   <th scope="col" className={headCell}>
                     {t("table.finished")}
@@ -235,7 +235,7 @@ function RecordingCell({ state, text, children }: { state: BackOfficeRecordingSt
   );
 }
 
-async function Replay({ recordingId, label, labels, now }: { recordingId: string; label: string; labels: SlotLabels; now: Date }) {
+export async function Replay({ recordingId, label, labels, now }: { recordingId: string; label: string; labels: SlotLabels; now: Date }) {
   const t = await getTranslations("AgencyRecordingsPage");
   let link: RecordingLink;
   try {
@@ -257,7 +257,7 @@ async function Replay({ recordingId, label, labels, now }: { recordingId: string
     <>
       <AgencyRecordingPlayer recordingId={recordingId} src={link.url} label={label} />
       <p className="flex items-start gap-2 text-sm text-ink">
-        <CalendarClock className="mt-0.5 size-4 shrink-0 text-brand-700" aria-hidden="true" />
+        <CalendarClock className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
         <span>{t("available", { day: labels.day({ date: jakartaDayOf(until, now).date, relative: null }), time: labels.time(until) })}</span>
       </p>
     </>
@@ -266,8 +266,8 @@ async function Replay({ recordingId, label, labels, now }: { recordingId: string
 
 function ReplayNotice({ icon: Icon, title, body }: { icon: LucideIcon; title: string; body: string }) {
   return (
-    <div className="flex items-start gap-3 rounded-md bg-surface-sunken px-4 py-3">
-      <Icon className="mt-0.5 size-5 shrink-0 text-brand-700" aria-hidden="true" />
+    <div className="flex items-start gap-3 rounded-md bg-sunken px-4 py-3">
+      <Icon className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
       <div className="flex min-w-0 flex-col gap-1 text-sm">
         <p className="font-semibold text-ink">{title}</p>
         <p className="text-ink-muted">{body}</p>

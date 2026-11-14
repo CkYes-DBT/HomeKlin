@@ -3,7 +3,8 @@ import { adminClient } from "../tests/integration/test-project";
 import { createJobWorld, jakartaClock, sessionOf, type JobWorld } from "./job-test-data";
 import { signedInAs } from "./setup/auth-state";
 
-// T18 on a desk: the agency (on /agency/orders) sees where each job stands: no cleaner yet, a cleaner
+// T18 on a desk: the agency sees where each job stands (on /agency/orders, since D2 the open jobs, and
+// /agency/past, the finished ones; each job's own page has the times): no cleaner yet, a cleaner
 // assigned, checked in at a time, finished at a time, and can assign a cleaner only until check-in
 // (T28, covered in full by e2e/agency-back-office.desktop.spec.ts). Admin sees finished jobs, read-only
 // and with the agency's name, on /admin/recordings (the dashboard's list of today's jobs went with the
@@ -62,33 +63,45 @@ async function expectReadOnly(page: Page, table: Locator) {
 test.describe("the agency", () => {
   test.use({ storageState: async ({}, provide) => provide(agencySession) });
 
-  test("sees each of its jobs with the cleaner and the check-in status; only jobs not started can be assigned", async ({ page }) => {
+  test("sees each of its jobs with the cleaner and where it stands; only jobs not started can be assigned", async ({ page }) => {
+    // Since D2 the jobs not finished are "Pekerjaan masuk" and the finished ones "Pesanan selesai".
     await page.goto("/agency/orders");
-    const table = page.getByRole("table", { name: "Pesanan agensi Anda" });
+    const table = page.getByRole("table", { name: "Pekerjaan masuk agensi Anda" });
     await expect(table).toBeVisible();
-    await expect(table.getByRole("row")).toHaveCount(5); // the header and four jobs: only its own
+    await expect(table.getByRole("row")).toHaveCount(4); // the header and three open jobs: only its own
 
-    await expect(rowOf(table, address.unassigned)).toContainText("Belum ada petugas");
-    await expect(rowOf(table, address.assigned).getByRole("combobox")).toHaveValue(/.+/); // its cleaner is chosen
+    await expect(rowOf(table, address.unassigned)).toContainText("Perlu petugas");
     await expect(rowOf(table, address.assigned)).toContainText("Uji Petugas Meja");
     await expect(rowOf(table, address.assigned)).toContainText("Ditugaskan");
-    await expect(rowOf(table, address.started)).toContainText(`Check-in pukul ${times.checkedIn}`);
-    await expect(rowOf(table, address.finished)).toContainText(`Selesai pukul ${times.completed}`);
-    await expect(rowOf(table, address.finished)).toContainText("Pembersihan Rutin");
-    // T28: a cleaner can be assigned until check-in; a job that has started is read-only.
+    await expect(rowOf(table, address.started)).toContainText("Berlangsung");
+    await expect(rowOf(table, address.finished)).toHaveCount(0);
+    // T28: a cleaner can be assigned (or changed) until check-in; a job that has started is read-only.
     await expect(rowOf(table, address.unassigned).getByRole("button", { name: "Tugaskan" })).toBeVisible();
-    for (const started of [address.started, address.finished]) {
-      await expect(rowOf(table, started).getByRole("combobox")).toHaveCount(0);
-      await expect(rowOf(table, started).getByRole("button")).toHaveCount(0);
-    }
+    await rowOf(table, address.assigned).getByRole("button", { name: "Ganti petugas Uji Petugas Meja" }).click();
+    await expect(rowOf(table, address.assigned).getByRole("combobox")).toHaveValue(/.+/); // its cleaner is chosen
+    await expect(rowOf(table, address.started).getByRole("combobox")).toHaveCount(0);
+    await expect(rowOf(table, address.started).getByRole("button")).toHaveCount(0);
+
+    // The check-in and finish times are on each job's own page.
+    await page.goto(`/agency/orders/job?order=${jobs.started}`);
+    await expect(page.getByRole("region", { name: "Status pekerjaan" })).toContainText(times.checkedIn);
+    await expect(page.getByRole("main").getByRole("combobox")).toHaveCount(0);
+
+    await page.goto("/agency/past");
+    const past = page.getByRole("table", { name: "Pesanan selesai agensi Anda" });
+    await expect(rowOf(past, address.finished)).toContainText("Pembersihan Rutin");
+    await expect(rowOf(past, address.finished).getByRole("button")).toHaveCount(0);
+    await page.goto(`/agency/past/job?order=${jobs.finished}`);
+    await expect(page.getByRole("region", { name: "Status pekerjaan" })).toContainText(times.completed);
   });
 
   test("reads in English", async ({ page }) => {
     await page.goto("/en/agency/orders");
-    const table = page.getByRole("table", { name: "Your agency’s orders" });
-    await expect(rowOf(table, address.unassigned)).toContainText("No cleaner yet");
-    await expect(rowOf(table, address.started)).toContainText(`Checked in at ${times.checkedIn}`);
-    await expect(rowOf(table, address.finished)).toContainText(`Finished at ${times.completed}`);
+    const table = page.getByRole("table", { name: "Your agency’s incoming jobs" });
+    await expect(rowOf(table, address.unassigned)).toContainText("Needs a cleaner");
+    await expect(rowOf(table, address.started)).toContainText("In progress");
+    await page.goto(`/en/agency/past/job?order=${jobs.finished}`);
+    await expect(page.getByRole("region", { name: "Job status" })).toContainText(times.completed);
   });
 });
 

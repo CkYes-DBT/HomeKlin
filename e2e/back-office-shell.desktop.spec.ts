@@ -9,11 +9,13 @@ const shells = [
     root: "/agency",
     navLabel: "Navigasi agensi",
     items: [
-      { label: "Dasbor", path: "/agency" },
-      { label: "Jadwal", path: "/agency/schedule" },
+      // The partner mocks' menu (D2), plus "Video petugas" so the live view and recordings stay reachable.
+      { label: "Ringkasan", path: "/agency" },
+      { label: "Pekerjaan masuk", path: "/agency/orders" },
+      { label: "Pesanan selesai", path: "/agency/past" },
       { label: "Petugas", path: "/agency/cleaners" },
-      { label: "Pesanan", path: "/agency/orders" },
-      { label: "Rekaman", path: "/agency/recordings" },
+      { label: "Video petugas", path: "/agency/recordings" },
+      { label: "Layanan", path: "/agency/services" },
     ],
   },
   {

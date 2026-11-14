@@ -37,11 +37,12 @@
   "BackOfficeNavigation": {
     "agency": {
       "label": "Navigasi agensi",
-      "dashboard": "Dasbor",
-      "schedule": "Jadwal",
+      "summary": "Ringkasan",
+      "incoming": "Pekerjaan masuk",
+      "past": "Pesanan selesai",
       "cleaners": "Petugas",
-      "orders": "Pesanan",
-      "recordings": "Rekaman"
+      "videos": "Video petugas",
+      "services": "Layanan"
     },
     "admin": {
       "label": "Navigasi admin",
@@ -64,7 +65,10 @@
     "adminRole": "Admin",
     "adminDashboard": "Admin Dashboard",
     "adminOperations": "Operasional HomeKlin",
-    "adminHome": "HomeKlin, ke Pemantauan langsung"
+    "adminHome": "HomeKlin, ke Pemantauan langsung",
+    "agencyDashboard": "Dasbor mitra agensi",
+    "agencyFallback": "Agensi mitra HomeKlin",
+    "agencyHome": "HomeKlin, ke Ringkasan"
   },
   "MarketingHeader": {
     "nav": "Navigasi situs",
@@ -775,30 +779,52 @@
   "CleanerAccountPage": {
     "title": "Akun"
   },
-  "AgencyDashboardPage": {
-    "title": "Dasbor",
-    "agency": "Agensi {name}",
+  "AgencySummaryPage": {
+    "title": "Ringkasan",
+    "description": "Imbalan, pekerjaan, dan pembayaran untuk agensi Anda.",
+    "rangeLabel": "Rentang waktu",
+    "range": "{days, number} hari",
     "noAgencyTitle": "Akun ini belum terhubung ke agensi.",
     "noAgencyBody": "Hubungi admin HomeKlin agar akun Anda dihubungkan ke agensi Anda.",
-    "errorTitle": "Ringkasan belum bisa dimuat.",
-    "errorBody": "Muat ulang halaman untuk mencoba lagi.",
+    "errorTitle": "Ringkasan imbalan belum bisa dimuat.",
+    "errorBody": "Muat ulang halaman untuk mencoba lagi. Jika tetap gagal, hubungi admin HomeKlin.",
+    "statsLabel": "Angka utama, {days, number} hari terakhir",
     "stats": {
-      "label": "Ringkasan",
-      "waiting": "Menunggu petugas",
-      "waitingBody": "Pesanan yang belum punya petugas",
-      "today": "Pekerjaan hari ini",
-      "todayBody": "Pesanan yang mulai hari ini",
-      "live": "Siaran langsung",
-      "liveBody": "Petugas yang sedang bekerja",
-      "liveUnknown": "Belum bisa dimuat"
+      "total": "Imbalan agensi",
+      "totalHint": "dari pekerjaan selesai {days, number} hari terakhir",
+      "jobs": "Pekerjaan selesai",
+      "jobsHint": "pekerjaan dengan imbalan",
+      "average": "Rata-rata imbalan",
+      "averageHint": "imbalan dibagi pekerjaan",
+      "pending": "Menunggu dibayarkan",
+      "pendingHint": "sudah dibayarkan {paid}"
     },
-    "waitingTitle": "Perlu petugas",
-    "waitingDescription": "Pesanan terdekat yang belum punya petugas. Tugaskan petugas di halaman Pesanan.",
-    "waitingEmptyTitle": "Semua pesanan sudah punya petugas",
-    "waitingEmptyBody": "Pesanan baru yang diarahkan ke agensi Anda muncul di sini sampai Anda menugaskan petugas.",
-    "waitingMore": "{count, plural, other {dan # pesanan lain}}",
-    "toOrders": "Buka Pesanan",
-    "toSchedule": "Atur jadwal"
+    "byCleanerTitle": "Imbalan per petugas",
+    "byCleanerEmpty": "Belum ada imbalan pada rentang ini.",
+    "byServiceTitle": "Imbalan per layanan",
+    "byServiceEmpty": "Belum ada imbalan pada rentang ini.",
+    "shareDescription": "{days, number} hari terakhir, total {total}",
+    "daily": {
+      "title": "Imbalan harian",
+      "description": "{count, number} hari terakhir, {from} sampai {to}",
+      "sentence": "Imbalan {count, number} hari terakhir berjumlah {total}. Tertinggi {high} pada {highDay}.",
+      "noneSentence": "Belum ada imbalan dalam {count, number} hari terakhir.",
+      "showTable": "Lihat angka per hari",
+      "day": "Hari",
+      "fee": "Imbalan"
+    },
+    "payouts": {
+      "title": "Pembayaran dari HomeKlin",
+      "description": "Imbalan dibayarkan ke agensi Anda setiap pekan.",
+      "emptyTitle": "Belum ada pembayaran",
+      "emptyBody": "Setiap pekan HomeKlin mengumpulkan imbalan pekerjaan yang selesai menjadi satu pembayaran. Pembayaran pertama muncul di sini.",
+      "date": "Tanggal",
+      "amount": "Jumlah",
+      "status": "Status",
+      "period": "Pekan {from} sampai {to}, {count, plural, other {# pekerjaan}}",
+      "paid": "Dibayar",
+      "pending": "Menunggu"
+    }
   },
   "AgencySchedulePage": {
     "title": "Jadwal",
@@ -851,8 +877,8 @@
     }
   },
   "AgencyCleanersPage": {
-    "title": "Petugas",
-    "description": "Petugas agensi Anda. Pelanggan melihat nama dan foto petugas sebagai Petugas HomeKlin, tanpa nama agensi.",
+    "title": "Petugas dan ketersediaan",
+    "description": "Petugas agensi Anda dan jam yang bisa menerima pekerjaan dari HomeKlin. Pelanggan melihat nama dan foto petugas sebagai Petugas HomeKlin, tanpa nama agensi.",
     "noAgencyTitle": "Akun ini belum terhubung ke agensi.",
     "noAgencyBody": "Hubungi admin HomeKlin agar akun Anda dihubungkan ke agensi Anda.",
     "errorTitle": "Daftar petugas belum bisa dimuat.",
@@ -862,7 +888,7 @@
     "photoAlt": "Foto {name}",
     "noPhoto": "Belum ada foto",
     "emptyTitle": "Belum ada petugas",
-    "emptyBody": "Tambahkan petugas pertama Anda dengan formulir di samping. Setelah itu Anda bisa menugaskannya ke pesanan.",
+    "emptyBody": "Tambahkan petugas pertama Anda dengan formulir di bawah. Setelah itu Anda bisa menugaskannya ke pekerjaan.",
     "form": {
       "title": "Tambah petugas",
       "name": "Nama lengkap",
@@ -878,18 +904,84 @@
       "choosePhoto": "Pilih foto",
       "changePhoto": "Ganti foto"
     },
-    "atWork": "Sedang bekerja di pekerjaan",
-    "upcoming": "{count, plural, =0 {Belum ada pekerjaan mendatang} other {# pekerjaan mendatang}}"
+    "atWork": "Sedang bertugas",
+    "upcoming": "{count, plural, =0 {Belum ada pekerjaan mendatang} other {# pekerjaan mendatang}}",
+    "table": {
+      "cleaner": "Petugas",
+      "status": "Status",
+      "week": "Pekerjaan pekan ini"
+    },
+    "notAtWork": "Tidak sedang bertugas",
+    "availability": {
+      "title": "Jadwal ketersediaan",
+      "thisWeek": "Pekan ini, {from} sampai {to}",
+      "week": "Pekan {from} sampai {to}",
+      "weekNav": "Pilih pekan",
+      "previous": "Pekan sebelumnya",
+      "next": "Pekan berikutnya",
+      "emptyTitle": "Belum ada jendela pekan ini",
+      "emptyBody": "Tambahkan jendela kedatangan di halaman Jadwal. Pelanggan hanya ditawari jam yang masih punya tempat.",
+      "caption": "Jendela kedatangan {from} sampai {to}, tempat kosong per jam",
+      "closed": "Tutup",
+      "full": "Penuh",
+      "free": "{free, number} dari {capacity, number} kosong",
+      "note": "Setiap kotak menunjukkan tempat kosong pada jendela yang mulai pada jam itu, di semua area Anda. Jam bertanda Tutup tidak menerima pekerjaan.",
+      "manage": "Atur jadwal"
+    }
   },
   "AgencyOrdersPage": {
-    "title": "Pesanan",
-    "description": "Pesanan yang sudah dibayar dan diarahkan ke agensi Anda, terbaru di atas. Tugaskan salah satu petugas Anda sampai petugas check-in.",
-    "emptyTitle": "Belum ada pesanan",
-    "emptyBody": "Pesanan yang sudah dibayar muncul di sini. Dari halaman ini Anda menugaskan petugas untuk setiap pesanan.",
-    "caption": "Pesanan agensi Anda",
-    "summary": "{count, plural, other {# pesanan}}",
-    "errorTitle": "Pesanan belum bisa dimuat.",
+    "title": "Pekerjaan masuk",
+    "description": "Pekerjaan yang HomeKlin arahkan ke agensi Anda. Tugaskan petugas Anda sendiri untuk tiap pekerjaan, sampai petugas check-in.",
+    "noAgencyTitle": "Akun ini belum terhubung ke agensi.",
+    "noAgencyBody": "Hubungi admin HomeKlin agar akun Anda dihubungkan ke agensi Anda.",
+    "errorTitle": "Pekerjaan belum bisa dimuat.",
     "errorBody": "Muat ulang halaman untuk mencoba lagi.",
+    "countsLabel": "Jumlah pekerjaan",
+    "counts": {
+      "unassigned": "Perlu petugas",
+      "assigned": "Sudah ditugaskan",
+      "inProgress": "Sedang berlangsung",
+      "completedThisWeek": "Selesai minggu ini"
+    },
+    "listTitle": "Daftar pekerjaan",
+    "filterLabel": "Filter status",
+    "filter": {
+      "all": "Semua",
+      "unassigned": "Perlu petugas",
+      "assigned": "Ditugaskan",
+      "inProgress": "Berlangsung"
+    },
+    "searchLabel": "Cari pekerjaan",
+    "searchPlaceholder": "Layanan, alamat, petugas",
+    "searchSubmit": "Cari",
+    "count": "{count, plural, =0 {Tidak ada pekerjaan} other {# pekerjaan}}, paling awal di atas",
+    "countSearch": "{count, plural, =0 {Tidak ada pekerjaan} other {# pekerjaan}} untuk “{query}”",
+    "searchEmptyTitle": "Tidak ada pekerjaan yang cocok",
+    "searchEmptyBody": "Coba kata lain, atau hapus pencarian untuk melihat semua pekerjaan.",
+    "emptyTitle": "Belum ada pekerjaan masuk",
+    "emptyBody": "Pekerjaan yang sudah dibayar dan diarahkan ke agensi Anda muncul di sini. Dari halaman ini Anda menugaskan petugas.",
+    "filterEmptyTitle": "Tidak ada pekerjaan dengan status ini",
+    "filterEmptyBody": "Pilih Semua untuk melihat setiap pekerjaan yang belum selesai.",
+    "caption": "Pekerjaan masuk agensi Anda",
+    "table": {
+      "order": "Pesanan",
+      "when": "Jadwal",
+      "status": "Status",
+      "cleaner": "Petugas",
+      "detail": "Detail"
+    },
+    "serviceFallback": "Layanan tidak aktif",
+    "change": "Ganti",
+    "changeFor": "Ganti petugas {name}",
+    "whenValue": "{day}, {window} WIB",
+    "windowValue": "{window} WIB",
+    "status": {
+      "unassigned": "Perlu petugas",
+      "assigned": "Ditugaskan",
+      "inProgress": "Berlangsung",
+      "completed": "Selesai"
+    },
+    "detailFor": "Lihat detail {service}, {day}",
     "assign": {
       "label": "Petugas untuk pesanan ini",
       "placeholder": "Pilih petugas",
@@ -907,16 +999,148 @@
       }
     }
   },
+  "AgencyPastPage": {
+    "title": "Pesanan selesai",
+    "description": "Pekerjaan yang sudah selesai dikerjakan petugas agensi Anda, lengkap dengan imbalan dan rekamannya.",
+    "noAgencyTitle": "Akun ini belum terhubung ke agensi.",
+    "noAgencyBody": "Hubungi admin HomeKlin agar akun Anda dihubungkan ke agensi Anda.",
+    "errorTitle": "Pesanan selesai belum bisa dimuat.",
+    "errorBody": "Muat ulang halaman untuk mencoba lagi.",
+    "feesErrorTitle": "Imbalan per pesanan belum bisa dimuat.",
+    "feesErrorBody": "Daftar tetap tampil tanpa kolom imbalan.",
+    "listTitle": "Daftar pesanan selesai",
+    "filterLabel": "Filter rekaman",
+    "filter": {
+      "all": "Semua",
+      "available": "Rekaman tersedia",
+      "deleted": "Rekaman dihapus"
+    },
+    "searchLabel": "Cari pesanan",
+    "searchPlaceholder": "Layanan, alamat, petugas",
+    "searchSubmit": "Cari",
+    "count": "{count, plural, =0 {Tidak ada pesanan} other {# pesanan}}, terbaru di atas",
+    "countSearch": "{count, plural, =0 {Tidak ada pesanan} other {# pesanan}} untuk “{query}”",
+    "searchEmptyTitle": "Tidak ada pesanan yang cocok",
+    "searchEmptyBody": "Coba kata lain, atau hapus pencarian untuk melihat semua pesanan selesai.",
+    "filterEmptyTitle": "Tidak ada pesanan dengan rekaman seperti ini",
+    "filterEmptyBody": "Pilih Semua untuk melihat setiap pesanan selesai.",
+    "emptyTitle": "Belum ada pesanan selesai",
+    "emptyBody": "Setelah petugas Anda check-out, pekerjaannya muncul di sini dengan imbalan dan rekamannya.",
+    "caption": "Pesanan selesai agensi Anda",
+    "table": {
+      "order": "Pesanan",
+      "finished": "Selesai",
+      "cleaner": "Petugas",
+      "recording": "Rekaman",
+      "fee": "Imbalan agensi",
+      "detail": "Detail"
+    },
+    "serviceFallback": "Layanan tidak aktif",
+    "finishedValue": "Selesai {day}, {window} WIB",
+    "windowValue": "{window} WIB",
+    "feeValue": "Imbalan agensi {fee}",
+    "noFee": "Belum tercatat",
+    "noCleaner": "Tanpa petugas",
+    "detailFor": "Lihat detail {service}, {day}",
+    "recording": {
+      "available": "Tersedia sampai {day}",
+      "expired": "Dihapus setelah 7 hari",
+      "none": "Tidak ada rekaman"
+    }
+  },
+  "AgencyJobPage": {
+    "title": "Detail pesanan",
+    "back": {
+      "incoming": "Kembali ke pekerjaan masuk",
+      "past": "Kembali ke pesanan selesai"
+    },
+    "errorTitle": "Pesanan belum bisa dimuat.",
+    "errorBody": "Muat ulang halaman untuk mencoba lagi.",
+    "noAgencyTitle": "Akun ini belum terhubung ke agensi.",
+    "noAgencyBody": "Hubungi admin HomeKlin agar akun Anda dihubungkan ke agensi Anda.",
+    "notFoundTitle": "Pesanan tidak ditemukan",
+    "notFoundBody": "Pesanan ini bukan milik agensi Anda, atau sudah tidak ada. Buka pesanan dari daftar pekerjaan.",
+    "serviceFallback": "Layanan tidak aktif",
+    "whenValue": "{date}, {window} WIB",
+    "subtitleCode": "Pesanan {code}, {when}",
+    "durationValue": "Sekitar {hours, plural, =0 {{minutes, number} menit} other {# jam{minutes, plural, =0 {} other { {minutes, number} menit}}}}",
+    "facts": {
+      "service": "Layanan",
+      "when": "Jadwal lengkap",
+      "duration": "Durasi",
+      "area": "Area",
+      "address": "Alamat",
+      "fee": "Imbalan agensi"
+    },
+    "feeUnknown": "Belum dapat dibaca",
+    "feeLater": "Tercatat setelah pekerjaan selesai",
+    "factsTitle": "Detail pesanan",
+    "asideLabel": "Petugas dan status",
+    "cleanerTitle": "Petugas",
+    "ownCleaner": "Petugas agensi Anda",
+    "noCleaner": "Belum ada petugas",
+    "stepsTitle": "Status pekerjaan",
+    "steps": {
+      "assigned": "Ditugaskan",
+      "checkedIn": "Check-in di alamat",
+      "completed": "Selesai",
+      "yes": "Sudah",
+      "notYet": "Belum"
+    },
+    "status": {
+      "unassigned": "Perlu petugas",
+      "assigned": "Ditugaskan",
+      "inProgress": "Berlangsung",
+      "completed": "Selesai"
+    },
+    "recordingTitle": "Rekaman pekerjaan",
+    "loading": "Memuat video…",
+    "recordingLabel": "Rekaman {service}, {day}",
+    "recordingExpired": "Rekaman sudah dihapus otomatis 7 hari setelah pekerjaan selesai.",
+    "recordingNone": "Pekerjaan ini tidak punya rekaman.",
+    "recordingKept": "Rekaman tersimpan 7 hari setelah pekerjaan selesai, lalu dihapus otomatis.",
+    "liveTitle": "Siaran langsung",
+    "liveLabel": "Siaran langsung {name}",
+    "liveSince": "Check-in pukul {time} WIB.",
+    "recordingAfter": "Rekaman tersedia setelah pekerjaan selesai, selama 7 hari.",
+    "liveNone": "Belum ada siaran untuk pekerjaan ini.",
+    "liveLater": "Siaran dimulai saat petugas check-in di alamat."
+  },
+  "AgencyServicesPage": {
+    "title": "Layanan",
+    "description": "Layanan HomeKlin yang dikerjakan petugas agensi Anda. Daftar dan harga ditetapkan oleh HomeKlin; agensi tidak dapat menambah layanan atau mengubah harga.",
+    "errorTitle": "Daftar layanan belum bisa dimuat.",
+    "errorBody": "Muat ulang halaman untuk mencoba lagi.",
+    "emptyTitle": "Belum ada layanan aktif",
+    "emptyBody": "Layanan muncul di sini setelah admin HomeKlin mengaktifkannya.",
+    "listTitle": "Layanan HomeKlin",
+    "caption": "Layanan HomeKlin dan harganya",
+    "table": {
+      "service": "Layanan",
+      "duration": "Durasi",
+      "price": "Harga pelanggan",
+      "offered": "Ditawarkan"
+    },
+    "durationValue": "Sekitar {hours, plural, =0 {{minutes, number} menit} other {# jam{minutes, plural, =0 {} other { {minutes, number} menit}}}}",
+    "offered": "Ditawarkan",
+    "type": "Jenis: {type}",
+    "categories": {
+      "whole-home": "Seluruh rumah",
+      "rooms": "Per ruangan",
+      "fabrics": "Kain & kasur"
+    },
+    "note": "Semua layanan aktif HomeKlin dapat dipesan di area yang dilayani agensi Anda. Memilih sendiri layanan yang ditawarkan belum tersedia. Layanan baru muncul di sini setelah admin mengaktifkannya."
+  },
   "AgencyRecordingsPage": {
-    "title": "Rekaman",
-    "description": "Siaran langsung dan rekaman pekerjaan petugas agensi Anda sendiri. Rekaman disimpan 7 hari setelah pekerjaan selesai, lalu dihapus otomatis.",
+    "title": "Video petugas",
+    "description": "Siaran langsung dan rekaman pekerjaan petugas Anda. Rekaman disimpan 7 hari setelah pekerjaan selesai, lalu dihapus otomatis.",
     "errorTitle": "Video belum bisa dimuat.",
     "errorBody": "Muat ulang halaman untuk mencoba lagi.",
-    "liveTitle": "Siaran langsung",
+    "liveTitle": "Sedang siaran",
     "liveCount": "{count, plural, other {# siaran}}",
     "liveEmptyTitle": "Tidak ada siaran saat ini",
     "liveEmptyBody": "Siaran muncul di sini saat petugas Anda check-in dan mulai bekerja. Muat ulang halaman untuk melihat siaran baru.",
-    "recordingsTitle": "Pekerjaan selesai",
+    "recordingsTitle": "Rekaman pekerjaan selesai",
     "recordingsDescription": "Pekerjaan yang sudah selesai, terbaru di atas.",
     "recordingsCaption": "Rekaman pekerjaan petugas Anda",
     "recordingsEmptyTitle": "Belum ada pekerjaan selesai",

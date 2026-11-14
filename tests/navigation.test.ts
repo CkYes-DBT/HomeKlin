@@ -58,6 +58,14 @@ describe("isActivePath", () => {
     expect(isActivePath("/services-old", { href: "/services" })).toBe(false);
   });
 
+  it("also marks an item active on the extra paths it names, and their sub-pages", () => {
+    const cleaners = { href: "/agency/cleaners", alsoOn: ["/agency/schedule"] };
+    expect(isActivePath("/agency/schedule", cleaners)).toBe(true);
+    expect(isActivePath("/agency/schedule/deep", cleaners)).toBe(true);
+    expect(isActivePath("/agency/schedules", cleaners)).toBe(false);
+    expect(isActivePath("/agency/orders", cleaners)).toBe(false);
+  });
+
   it("ignores a trailing slash", () => {
     expect(isActivePath("/services/", { href: "/services" })).toBe(true);
     expect(isActivePath("/agency/", { href: "/agency", exact: true })).toBe(true);
@@ -114,21 +122,30 @@ describe("navigation", () => {
     ]);
   });
 
-  it("gives the agency its back-office sections, without services or prices", () => {
+  it("gives the agency the partner mock's sections in order (D2), plus its cleaners' videos", () => {
     expect(items("agency", "id")).toEqual([
-      ["Dasbor", "/agency"],
-      ["Jadwal", "/agency/schedule"],
+      ["Ringkasan", "/agency"],
+      ["Pekerjaan masuk", "/agency/orders"],
+      ["Pesanan selesai", "/agency/past"],
       ["Petugas", "/agency/cleaners"],
-      ["Pesanan", "/agency/orders"],
-      ["Rekaman", "/agency/recordings"],
+      ["Video petugas", "/agency/recordings"],
+      ["Layanan", "/agency/services"],
     ]);
     expect(items("agency", "en")).toEqual([
-      ["Dashboard", "/agency"],
-      ["Schedule", "/agency/schedule"],
+      ["Summary", "/agency"],
+      ["Incoming jobs", "/agency/orders"],
+      ["Completed orders", "/agency/past"],
       ["Cleaners", "/agency/cleaners"],
-      ["Orders", "/agency/orders"],
-      ["Recordings", "/agency/recordings"],
+      ["Cleaner videos", "/agency/recordings"],
+      ["Services", "/agency/services"],
     ]);
+  });
+
+  it("keeps Petugas current on the schedule, which belongs to the cleaners and their availability", () => {
+    const cleaners = backOfficeNavigation.agency.items.find((item) => item.href === "/agency/cleaners");
+    expect(cleaners && isActivePath("/agency/schedule", cleaners)).toBe(true);
+    const others = backOfficeNavigation.agency.items.filter((item) => item.href !== "/agency/cleaners");
+    expect(others.some((item) => isActivePath("/agency/schedule", item))).toBe(false);
   });
 
   it("gives the admin the five console sections of the mock, live monitoring first, with no dashboard", () => {

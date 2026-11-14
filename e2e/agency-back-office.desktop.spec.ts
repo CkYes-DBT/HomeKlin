@@ -13,6 +13,9 @@ import type { StorageState } from "./setup/auth-state";
 //   is set afterwards with the secret key, only so the test can sign in).
 // - Pesanan: it assigns that cleaner to a paid job; the cleaner then sees the job, and the customer
 //   sees the cleaner's name and photo as Petugas HomeKlin, with no agency anywhere.
+// - Since D2 (the partner mocks): its summary (Ringkasan) with the range in the address, incoming jobs
+//   with counts, a status filter and a search, each job's own page (another agency's answers "not
+//   found"), finished jobs with their recordings, and HomeKlin's services, read-only.
 // - Rekaman: it watches its own cleaner's live stream (the status is polled) and replays its own
 //   recordings; a deleted one says so. Another agency's job, stream and recording are refused.
 // The spec makes two agencies of its own serving Jakarta Timur, their cleaners and paid jobs a few
@@ -213,10 +216,12 @@ test.describe("the agency", () => {
 
   test("adds a cleaner with a photo, who appears in its list", async ({ page }) => {
     await page.goto("/agency/cleaners");
-    await expect(page.getByRole("heading", { level: 1, name: "Petugas" })).toBeVisible();
-    const list = page.getByRole("list", { name: "Petugas Anda" });
-    await expect(list.getByRole("listitem")).toHaveCount(1); // only its own cleaner, not the other agency's
+    await expect(page.getByRole("heading", { level: 1, name: "Petugas dan ketersediaan" })).toBeVisible();
+    const list = page.getByRole("table", { name: "Petugas Anda" });
+    await expect(list.locator("tbody tr")).toHaveCount(1); // only its own cleaner, not the other agency's
     await expect(list).toContainText("Uji Petugas Siaran");
+    // The week's windows sit under the list, with the way to change them.
+    await expect(page.getByRole("region", { name: "Jadwal ketersediaan" }).getByRole("link", { name: "Atur jadwal" })).toHaveAttribute("href", "/agency/schedule");
 
     const form = page.getByRole("form", { name: "Tambah petugas" });
     await expect(form).toContainText("kode 6 angka yang kami kirim ke email ini");
@@ -226,7 +231,7 @@ test.describe("the agency", () => {
     await expect(form.getByRole("img", { name: "Pratinjau foto petugas" })).toBeVisible();
     await form.getByRole("button", { name: "Tambah petugas" }).click();
     await expect(form.getByRole("status")).toContainText(`${newCleaner.name} ditambahkan.`, { timeout: 30_000 });
-    await expect(list.getByRole("listitem")).toHaveCount(2);
+    await expect(list.locator("tbody tr")).toHaveCount(2);
     await expect(list.getByRole("img", { name: `Foto ${newCleaner.name}` })).toBeVisible();
 
     const { data } = await adminClient().from("cleaners").select("user_id, photo_url").eq("agency_id", agency.id).eq("full_name", newCleaner.name).single<{ user_id: string; photo_url: string }>();
@@ -244,10 +249,11 @@ test.describe("the agency", () => {
 
   test("assigns its new cleaner to a paid job; a started job cannot be reassigned", async ({ page }) => {
     await page.goto("/agency/orders");
-    const table = page.getByRole("table", { name: "Pesanan agensi Anda" });
+    await expect(page.getByRole("heading", { level: 1, name: "Pekerjaan masuk" })).toBeVisible();
+    const table = page.getByRole("table", { name: "Pekerjaan masuk agensi Anda" });
     await expect(jobRow(table, address.other)).toHaveCount(0); // never another agency's job
     const row = jobRow(table, address.open);
-    await expect(row).toContainText("Belum ada petugas");
+    await expect(row).toContainText("Perlu petugas");
     await row.getByRole("combobox", { name: "Petugas untuk pesanan ini" }).selectOption({ label: newCleaner.name });
     await row.getByRole("button", { name: "Tugaskan" }).click();
     await expect(row.getByRole("status")).toHaveText(`Ditugaskan ke ${newCleaner.name}.`, { timeout: 20_000 });
@@ -256,7 +262,75 @@ test.describe("the agency", () => {
     expect(data?.cleaner_id).toBe(newCleaner.id);
 
     await expect(jobRow(table, address.live).getByRole("combobox")).toHaveCount(0);
-    await expect(jobRow(table, address.finished).getByRole("button")).toHaveCount(0);
+    // A finished job is no longer incoming: it is under "Pesanan selesai", with nothing to change.
+    await expect(jobRow(table, address.finished)).toHaveCount(0);
+    await page.goto("/agency/past");
+    const past = page.getByRole("table", { name: "Pesanan selesai agensi Anda" });
+    await expect(jobRow(past, address.finished)).toHaveCount(1);
+    await expect(jobRow(past, address.finished).getByRole("button")).toHaveCount(0);
+    await expect(jobRow(past, address.other)).toHaveCount(0);
+  });
+
+  test("filters and searches its incoming jobs through the address", async ({ page }) => {
+    await page.goto("/agency/orders");
+    const counts = page.getByRole("list", { name: "Jumlah pekerjaan" });
+    await expect(counts).toContainText("Sedang berlangsung");
+    const filters = page.getByRole("navigation", { name: "Filter status" });
+    await filters.getByRole("link", { name: "Berlangsung" }).click();
+    await expect(page).toHaveURL("/agency/orders?status=inProgress");
+    await expect(filters.getByRole("link", { name: "Berlangsung" })).toHaveAttribute("aria-current", "true");
+    const table = page.getByRole("table", { name: "Pekerjaan masuk agensi Anda" });
+    await expect(jobRow(table, address.live)).toHaveCount(1);
+    await expect(jobRow(table, address.open)).toHaveCount(0);
+
+    await page.goto("/agency/orders");
+    await page.getByRole("searchbox", { name: "Cari pekerjaan" }).fill("Uji Siaran");
+    await page.getByRole("button", { name: "Cari", exact: true }).click();
+    await expect(page).toHaveURL(/\/agency\/orders\?q=Uji\+Siaran$/);
+    await expect(jobRow(table, address.live)).toHaveCount(1);
+    await expect(jobRow(table, address.open)).toHaveCount(0);
+  });
+
+  test("opens its own job, under way and finished, and is refused another agency's", async ({ page }) => {
+    await page.goto(`/agency/orders/job?order=${jobs.live}`);
+    await expect(page.getByRole("heading", { level: 1, name: "Pembersihan Rutin" })).toBeVisible();
+    await expect(page.getByRole("main")).toContainText(address.live);
+    await expect(page.getByRole("main")).toContainText("Berlangsung");
+    await expect(page.getByRole("region", { name: "Siaran langsung" }).locator("video")).toHaveCount(1);
+    await expect(page.getByRole("link", { name: "Kembali ke pekerjaan masuk" })).toHaveAttribute("href", "/agency/orders");
+
+    await page.goto(`/agency/past/job?order=${jobs.finished}`);
+    const recording = page.getByRole("region", { name: "Rekaman pekerjaan" });
+    const src = (await recording.locator("video").getAttribute("src")) ?? "";
+    expect(src.startsWith(`${signedLink("jobs")}${jobs.finished}.`)).toBe(true);
+    await expect(page.getByRole("region", { name: "Status pekerjaan" })).toContainText("Check-in di alamat");
+
+    await page.goto(`/agency/orders/job?order=${jobs.other}`);
+    await expect(page.getByRole("heading", { name: "Pesanan tidak ditemukan" })).toBeVisible();
+    await expect(page.getByRole("main")).not.toContainText(address.other);
+    await expect(page.locator("main video")).toHaveCount(0);
+  });
+
+  test("lists its finished jobs with where each recording stands", async ({ page }) => {
+    await page.goto("/agency/past");
+    await expect(page.getByRole("heading", { level: 1, name: "Pesanan selesai" })).toBeVisible();
+    const table = page.getByRole("table", { name: "Pesanan selesai agensi Anda" });
+    await expect(jobRow(table, address.finished)).toContainText("Tersedia sampai");
+    await expect(jobRow(table, address.expired)).toContainText("Dihapus setelah 7 hari");
+    await expect(jobRow(table, address.none)).toContainText("Tidak ada rekaman");
+    await expect(jobRow(table, address.open)).toHaveCount(0);
+    await page.getByRole("navigation", { name: "Filter rekaman" }).getByRole("link", { name: "Rekaman dihapus" }).click();
+    await expect(page).toHaveURL("/agency/past?recording=deleted");
+    await expect(jobRow(table, address.expired)).toHaveCount(1);
+    await expect(jobRow(table, address.finished)).toHaveCount(0);
+  });
+
+  test("reads HomeKlin's services, without a way to change them", async ({ page }) => {
+    await page.goto("/agency/services");
+    const table = page.getByRole("table", { name: "Layanan HomeKlin dan harganya" });
+    await expect(table.getByRole("row").filter({ hasText: "Pembersihan Rutin" })).toContainText("Ditawarkan");
+    await expect(page.getByRole("main").getByRole("button")).toHaveCount(0);
+    await expect(page.getByRole("main").getByRole("checkbox")).toHaveCount(0);
   });
 
   test("cannot assign another agency's job, nor another agency's cleaner", async () => {
@@ -267,19 +341,23 @@ test.describe("the agency", () => {
     expect(foreignCleaner.error?.message).toBe("cleaner_not_found");
   });
 
-  test("shows a summary with links on its dashboard", async ({ page }) => {
+  test("opens on its summary, whose range is part of the address, and names the agency in the sidebar", async ({ page }) => {
     await page.goto("/agency");
-    const stats = page.getByRole("list", { name: "Ringkasan" });
-    await expect(stats.getByRole("link", { name: /Menunggu petugas/ })).toHaveAttribute("href", "/agency/orders");
-    await expect(stats.getByRole("link", { name: /Pekerjaan hari ini/ })).toHaveAttribute("href", "/agency/orders");
-    await expect(stats.getByRole("link", { name: /Siaran langsung/ })).toContainText("1");
-    await expect(stats.getByRole("link", { name: /Siaran langsung/ })).toHaveAttribute("href", "/agency/recordings");
-    await expect(page.getByRole("main").getByText(`Agensi ${agencyName}`, { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Ringkasan" })).toBeVisible();
+    await expect(page.locator("aside")).toContainText(agencyName);
+    const range = page.getByRole("navigation", { name: "Rentang waktu" });
+    await expect(range.getByRole("link", { name: "30 hari" })).toHaveAttribute("aria-current", "true");
+    await range.getByRole("link", { name: "7 hari" }).click();
+    await expect(page).toHaveURL("/agency?days=7");
+    await expect(range.getByRole("link", { name: "7 hari" })).toHaveAttribute("aria-current", "true");
+    // The numbers come from the T40 summary functions. The test project's agency role cannot read
+    // order_fees yet (docs/redesign-gaps-partner.md); the page then says so instead of showing 0.
+    await expect(page.getByRole("list", { name: "Angka utama, 7 hari terakhir" }).or(page.getByRole("main").getByRole("alert"))).toBeVisible();
   });
 
   test("watches its own cleaner's live stream, whose status follows the cleaner's", async ({ page }) => {
     await page.goto("/agency/recordings");
-    const tiles = page.getByRole("region", { name: "Siaran langsung" }).getByRole("article");
+    const tiles = page.getByRole("region", { name: "Sedang siaran" }).getByRole("article");
     await expect(tiles).toHaveCount(1); // not the other agency's
     const tile = tiles.first();
     await expect(tile).toContainText("Uji Petugas Siaran");
@@ -300,7 +378,7 @@ test.describe("the agency", () => {
 
     await jobRow(table, address.finished).getByRole("link", { name: /^Putar rekaman/ }).click();
     await expect(page).toHaveURL(`/agency/recordings?recording=${recordings.own}`);
-    const player = page.getByRole("region", { name: /^Rekaman / });
+    const player = page.getByRole("region", { name: /^Rekaman (Pembersihan|yang dipilih)/ });
     const src = (await player.locator("video").getAttribute("src")) ?? "";
     expect(src.startsWith(`${signedLink("jobs")}${jobs.finished}.`)).toBe(true);
     expect((await request.get(src)).status()).toBe(200);
@@ -321,7 +399,7 @@ test.describe("the agency", () => {
 
     await page.goto(`/agency/recordings?recording=${recordings.other}`);
     await expect(page.getByText("Rekaman tidak ditemukan")).toBeVisible();
-    await expect(page.getByRole("region", { name: /^Rekaman / }).locator("video")).toHaveCount(0);
+    await expect(page.getByRole("region", { name: /^Rekaman (Pembersihan|yang dipilih)/ }).locator("video")).toHaveCount(0);
   });
 
   test("reads in English", async ({ page }) => {
@@ -333,8 +411,9 @@ test.describe("the agency", () => {
     await expect(page.getByRole("form", { name: "Add a cleaner" })).toContainText("6-digit code");
 
     await page.goto("/en/agency/orders");
-    const table = page.getByRole("table", { name: "Your agency’s orders" });
+    const table = page.getByRole("table", { name: "Your agency’s incoming jobs" });
     await expect(jobRow(table, address.open)).toContainText(newCleaner.name);
+    await jobRow(table, address.open).getByRole("button", { name: `Change cleaner ${newCleaner.name}` }).click();
     await expect(jobRow(table, address.open).getByRole("button", { name: "Assign" })).toBeVisible();
 
     await page.goto("/en/agency/recordings");
@@ -342,7 +421,11 @@ test.describe("the agency", () => {
     await expect(jobRow(page.getByRole("table", { name: "Recordings of your cleaners’ jobs" }), address.expired)).toContainText("Deleted after 7 days");
 
     await page.goto("/en/agency");
-    await expect(page.getByRole("list", { name: "Overview" }).getByRole("link", { name: /Live now/ })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Summary" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Time range" }).getByRole("link", { name: "90 days" })).toBeVisible();
+
+    await page.goto(`/en/agency/past/job?order=${jobs.finished}`);
+    await expect(page.getByRole("link", { name: "Back to completed orders" })).toBeVisible();
   });
 });
 

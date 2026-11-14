@@ -37,11 +37,12 @@
   "BackOfficeNavigation": {
     "agency": {
       "label": "Agency navigation",
-      "dashboard": "Dashboard",
-      "schedule": "Schedule",
+      "summary": "Summary",
+      "incoming": "Incoming jobs",
+      "past": "Completed orders",
       "cleaners": "Cleaners",
-      "orders": "Orders",
-      "recordings": "Recordings"
+      "videos": "Cleaner videos",
+      "services": "Services"
     },
     "admin": {
       "label": "Admin navigation",
@@ -64,7 +65,10 @@
     "adminRole": "Admin",
     "adminDashboard": "Admin Dashboard",
     "adminOperations": "HomeKlin operations",
-    "adminHome": "HomeKlin, to Live monitoring"
+    "adminHome": "HomeKlin, to Live monitoring",
+    "agencyDashboard": "Partner agency dashboard",
+    "agencyFallback": "HomeKlin partner agency",
+    "agencyHome": "HomeKlin, to Summary"
   },
   "MarketingHeader": {
     "nav": "Site navigation",
@@ -775,30 +779,52 @@
   "CleanerAccountPage": {
     "title": "Account"
   },
-  "AgencyDashboardPage": {
-    "title": "Dashboard",
-    "agency": "Agency {name}",
+  "AgencySummaryPage": {
+    "title": "Summary",
+    "description": "Fees, jobs and payouts for your agency.",
+    "rangeLabel": "Time range",
+    "range": "{days, number} days",
     "noAgencyTitle": "This account is not linked to an agency yet.",
     "noAgencyBody": "Ask a HomeKlin admin to link your account to your agency.",
-    "errorTitle": "The overview could not be loaded.",
-    "errorBody": "Reload the page to try again.",
+    "errorTitle": "The fee summary could not be loaded.",
+    "errorBody": "Reload the page to try again. If it still fails, contact a HomeKlin admin.",
+    "statsLabel": "Key numbers, last {days, number} days",
     "stats": {
-      "label": "Overview",
-      "waiting": "Waiting for a cleaner",
-      "waitingBody": "Orders without a cleaner",
-      "today": "Today’s jobs",
-      "todayBody": "Orders that start today",
-      "live": "Live now",
-      "liveBody": "Cleaners at work right now",
-      "liveUnknown": "Could not be loaded"
+      "total": "Agency fees",
+      "totalHint": "from jobs completed in the last {days, number} days",
+      "jobs": "Completed jobs",
+      "jobsHint": "jobs with a fee",
+      "average": "Average fee",
+      "averageHint": "fees divided by jobs",
+      "pending": "Waiting to be paid",
+      "pendingHint": "already paid {paid}"
     },
-    "waitingTitle": "Needs a cleaner",
-    "waitingDescription": "The next orders that have no cleaner yet. Assign a cleaner on the Orders page.",
-    "waitingEmptyTitle": "Every order has a cleaner",
-    "waitingEmptyBody": "New orders routed to your agency appear here until you assign a cleaner.",
-    "waitingMore": "{count, plural, one {and # more order} other {and # more orders}}",
-    "toOrders": "Open Orders",
-    "toSchedule": "Set your schedule"
+    "byCleanerTitle": "Fees per cleaner",
+    "byCleanerEmpty": "No fees in this range yet.",
+    "byServiceTitle": "Fees per service",
+    "byServiceEmpty": "No fees in this range yet.",
+    "shareDescription": "Last {days, number} days, total {total}",
+    "daily": {
+      "title": "Daily fees",
+      "description": "Last {count, number} days, {from} to {to}",
+      "sentence": "Fees in the last {count, number} days add up to {total}. The highest was {high} on {highDay}.",
+      "noneSentence": "No fees in the last {count, number} days.",
+      "showTable": "See the numbers per day",
+      "day": "Day",
+      "fee": "Fee"
+    },
+    "payouts": {
+      "title": "Payouts from HomeKlin",
+      "description": "Fees are paid to your agency every week.",
+      "emptyTitle": "No payouts yet",
+      "emptyBody": "Every week HomeKlin adds up the fees of completed jobs into one payout. The first payout appears here.",
+      "date": "Date",
+      "amount": "Amount",
+      "status": "Status",
+      "period": "Week of {from} to {to}, {count, plural, one {# job} other {# jobs}}",
+      "paid": "Paid",
+      "pending": "Pending"
+    }
   },
   "AgencySchedulePage": {
     "title": "Schedule",
@@ -851,8 +877,8 @@
     }
   },
   "AgencyCleanersPage": {
-    "title": "Cleaners",
-    "description": "Your agency’s cleaners. Customers see a cleaner’s name and photo as a HomeKlin cleaner, never with the agency name.",
+    "title": "Cleaners and availability",
+    "description": "Your agency’s cleaners and the hours that can take jobs from HomeKlin. Customers see a cleaner’s name and photo as a HomeKlin cleaner, never with the agency name.",
     "noAgencyTitle": "This account is not linked to an agency yet.",
     "noAgencyBody": "Ask a HomeKlin admin to link your account to your agency.",
     "errorTitle": "The cleaners could not be loaded.",
@@ -862,7 +888,7 @@
     "photoAlt": "Photo of {name}",
     "noPhoto": "No photo yet",
     "emptyTitle": "No cleaners yet",
-    "emptyBody": "Add your first cleaner with the form beside this list. You can then assign them to orders.",
+    "emptyBody": "Add your first cleaner with the form below. You can then assign them to jobs.",
     "form": {
       "title": "Add a cleaner",
       "name": "Full name",
@@ -879,17 +905,83 @@
       "changePhoto": "Change photo"
     },
     "atWork": "At a job now",
-    "upcoming": "{count, plural, =0 {No upcoming jobs} one {# upcoming job} other {# upcoming jobs}}"
+    "upcoming": "{count, plural, =0 {No upcoming jobs} one {# upcoming job} other {# upcoming jobs}}",
+    "table": {
+      "cleaner": "Cleaner",
+      "status": "Status",
+      "week": "Jobs this week"
+    },
+    "notAtWork": "Not at a job",
+    "availability": {
+      "title": "Availability",
+      "thisWeek": "This week, {from} to {to}",
+      "week": "Week of {from} to {to}",
+      "weekNav": "Choose a week",
+      "previous": "Previous week",
+      "next": "Next week",
+      "emptyTitle": "No time slots this week",
+      "emptyBody": "Add arrival time slots on the Schedule page. Customers are only offered hours that still have room.",
+      "caption": "Arrival time slots {from} to {to}, free places per hour",
+      "closed": "Closed",
+      "full": "Full",
+      "free": "{free, number} of {capacity, number} free",
+      "note": "Each box shows the free places of the time slots starting at that hour, across all your areas. Hours marked Closed take no jobs.",
+      "manage": "Manage schedule"
+    }
   },
   "AgencyOrdersPage": {
-    "title": "Orders",
-    "description": "Paid orders routed to your agency, newest first. Assign one of your cleaners until the cleaner checks in.",
-    "emptyTitle": "No orders yet",
-    "emptyBody": "Paid orders appear here. From this page you assign a cleaner to each order.",
-    "caption": "Your agency’s orders",
-    "summary": "{count, plural, one {# order} other {# orders}}",
-    "errorTitle": "The orders could not be loaded.",
+    "title": "Incoming jobs",
+    "description": "Jobs HomeKlin routes to your agency. Assign one of your own cleaners to each job, until the cleaner checks in.",
+    "noAgencyTitle": "This account is not linked to an agency yet.",
+    "noAgencyBody": "Ask a HomeKlin admin to link your account to your agency.",
+    "errorTitle": "The jobs could not be loaded.",
     "errorBody": "Reload the page to try again.",
+    "countsLabel": "Job counts",
+    "counts": {
+      "unassigned": "Need a cleaner",
+      "assigned": "Assigned",
+      "inProgress": "In progress",
+      "completedThisWeek": "Completed this week"
+    },
+    "listTitle": "Job list",
+    "filterLabel": "Status filter",
+    "filter": {
+      "all": "All",
+      "unassigned": "Needs a cleaner",
+      "assigned": "Assigned",
+      "inProgress": "In progress"
+    },
+    "searchLabel": "Search jobs",
+    "searchPlaceholder": "Service, address, cleaner",
+    "searchSubmit": "Search",
+    "count": "{count, plural, =0 {No jobs} one {# job} other {# jobs}}, earliest first",
+    "countSearch": "{count, plural, =0 {No jobs} one {# job} other {# jobs}} for “{query}”",
+    "searchEmptyTitle": "No matching jobs",
+    "searchEmptyBody": "Try other words, or clear the search to see every job.",
+    "emptyTitle": "No incoming jobs yet",
+    "emptyBody": "Paid jobs routed to your agency appear here. From this page you assign a cleaner.",
+    "filterEmptyTitle": "No jobs with this status",
+    "filterEmptyBody": "Choose All to see every job that is not finished.",
+    "caption": "Your agency’s incoming jobs",
+    "table": {
+      "order": "Order",
+      "when": "Schedule",
+      "status": "Status",
+      "cleaner": "Cleaner",
+      "detail": "Details"
+    },
+    "serviceFallback": "Service no longer offered",
+    "change": "Change",
+    "changeFor": "Change cleaner {name}",
+    "whenValue": "{day}, {window} WIB",
+    "windowValue": "{window} WIB",
+    "status": {
+      "unassigned": "Needs a cleaner",
+      "assigned": "Assigned",
+      "inProgress": "In progress",
+      "completed": "Completed"
+    },
+    "detailFor": "See details of {service}, {day}",
     "assign": {
       "label": "Cleaner for this order",
       "placeholder": "Choose a cleaner",
@@ -907,16 +999,148 @@
       }
     }
   },
+  "AgencyPastPage": {
+    "title": "Completed orders",
+    "description": "Jobs your agency’s cleaners have finished, with their fees and recordings.",
+    "noAgencyTitle": "This account is not linked to an agency yet.",
+    "noAgencyBody": "Ask a HomeKlin admin to link your account to your agency.",
+    "errorTitle": "The completed orders could not be loaded.",
+    "errorBody": "Reload the page to try again.",
+    "feesErrorTitle": "The fee per order could not be loaded.",
+    "feesErrorBody": "The list still shows, without the fee column.",
+    "listTitle": "Completed order list",
+    "filterLabel": "Recording filter",
+    "filter": {
+      "all": "All",
+      "available": "Recording available",
+      "deleted": "Recording deleted"
+    },
+    "searchLabel": "Search orders",
+    "searchPlaceholder": "Service, address, cleaner",
+    "searchSubmit": "Search",
+    "count": "{count, plural, =0 {No orders} one {# order} other {# orders}}, newest first",
+    "countSearch": "{count, plural, =0 {No orders} one {# order} other {# orders}} for “{query}”",
+    "searchEmptyTitle": "No matching orders",
+    "searchEmptyBody": "Try other words, or clear the search to see every completed order.",
+    "filterEmptyTitle": "No orders with a recording like this",
+    "filterEmptyBody": "Choose All to see every completed order.",
+    "emptyTitle": "No completed orders yet",
+    "emptyBody": "After your cleaner checks out, the job appears here with its fee and recording.",
+    "caption": "Your agency’s completed orders",
+    "table": {
+      "order": "Order",
+      "finished": "Completed",
+      "cleaner": "Cleaner",
+      "recording": "Recording",
+      "fee": "Agency fee",
+      "detail": "Details"
+    },
+    "serviceFallback": "Service no longer offered",
+    "finishedValue": "Completed {day}, {window} WIB",
+    "windowValue": "{window} WIB",
+    "feeValue": "Agency fee {fee}",
+    "noFee": "Not recorded yet",
+    "noCleaner": "No cleaner",
+    "detailFor": "See details of {service}, {day}",
+    "recording": {
+      "available": "Available until {day}",
+      "expired": "Deleted after 7 days",
+      "none": "No recording"
+    }
+  },
+  "AgencyJobPage": {
+    "title": "Order details",
+    "back": {
+      "incoming": "Back to incoming jobs",
+      "past": "Back to completed orders"
+    },
+    "errorTitle": "The order could not be loaded.",
+    "errorBody": "Reload the page to try again.",
+    "noAgencyTitle": "This account is not linked to an agency yet.",
+    "noAgencyBody": "Ask a HomeKlin admin to link your account to your agency.",
+    "notFoundTitle": "Order not found",
+    "notFoundBody": "This order does not belong to your agency, or no longer exists. Open orders from the job lists.",
+    "serviceFallback": "Service no longer offered",
+    "whenValue": "{date}, {window} WIB",
+    "subtitleCode": "Order {code}, {when}",
+    "durationValue": "About {hours, plural, =0 {{minutes, number} minutes} one {# hour{minutes, plural, =0 {} other { {minutes, number} minutes}}} other {# hours{minutes, plural, =0 {} other { {minutes, number} minutes}}}}",
+    "facts": {
+      "service": "Service",
+      "when": "Full schedule",
+      "duration": "Duration",
+      "area": "Area",
+      "address": "Address",
+      "fee": "Agency fee"
+    },
+    "feeUnknown": "Could not be read",
+    "feeLater": "Recorded once the job is finished",
+    "factsTitle": "Order details",
+    "asideLabel": "Cleaner and status",
+    "cleanerTitle": "Cleaner",
+    "ownCleaner": "Your agency’s cleaner",
+    "noCleaner": "No cleaner yet",
+    "stepsTitle": "Job status",
+    "steps": {
+      "assigned": "Assigned",
+      "checkedIn": "Checked in at the address",
+      "completed": "Completed",
+      "yes": "Done",
+      "notYet": "Not yet"
+    },
+    "status": {
+      "unassigned": "Needs a cleaner",
+      "assigned": "Assigned",
+      "inProgress": "In progress",
+      "completed": "Completed"
+    },
+    "recordingTitle": "Job recording",
+    "loading": "Loading the video…",
+    "recordingLabel": "Recording of {service}, {day}",
+    "recordingExpired": "The recording was deleted automatically 7 days after the job finished.",
+    "recordingNone": "This job has no recording.",
+    "recordingKept": "Recordings are kept for 7 days after the job is finished, then deleted automatically.",
+    "liveTitle": "Live view",
+    "liveLabel": "Live view of {name}",
+    "liveSince": "Checked in at {time} WIB.",
+    "recordingAfter": "The recording is available for 7 days once the job is finished.",
+    "liveNone": "There is no live view for this job yet.",
+    "liveLater": "The live view starts when the cleaner checks in at the address."
+  },
+  "AgencyServicesPage": {
+    "title": "Services",
+    "description": "HomeKlin services your agency’s cleaners carry out. HomeKlin sets the list and the prices; an agency cannot add services or change prices.",
+    "errorTitle": "The service list could not be loaded.",
+    "errorBody": "Reload the page to try again.",
+    "emptyTitle": "No active services yet",
+    "emptyBody": "Services appear here once a HomeKlin admin makes them active.",
+    "listTitle": "HomeKlin services",
+    "caption": "HomeKlin services and their prices",
+    "table": {
+      "service": "Service",
+      "duration": "Duration",
+      "price": "Customer price",
+      "offered": "Offered"
+    },
+    "durationValue": "About {hours, plural, =0 {{minutes, number} minutes} one {# hour{minutes, plural, =0 {} other { {minutes, number} minutes}}} other {# hours{minutes, plural, =0 {} other { {minutes, number} minutes}}}}",
+    "offered": "Offered",
+    "type": "Type: {type}",
+    "categories": {
+      "whole-home": "Whole home",
+      "rooms": "Single rooms",
+      "fabrics": "Fabrics & mattresses"
+    },
+    "note": "Every active HomeKlin service can be booked in the areas your agency serves. Choosing which services you offer is not available yet. New services appear here once an admin makes them active."
+  },
   "AgencyRecordingsPage": {
-    "title": "Recordings",
-    "description": "Live streams and recordings of your own agency’s cleaners. Recordings are kept for 7 days after the job is done, then deleted automatically.",
+    "title": "Cleaner videos",
+    "description": "Live views and recordings of your cleaners’ jobs. Recordings are kept for 7 days after the job is finished, then deleted automatically.",
     "errorTitle": "The video could not be loaded.",
     "errorBody": "Reload the page to try again.",
     "liveTitle": "Live now",
     "liveCount": "{count, plural, one {# stream} other {# streams}}",
     "liveEmptyTitle": "No live streams right now",
     "liveEmptyBody": "A stream appears here when one of your cleaners checks in and starts the job. Reload the page to see new streams.",
-    "recordingsTitle": "Finished jobs",
+    "recordingsTitle": "Completed job recordings",
     "recordingsDescription": "Finished jobs, newest first.",
     "recordingsCaption": "Recordings of your cleaners’ jobs",
     "recordingsEmptyTitle": "No finished jobs yet",

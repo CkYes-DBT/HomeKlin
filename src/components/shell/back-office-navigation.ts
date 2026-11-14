@@ -1,12 +1,10 @@
 import {
   Building2,
-  CalendarDays,
   ChartColumn,
+  CircleCheck,
   CircleHelp,
-  CirclePlay,
   ClipboardList,
   History,
-  LayoutDashboard,
   LayoutGrid,
   MessageCircle,
   ShieldCheck,
@@ -15,7 +13,9 @@ import {
 } from "lucide-react";
 import type { BackOfficeNavKey, MessageKeyIn, Navigation } from "./navigation";
 
-// Agency, admin and owner menus. Partner agencies run cleaners, availability and assignment;
+// Agency, admin and owner menus. Partner agencies run cleaners, availability and assignment (their
+// menu follows the partner mocks, D2: summary first; the schedule is part of Petugas, and "Video
+// petugas" is kept although the mocks leave it out, so the live view and recordings stay reachable);
 // HomeKlin admin owns the services and the one price list (its menu follows the mock, R2b: no
 // dashboard, live monitoring first, /admin redirects there); the owner sees the business numbers and
 // decides which partner agencies and admins HomeKlin has.
@@ -25,11 +25,12 @@ export const backOfficeNavigation = {
   agency: {
     labelKey: "agency.label",
     items: [
-      { href: "/agency", exact: true, labelKey: "agency.dashboard", icon: LayoutDashboard },
-      { href: "/agency/schedule", labelKey: "agency.schedule", icon: CalendarDays },
-      { href: "/agency/cleaners", labelKey: "agency.cleaners", icon: UsersRound },
-      { href: "/agency/orders", labelKey: "agency.orders", icon: ClipboardList },
-      { href: "/agency/recordings", labelKey: "agency.recordings", icon: CirclePlay },
+      { href: "/agency", exact: true, labelKey: "agency.summary", icon: ChartColumn },
+      { href: "/agency/orders", labelKey: "agency.incoming", icon: ClipboardList },
+      { href: "/agency/past", labelKey: "agency.past", icon: CircleCheck },
+      { href: "/agency/cleaners", alsoOn: ["/agency/schedule"], labelKey: "agency.cleaners", icon: UsersRound },
+      { href: "/agency/recordings", labelKey: "agency.videos", icon: Video },
+      { href: "/agency/services", labelKey: "agency.services", icon: LayoutGrid },
     ],
   },
   admin: {

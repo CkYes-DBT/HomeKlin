@@ -27,10 +27,10 @@ export async function LiveTile({ stream, serviceName, areaName, startedAt }: Liv
   const titleId = `live-${stream.orderId}`;
   return (
     <li data-stream={stream.orderId} className="min-w-0">
-      <article aria-labelledby={titleId} className="flex h-full flex-col gap-3 rounded-xl border border-border bg-surface p-3 shadow-card">
+      <article aria-labelledby={titleId} className="flex h-full flex-col gap-3 rounded-lg bg-card p-3">
         <Suspense
           fallback={
-            <div aria-busy="true" className="flex aspect-video w-full items-center justify-center rounded-md bg-surface-sunken">
+            <div aria-busy="true" className="flex aspect-video w-full items-center justify-center rounded-md bg-sunken">
               <span className="text-xs text-ink-muted">{t("loading")}</span>
             </div>
           }
@@ -58,7 +58,7 @@ export async function LiveTile({ stream, serviceName, areaName, startedAt }: Liv
   );
 }
 
-async function SignedVideo({ orderId, label }: { orderId: string; label: string }) {
+export async function SignedVideo({ orderId, label }: { orderId: string; label: string }) {
   let src: string | null = null;
   let ended = false;
   try {
