@@ -174,12 +174,32 @@ export async function listAdminJobs(client: SupabaseClient): Promise<AdminJob[]>
   }));
 }
 
-export type AgencyCleaner = { id: string; fullName: string; photoUrl: string | null };
+/**
+ * A cleaner's account details. phone (+628...) and areaId (one of the agency's areas) are set by the
+ * agency (B11, 20261114150000_full_windows_cleaner_details.sql); null until then.
+ */
+export type CleanerProfile = { id: string; fullName: string; photoUrl: string | null; phone: string | null; areaId: string | null };
+export type AgencyCleaner = CleanerProfile;
+
+type CleanerRow = { cleaner_id: string; full_name: string; photo_url: string | null; phone: string | null; area_id: string | null };
+
+const cleanerProfile = (row: CleanerRow): CleanerProfile => ({
+  id: row.cleaner_id,
+  fullName: row.full_name,
+  photoUrl: row.photo_url,
+  phone: row.phone ?? null,
+  areaId: row.area_id ?? null,
+});
 
 /** The signed-in agency's own cleaners, by name. */
 export async function listAgencyCleaners(client: SupabaseClient): Promise<AgencyCleaner[]> {
-  type Row = { cleaner_id: string; full_name: string; photo_url: string | null };
-  return (await read<Row>(client, "agency_cleaners")).map((row) => ({ id: row.cleaner_id, fullName: row.full_name, photoUrl: row.photo_url }));
+  return (await read<CleanerRow>(client, "agency_cleaners")).map(cleanerProfile);
+}
+
+/** The signed-in cleaner's own details, or null when the account has no cleaner row. */
+export async function getMyCleanerProfile(client: SupabaseClient): Promise<CleanerProfile | null> {
+  const [row] = await read<CleanerRow>(client, "my_cleaner_profile");
+  return row ? cleanerProfile(row) : null;
 }
 
 /** Where a job stands, for every role's status line. */

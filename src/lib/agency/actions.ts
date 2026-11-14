@@ -6,6 +6,7 @@ import { z } from "zod";
 import { authorize } from "@/lib/auth/dal";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { normalisePhone } from "@/lib/validation/booking";
 import { getMyAgency } from "./agency";
 
 // The partner agency's back office actions (T27, T28). Public POST endpoints: each checks the agency
@@ -28,6 +29,8 @@ export type AgencyFailureKey =
   | "emailInvalid"
   | "emailTaken"
   | "photoInvalid"
+  | "phoneInvalid"
+  | "cleanerNotFound"
   | "unavailable";
 
 export type AgencyActionState = { ok?: true; formError?: AgencyFailureKey } | null;
@@ -41,6 +44,9 @@ const refusals: Record<string, AgencyFailureKey> = {
   slot_not_found: "slotNotFound",
   capacity_below_booked: "capacityBelowBooked",
   slot_booked: "slotBooked",
+  phone_invalid: "phoneInvalid",
+  area_invalid: "areaNotServed",
+  cleaner_not_found: "cleanerNotFound",
 };
 
 const failure = (error: { message: string }): AgencyActionState => ({ formError: refusals[error.message] ?? "unavailable" });
@@ -160,6 +166,54 @@ export async function addCleaner(_previous: AgencyActionState, formData: FormDat
     await server.auth.admin.deleteUser(userId);
     return { formError: "unavailable" };
   }
+  refresh();
+  return { ok: true };
+}
+
+// B11: the agency sets its own cleaner's phone and area (set_cleaner_details, which checks that the
+// cleaner is the agency's and the area one it serves). An empty field clears it. The phone is accepted
+// in the ways people write it and stored as +628..., as the booking form does.
+const cleanerDetailsInput = z.object({
+  cleanerId: z.uuid(),
+  phone: z
+    .string()
+    .trim()
+    .transform((phone, context) => {
+      if (phone === "") return null;
+      const normalised = normalisePhone(phone);
+      if (!normalised) {
+        context.addIssue({ code: "custom", message: "phoneInvalid" });
+        return z.NEVER;
+      }
+      return normalised;
+    }),
+  areaId: z
+    .string()
+    .trim()
+    .regex(/^([a-z0-9-]{1,60})?$/)
+    .transform((area) => area || null),
+});
+
+/** Sets a cleaner's phone and area (form fields cleanerId, phone, areaId). */
+export async function updateCleanerDetails(_previous: AgencyActionState, formData: FormData): Promise<AgencyActionState> {
+  if (!(await authorize(["agency"]))) return { formError: "notAllowed" };
+  const text = (name: string) => {
+    const entry = formData.get(name);
+    return typeof entry === "string" ? entry : "";
+  };
+  const parsed = cleanerDetailsInput.safeParse({ cleanerId: text("cleanerId"), phone: text("phone"), areaId: text("areaId") });
+  if (!parsed.success) {
+    const field = parsed.error.issues[0]?.path[0];
+    return { formError: field === "phone" ? "phoneInvalid" : field === "areaId" ? "areaNotServed" : "cleanerNotFound" };
+  }
+
+  const supabase = await createSupabaseServerClient({ writeCookies: true });
+  const { error } = await supabase.rpc("set_cleaner_details", {
+    p_cleaner: parsed.data.cleanerId,
+    p_phone: parsed.data.phone,
+    p_area: parsed.data.areaId,
+  });
+  if (error) return failure(error);
   refresh();
   return { ok: true };
 }

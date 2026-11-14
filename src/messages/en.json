@@ -959,6 +959,8 @@
     "emailInvalid": "Enter a valid email address.",
     "emailTaken": "This email is already used by another account.",
     "photoInvalid": "The photo must be a JPG, PNG or WebP file of at most 2 MB.",
+    "phoneInvalid": "Check the mobile number, for example 0812 3456 7890.",
+    "cleanerNotFound": "This cleaner is not one of your agency’s cleaners. Reload the page.",
     "unavailable": "The change could not be saved. Try again in a moment."
   },
   "AgencyLiveStream": {

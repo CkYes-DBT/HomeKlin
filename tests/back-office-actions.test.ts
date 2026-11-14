@@ -34,7 +34,7 @@ vi.mock("@/lib/supabase/server", () => ({ createSupabaseServerClient: async () =
 vi.mock("@/lib/supabase/service", () => ({ createSupabaseServiceClient: makeService }));
 vi.mock("next/cache", () => ({ refresh: vi.fn() }));
 
-const { addCleaner } = await import("@/lib/agency/actions");
+const { addCleaner, updateCleanerDetails } = await import("@/lib/agency/actions");
 const { createAdmin, removeAdmin, setAgencyStatus } = await import("@/lib/owner/actions");
 const { submitReview } = await import("@/lib/reviews/actions");
 
@@ -89,6 +89,43 @@ describe("addCleaner", () => {
     cleanerInsert.mockResolvedValue({ error: { message: "insert failed" } });
     expect(await addCleaner(null, form({ fullName: "Sari", email: "sari@contoh.id" }))).toEqual({ formError: "unavailable" });
     expect(deleteUser).toHaveBeenCalledWith(userId);
+  });
+});
+
+describe("updateCleanerDetails (B11)", () => {
+  const cleanerId = "3e1b6f4b-4444-4555-8666-c77788889999";
+
+  it("sends the phone in +628 form and the area to set_cleaner_details", async () => {
+    user = { role: "agency" };
+    rpc.mockResolvedValue({ data: null, error: null });
+    expect(await updateCleanerDetails(null, form({ cleanerId, phone: "0812 9999 0000", areaId: "jakarta-selatan" }))).toEqual({ ok: true });
+    expect(rpc).toHaveBeenCalledWith("set_cleaner_details", { p_cleaner: cleanerId, p_phone: "+6281299990000", p_area: "jakarta-selatan" });
+  });
+
+  it("clears empty fields", async () => {
+    user = { role: "agency" };
+    rpc.mockResolvedValue({ data: null, error: null });
+    await updateCleanerDetails(null, form({ cleanerId, phone: " ", areaId: "" }));
+    expect(rpc).toHaveBeenCalledWith("set_cleaner_details", { p_cleaner: cleanerId, p_phone: null, p_area: null });
+  });
+
+  it("refuses a bad phone, area or cleaner before the database, and every other role", async () => {
+    user = { role: "agency" };
+    expect(await updateCleanerDetails(null, form({ cleanerId, phone: "12345", areaId: "" }))).toEqual({ formError: "phoneInvalid" });
+    expect(await updateCleanerDetails(null, form({ cleanerId, phone: "", areaId: "Jakarta Selatan" }))).toEqual({ formError: "areaNotServed" });
+    expect(await updateCleanerDetails(null, form({ cleanerId: "not-a-uuid", phone: "", areaId: "" }))).toEqual({ formError: "cleanerNotFound" });
+    user = { role: "cleaner" };
+    expect(await updateCleanerDetails(null, form({ cleanerId, phone: "", areaId: "" }))).toEqual({ formError: "notAllowed" });
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("turns the database's refusals into messages", async () => {
+    user = { role: "agency" };
+    const cases: [string, string][] = [["area_invalid", "areaNotServed"], ["cleaner_not_found", "cleanerNotFound"], ["phone_invalid", "phoneInvalid"], ["boom", "unavailable"]];
+    for (const [message, key] of cases) {
+      rpc.mockResolvedValueOnce({ data: null, error: { message } });
+      expect(await updateCleanerDetails(null, form({ cleanerId, phone: "", areaId: "" })), message).toEqual({ formError: key });
+    }
   });
 });
 
