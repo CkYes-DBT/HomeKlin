@@ -371,7 +371,8 @@ Conventions for every task: tests written first; `npm run typecheck`, `npm run l
   - Done 2026-11-14: `order_code` on the three functions, `orderCode` on the readers (`20261114100000_order_code_everywhere.sql`, `tests/integration/order-codes.test.ts`).
 - [ ] **B2 Admin order detail** (M): `admin_order_detail(order)` (admin only): service, window, area, address, customer name and phone, cleaner and agency, price, agency fee and HomeKlin income (from `order_fees`, else price × `payout_percent`), status times (created, paid, checked in, completed), stream status and its last change. Screens: Admin-Order, Admin-Order-Issue.
   - Accept: non-admins get `not_admin`; the split adds up to the price. Verify: integration tests.
-- [ ] **B3 Assigned time** (S): `orders.assigned_at`, set by `assign_cleaner`; returned by B2, `agency_jobs`. Screens: the "Ditugaskan" step in every timeline.
+- [x] **B3 Assigned time** (S): `orders.assigned_at`, set by `assign_cleaner`; returned by B2, `agency_jobs`. Screens: the "Ditugaskan" step in every timeline.
+  - Done 2026-11-14: `assigned_at` on `agency_jobs` and `my_orders` (`assignedAt` on the readers), null on orders assigned before (`20261114110000_assigned_time.sql`, `tests/integration/assigned-time.test.ts`).
 - [ ] **B4 Agency fee before completion** (S): `agency_jobs` returns the expected fee (price × the agency's percent) until `order_fees` holds the real one. Screens: Partner-Jobs, Partner-Job.
 - [ ] **B5 Periods and growth** (M): `owner_numbers(p_days)` and `agency_summary(p_days)` also return the previous period's total; owner gets payouts per agency for the period; `owner_agencies` adds completed, on-time share (check-in by start time), cancelled and paid out for the last 30 days; `owner_admins` adds last sign-in. Screens: Owner-Overview, Owner-Partners, Owner-Admins, Partner-Summary.
   - Accept: 7, 30 and 90 only; customers' data never in owner numbers. Verify: integration tests.

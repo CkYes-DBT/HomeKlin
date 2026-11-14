@@ -33,6 +33,8 @@ export type CustomerOrder = {
   recordingDeleted: boolean;
   /** The short order number, "HK-1042" (20261114100000_order_code_everywhere.sql). */
   orderCode: string;
+  /** When the agency gave the job to the cleaner (B3); null before that and on older orders. */
+  assignedAt: string | null;
 };
 
 type OrderRow = {
@@ -54,6 +56,7 @@ type OrderRow = {
   recording_expires_at: string | null;
   recording_deleted: boolean | null;
   order_code: string;
+  assigned_at: string | null;
 };
 
 const isoOrNull = (value: string | null) => (value ? new Date(value).toISOString() : null);
@@ -88,5 +91,6 @@ export async function listMyOrders(client: SupabaseClient): Promise<CustomerOrde
     recordingExpiresAt: isoOrNull(row.recording_expires_at),
     recordingDeleted: row.recording_deleted === true,
     orderCode: row.order_code,
+    assignedAt: isoOrNull(row.assigned_at),
   }));
 }

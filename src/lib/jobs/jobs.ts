@@ -86,8 +86,11 @@ export type BackOfficeJob = {
   recordingDeleted: boolean;
 };
 
-/** orderCode: the short order number, "HK-1042" (20261114100000_order_code_everywhere.sql). */
-export type AgencyJob = BackOfficeJob & { address: string; contactPhone: string | null; orderCode: string };
+/**
+ * orderCode: the short order number, "HK-1042" (20261114100000_order_code_everywhere.sql).
+ * assignedAt: when the agency gave the job to the cleaner (B3); null before that and on older jobs.
+ */
+export type AgencyJob = BackOfficeJob & { address: string; contactPhone: string | null; orderCode: string; assignedAt: string | null };
 /** orderCode: the short order number, "HK-1042" (20261112100000_admin_jobs_code.sql). */
 export type AdminJob = BackOfficeJob & { agencyName: string; orderCode: string };
 
@@ -125,12 +128,13 @@ function backOfficeJob(row: BackOfficeRow): BackOfficeJob {
 
 /** The paid jobs routed to the signed-in agency, latest first. */
 export async function listAgencyJobs(client: SupabaseClient): Promise<AgencyJob[]> {
-  type Row = BackOfficeRow & { address: string; contact_phone: string | null; order_code: string };
+  type Row = BackOfficeRow & { address: string; contact_phone: string | null; order_code: string; assigned_at: string | null };
   return (await read<Row>(client, "agency_jobs")).map((row) => ({
     ...backOfficeJob(row),
     address: row.address,
     contactPhone: row.contact_phone,
     orderCode: row.order_code,
+    assignedAt: isoOrNull(row.assigned_at),
   }));
 }
 
