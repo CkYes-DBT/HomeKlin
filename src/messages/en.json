@@ -451,7 +451,8 @@
       "phoneInvalid": "Check your mobile number, for example 0812 3456 7890.",
       "emailRequired": "Enter your email.",
       "emailInvalid": "Check your email, for example name@domain.com.",
-      "codeInvalid": "The code is wrong or has expired. Check your email or send a new code."
+      "codeInvalid": "The code is wrong or has expired. Check your email or send a new code.",
+      "noteTooLong": "The note is too long. Shorten it to 300 characters at most."
     },
     "formErrors": {
       "notCustomer": "Only customer accounts can book. Sign in with your customer account, then try again.",
@@ -1184,6 +1185,9 @@
     "emailInvalid": "Enter a valid email address.",
     "emailTaken": "This email is already used by another account.",
     "photoInvalid": "The photo must be a JPG, PNG or WebP file of at most 2 MB.",
+    "phoneInvalid": "Check the mobile number, for example 0812 3456 7890.",
+    "cleanerNotFound": "This cleaner is not one of your agency’s cleaners. Reload the page.",
+    "serviceInvalid": "Choose services from the list.",
     "unavailable": "The change could not be saved. Try again in a moment."
   },
   "AgencyLiveStream": {
@@ -1450,7 +1454,8 @@
       "durationRequired": "Enter the duration in minutes.",
       "durationInvalid": "Write the duration as a number of minutes, for example 120.",
       "durationRange": "The duration must be between 30 and 720 minutes.",
-      "sortOrderInvalid": "Write the order as a whole number from 0 to 9999."
+      "sortOrderInvalid": "Write the order as a whole number from 0 to 9999.",
+      "photoInvalid": "The photo must be a JPG, PNG or WebP file of at most 2 MB."
     },
     "formErrors": {
       "forbidden": "Only an admin can change services. Log in with an admin account, then try again.",

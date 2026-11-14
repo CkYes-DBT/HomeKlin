@@ -32,6 +32,9 @@ export type Service = {
   /** The full price in whole rupiah; there are no other fees. */
   priceIdr: number;
   durationMinutes: number;
+  /** The photo admin added (B10): a site image or a file in the service-photos bucket. Null: the app's
+   * own photo for the service (src/components/customer/service-photos.ts), else its type's icon. */
+  photoUrl: string | null;
 };
 
 export type ServiceArea = {
@@ -43,6 +46,9 @@ export type ServiceArea = {
 
 /** An arrival window in which a cleaner can start, as ISO 8601 times (UTC). */
 export type FreeSlot = { startsAt: string; endsAt: string };
+
+/** A window of the area, free or full (B11): a full one is shown greyed out, "15.00, penuh". */
+export type SlotWindow = FreeSlot & { isFull: boolean };
 
 export type CatalogFilters = {
   /** Only services offered in this area (an area no agency serves offers none). */
@@ -68,6 +74,7 @@ type ServiceRow = {
   description_en: string;
   price_idr: number;
   duration_minutes: number;
+  photo_url?: string | null;
 };
 
 type AreaRow = { id: string; name_id: string; name_en: string };
@@ -81,6 +88,7 @@ function toService(row: ServiceRow): Service {
     description: { id: row.description_id, en: row.description_en },
     priceIdr: row.price_idr,
     durationMinutes: row.duration_minutes,
+    photoUrl: row.photo_url ?? null,
   };
 }
 
@@ -120,17 +128,45 @@ const dayMs = 86_400_000;
 export async function listFreeSlots(
   client: SupabaseClient,
   areaId: string,
-  { days = 14, now = new Date() }: { days?: number; now?: Date } = {},
+  { days = 14, now = new Date(), serviceId }: { days?: number; now?: Date; serviceId?: string } = {},
 ): Promise<FreeSlot[]> {
   const span = Math.min(Math.max(Math.round(days), 1), 60);
   const { data, error } = await client.rpc("free_slots", {
     p_area: areaId,
     p_from: now.toISOString(),
     p_to: new Date(now.getTime() + span * dayMs).toISOString(),
+    // B12: only windows of agencies offering this service (20261114230000_agency_services.sql).
+    ...(serviceId ? { p_service: serviceId } : {}),
   });
   if (error) throw new CatalogError("free slots", error);
   return (data as SlotRow[]).map((row) => ({
     startsAt: new Date(row.starts_at).toISOString(),
     endsAt: new Date(row.ends_at).toISOString(),
+  }));
+}
+
+/**
+ * The area's arrival windows from now for `days` days (1 to 60), the full ones included with isFull
+ * true (B11, slot_windows in supabase/migrations/20261114150000_full_windows_cleaner_details.sql).
+ * Booking still checks the place itself; a window can fill up after this read.
+ */
+export async function listSlotWindows(
+  client: SupabaseClient,
+  areaId: string,
+  { days = 14, now = new Date(), serviceId }: { days?: number; now?: Date; serviceId?: string } = {},
+): Promise<SlotWindow[]> {
+  const span = Math.min(Math.max(Math.round(days), 1), 60);
+  const { data, error } = await client.rpc("slot_windows", {
+    p_area: areaId,
+    p_from: now.toISOString(),
+    p_to: new Date(now.getTime() + span * dayMs).toISOString(),
+    // B12: only windows of agencies offering this service (20261114230000_agency_services.sql).
+    ...(serviceId ? { p_service: serviceId } : {}),
+  });
+  if (error) throw new CatalogError("slot windows", error);
+  return (data as (SlotRow & { is_full: boolean })[]).map((row) => ({
+    startsAt: new Date(row.starts_at).toISOString(),
+    endsAt: new Date(row.ends_at).toISOString(),
+    isFull: row.is_full === true,
   }));
 }

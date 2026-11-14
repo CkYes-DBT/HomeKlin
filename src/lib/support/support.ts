@@ -46,6 +46,12 @@ export type Ticket = {
   status: TicketStatus;
   createdAt: string;
   lastMessageAt: string;
+  /**
+   * "Terbaca" (B13, 20261114180000_guest_support.sql): when the customer and when admin last read the
+   * chat; a message is read when the other side's time is at or after it. Null until then.
+   */
+  customerReadAt: string | null;
+  adminReadAt: string | null;
 };
 
 export type TicketMessage = { id: string; ticketId: string; fromAdmin: boolean; body: string; createdAt: string };
@@ -58,6 +64,8 @@ type TicketRow = {
   status: TicketStatus;
   created_at: string;
   last_message_at: string;
+  customer_read_at?: string | null;
+  admin_read_at?: string | null;
 };
 
 export function ticketFromRow(row: TicketRow): Ticket {
@@ -69,6 +77,8 @@ export function ticketFromRow(row: TicketRow): Ticket {
     status: row.status,
     createdAt: new Date(row.created_at).toISOString(),
     lastMessageAt: new Date(row.last_message_at).toISOString(),
+    customerReadAt: row.customer_read_at ? new Date(row.customer_read_at).toISOString() : null,
+    adminReadAt: row.admin_read_at ? new Date(row.admin_read_at).toISOString() : null,
   };
 }
 
@@ -76,7 +86,7 @@ export function messageFromRow(row: { id: string; ticket_id: string; from_admin:
   return { id: row.id, ticketId: row.ticket_id, fromAdmin: row.from_admin, body: row.body, createdAt: new Date(row.created_at).toISOString() };
 }
 
-const ticketColumns = "id, order_id, question, urgency, status, created_at, last_message_at";
+const ticketColumns = "id, order_id, question, urgency, status, created_at, last_message_at, customer_read_at, admin_read_at";
 
 /** The signed-in customer's tickets, latest activity first (row-level security keeps them their own). */
 export async function listMyTickets(client: SupabaseClient): Promise<Ticket[]> {
@@ -98,16 +108,25 @@ export async function getTicket(client: SupabaseClient, ticketId: string): Promi
   return { ticket: ticketFromRow(ticket.data as TicketRow), messages: (messages.data ?? []).map(messageFromRow) };
 }
 
-export type InboxTicket = Ticket & { customerName: string | null; messageCount: number };
+/** customerName is the guest's own name for a chat opened without an account (isGuest, B13). */
+export type InboxTicket = Ticket & { customerName: string | null; messageCount: number; isGuest: boolean; guestEmail: string | null };
 
 /** Admin's inbox: waiting tickets first, urgent before normal, oldest first. */
 export async function listInbox(client: SupabaseClient): Promise<InboxTicket[]> {
   const { data, error } = await client.rpc("admin_ticket_inbox");
   if (error) throw new SupportError(error);
-  type Row = Omit<TicketRow, "id"> & { ticket_id: string; customer_name: string | null; message_count: number };
+  type Row = Omit<TicketRow, "id"> & {
+    ticket_id: string;
+    customer_name: string | null;
+    message_count: number;
+    is_guest?: boolean;
+    guest_email?: string | null;
+  };
   return (data as Row[]).map((row) => ({
     ...ticketFromRow({ ...row, id: row.ticket_id }),
     customerName: row.customer_name,
     messageCount: Number(row.message_count),
+    isGuest: row.is_guest === true,
+    guestEmail: row.guest_email ?? null,
   }));
 }

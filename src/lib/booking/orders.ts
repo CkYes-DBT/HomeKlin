@@ -31,6 +31,14 @@ export type CustomerOrder = {
   recordingExpiresAt: string | null;
   /** The 7-day cleanup (T16) has deleted the file: it can no longer be played. */
   recordingDeleted: boolean;
+  /** The short order number, "HK-1042" (20261114100000_order_code_everywhere.sql). */
+  orderCode: string;
+  /** When the agency gave the job to the cleaner (B3); null before that and on older orders. */
+  assignedAt: string | null;
+  /** The customer's note for the cleaner (B7); empty when there is none. */
+  customerNote: string;
+  /** How the order was paid, as Midtrans names it ("bank_transfer", "qris", ...; B8); null until paid. */
+  paymentMethod: string | null;
 };
 
 type OrderRow = {
@@ -51,6 +59,10 @@ type OrderRow = {
   recording_id: string | null;
   recording_expires_at: string | null;
   recording_deleted: boolean | null;
+  order_code: string;
+  assigned_at: string | null;
+  customer_note: string | null;
+  payment_type: string | null;
 };
 
 const isoOrNull = (value: string | null) => (value ? new Date(value).toISOString() : null);
@@ -84,5 +96,9 @@ export async function listMyOrders(client: SupabaseClient): Promise<CustomerOrde
     recordingId: row.recording_id,
     recordingExpiresAt: isoOrNull(row.recording_expires_at),
     recordingDeleted: row.recording_deleted === true,
+    orderCode: row.order_code,
+    assignedAt: isoOrNull(row.assigned_at),
+    customerNote: row.customer_note ?? "",
+    paymentMethod: row.payment_type ?? null,
   }));
 }

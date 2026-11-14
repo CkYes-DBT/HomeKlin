@@ -11,7 +11,8 @@ import type {
 
 // Server-side readers for agency fees and payouts (T40). Pass the caller's session client
 // (createSupabaseServerClient) so RLS limits SECURITY INVOKER functions to their own agency.
-// SECURITY DEFINER functions (owner_payouts_overview) check the caller's role in the DB itself.
+// SECURITY DEFINER functions (owner_payouts_overview, and agency_summary since B5) check the caller's
+// role in the DB itself.
 
 export class PayoutError extends Error {
   constructor(cause: { message: string }) {
@@ -23,13 +24,14 @@ export class PayoutError extends Error {
 export async function getAgencySummary(client: SupabaseClient, days: ValidDays): Promise<AgencySummary> {
   const { data, error } = await client.rpc("agency_summary", { p_days: days });
   if (error) throw new PayoutError(error);
-  type Row = { total_fee_idr: unknown; jobs_count: unknown; avg_fee_idr: unknown; pending_idr: unknown };
+  type Row = { total_fee_idr: unknown; jobs_count: unknown; avg_fee_idr: unknown; pending_idr: unknown; previous_total_fee_idr: unknown };
   const row = (Array.isArray(data) ? data[0] : data) as Row;
   return {
     totalFeeIdr: Number(row.total_fee_idr ?? 0),
     jobsCount: Number(row.jobs_count ?? 0),
     avgFeeIdr: Number(row.avg_fee_idr ?? 0),
     pendingIdr: Number(row.pending_idr ?? 0),
+    previousTotalFeeIdr: Number(row.previous_total_fee_idr ?? 0),
   };
 }
 

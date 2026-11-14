@@ -257,6 +257,7 @@ describe("serviceToFormValues", () => {
         durationMinutes: 120,
         isActive: true,
         sortOrder: 0,
+        photoUrl: null,
       }),
     ).toEqual({
       id: "regular",

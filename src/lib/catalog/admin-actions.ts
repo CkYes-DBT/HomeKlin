@@ -1,5 +1,7 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { updateTag } from "next/cache";
 import { redirect } from "@/i18n/navigation";
 import { authorize } from "@/lib/auth/dal";
@@ -7,6 +9,7 @@ import { catalogCacheTag } from "@/lib/catalog/catalog";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   parseServiceForm,
+  parseServicePhoto,
   serviceFormValues,
   type ServiceErrorKey,
   type ServiceField,
@@ -25,6 +28,11 @@ import {
 //    it off keeps it for past orders;
 // 4. after a successful write only, expires the catalog's cache tag with updateTag, so the customer
 //    pages (which cache their catalog reads with cacheTag(catalogCacheTag)) show the change at once.
+// B10: the form may carry a photo (field "photo", JPEG, PNG or WebP up to 2 MB) or ask to remove the
+// stored one ("removePhoto"). It is uploaded to the public service-photos bucket under a random name with
+// the admin's own session, so the bucket's storage policies check the role once more; the address the
+// upload returns becomes services.photo_url. A file whose service could not be saved is removed again,
+// and a replaced or removed photo's old file goes after the save. A form without either keeps the photo.
 // Database messages never reach the browser; the answer is a message key the page translates.
 // The language comes from a hidden field (root params do not reach Server Actions), so the redirect
 // keeps admin's language.
@@ -36,7 +44,7 @@ import {
 export type ServiceFailureKey = "forbidden" | "notFound" | "unavailable";
 
 export type ServiceFormState = {
-  fieldErrors?: Partial<Record<ServiceField, ServiceErrorKey>>;
+  fieldErrors?: Partial<Record<ServiceField | "photo", ServiceErrorKey>>;
   formError?: ServiceFailureKey;
   /** What admin typed, to refill the form after an error. */
   values?: ServiceFormValues;
@@ -68,6 +76,39 @@ function changedColumns(service: ServiceInput) {
   };
 }
 
+const photoBucket = "service-photos";
+
+/** The file name of a photo in our bucket, from its public address; null for a site image or none. */
+function bucketFileOf(photoUrl: string | null | undefined): string | null {
+  const match = photoUrl?.match(/\/storage\/v1\/object\/public\/service-photos\/([0-9a-f-]{36}\.(?:jpg|png|webp))$/);
+  return match ? match[1] : null;
+}
+
+/** Removes files from the bucket after the fact; a failure leaves an unused file, never a broken page. */
+async function removeFiles(supabase: SupabaseClient, files: (string | null)[]) {
+  const names = files.filter((name): name is string => name !== null);
+  if (names.length === 0) return;
+  const { error } = await supabase.storage.from(photoBucket).remove(names);
+  if (error) console.error("[admin services] could not remove an unused service photo:", error.message);
+}
+
+type PhotoChoice = Extract<ReturnType<typeof parseServicePhoto>, { ok: true }>;
+type PhotoStep = { ok: true; column: { photo_url?: string | null }; uploaded: string | null } | { ok: false; state: ServiceFormState };
+
+/** Uploads the form's new photo, or notes its removal: the photo_url column to write, if any. */
+async function photoStep(supabase: SupabaseClient, choice: PhotoChoice, values: ServiceFormValues): Promise<PhotoStep> {
+  if (!choice.upload) return { ok: true, column: choice.remove ? { photo_url: null } : {}, uploaded: null };
+
+  const name = `${randomUUID()}.${choice.upload.extension}`;
+  const storage = supabase.storage.from(photoBucket);
+  const { error } = await storage.upload(name, choice.upload.file, { contentType: choice.upload.file.type });
+  if (error) {
+    console.error("[admin services] could not upload a service photo:", error.message);
+    return { ok: false, state: { formError: "unavailable", values } };
+  }
+  return { ok: true, column: { photo_url: storage.getPublicUrl(name).data.publicUrl }, uploaded: name };
+}
+
 export async function createService(_previous: ServiceFormState, formData: FormData): Promise<ServiceFormState> {
   if (!(await authorize(["admin"]))) return { formError: "forbidden" };
 
@@ -75,10 +116,16 @@ export async function createService(_previous: ServiceFormState, formData: FormD
   const parsed = parseServiceForm(formData);
   if (!parsed.ok) return { fieldErrors: parsed.fieldErrors, values };
 
+  const photoChoice = parseServicePhoto(formData);
+  if (!photoChoice.ok) return { fieldErrors: { photo: "photoInvalid" }, values };
+
   const service = parsed.data;
   const supabase = await createSupabaseServerClient({ writeCookies: true });
-  const { error } = await supabase.from("services").insert({ id: service.id, ...changedColumns(service) });
+  const photo = await photoStep(supabase, photoChoice, values);
+  if (!photo.ok) return photo.state;
+  const { error } = await supabase.from("services").insert({ id: service.id, ...changedColumns(service), ...photo.column });
   if (error) {
+    await removeFiles(supabase, [photo.uploaded]);
     if (error.code === uniqueViolation) return { fieldErrors: { id: "idTaken" }, values };
     return { formError: failureOf(error), values };
   }
@@ -94,17 +141,28 @@ export async function updateService(_previous: ServiceFormState, formData: FormD
   const parsed = parseServiceForm(formData);
   if (!parsed.ok) return { fieldErrors: parsed.fieldErrors, values };
 
+  const photoChoice = parseServicePhoto(formData);
+  if (!photoChoice.ok) return { fieldErrors: { photo: "photoInvalid" }, values };
+
   const service = parsed.data;
   const supabase = await createSupabaseServerClient({ writeCookies: true });
+  const photo = await photoStep(supabase, photoChoice, values);
+  if (!photo.ok) return photo.state;
+  // The stored photo, read only when this save replaces or removes it, so its file can go afterwards.
+  const replacing = "photo_url" in photo.column;
+  const before = replacing ? await supabase.from("services").select("photo_url").eq("id", service.id).maybeSingle() : null;
   // select() returns the changed rows: none means there is no such service (row-level security also
   // hides every row from anyone but admin, so nothing would change for them either).
   const { data, error } = await supabase
     .from("services")
-    .update(changedColumns(service))
+    .update({ ...changedColumns(service), ...photo.column })
     .eq("id", service.id)
     .select("id");
-  if (error) return { formError: failureOf(error), values };
-  if (!data || data.length === 0) return { formError: "notFound", values };
+  if (error || !data || data.length === 0) {
+    await removeFiles(supabase, [photo.uploaded]);
+    return { formError: error ? failureOf(error) : "notFound", values };
+  }
+  if (replacing) await removeFiles(supabase, [bucketFileOf(before?.data?.photo_url)]);
 
   updateTag(catalogCacheTag);
   return redirect({ href: { pathname: "/admin/services", query: { saved: service.id } }, locale: parsed.locale });

@@ -71,8 +71,15 @@ describe("listServices", () => {
         description: { id: "Lantai dan debu.", en: "Floors and dust." },
         priceIdr: 85000,
         durationMinutes: 120,
+        photoUrl: null,
       },
     ]);
+  });
+
+  it("returns the service's own photo when admin added one (B10)", async () => {
+    const photoUrl = "https://test.supabase.co/storage/v1/object/public/service-photos/0b9c6f0e-1d2a-4b3c-8d4e-5f6a7b8c9d0e.jpg";
+    const { client } = fakeClient({ search_services: { data: [{ ...serviceRow, photo_url: photoUrl }], error: null } });
+    expect((await listServices(client))[0].photoUrl).toBe(photoUrl);
   });
 
   it("sends no filter as null, so the database applies none", async () => {

@@ -42,7 +42,7 @@ export type BookingFormState = {
   /** The guest is signed in now (the code was right) but the order failed: retry with bookService. */
   signedIn?: boolean;
   /** What the customer typed, to refill the form after an error. */
-  values?: { address?: string; phone?: string; email?: string };
+  values?: { address?: string; phone?: string; email?: string; note?: string };
 } | null;
 
 /** book_slot()'s refusals (raised by name in the migrations) and what the customer is told. */
@@ -54,6 +54,7 @@ const refusals: Record<string, BookingFormState> = {
   consent_required: { fieldErrors: { consent: "consentRequired" } },
   address_invalid: { fieldErrors: { address: "addressTooShort" } },
   phone_invalid: { fieldErrors: { phone: "phoneInvalid" } },
+  note_invalid: { fieldErrors: { note: "noteTooLong" } },
 };
 
 function typed(formData: FormData) {
@@ -61,7 +62,7 @@ function typed(formData: FormData) {
     const value = formData.get(name);
     return typeof value === "string" ? value : "";
   };
-  return { address: text("address"), phone: text("phone"), email: text("email") };
+  return { address: text("address"), phone: text("phone"), email: text("email"), note: text("note") };
 }
 
 const siteUrl = () => (process.env.SITE_URL ?? "https://home-klin.vercel.app").replace(/\/+$/, "");
@@ -106,6 +107,7 @@ async function book(
     p_address: order.address,
     p_phone: order.phone,
     p_consent: true,
+    p_note: order.note,
   });
   if (error) {
     const refusal = Object.hasOwn(refusals, error.message) ? refusals[error.message] : { formError: "unavailable" as const };

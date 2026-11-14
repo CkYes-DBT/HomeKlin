@@ -19,7 +19,18 @@ const insertMock = vi.fn(async () => insertResult);
 const selectMock = vi.fn(async () => updateResult);
 const eqMock = vi.fn(() => ({ select: selectMock }));
 const updateMock = vi.fn(() => ({ eq: eqMock }));
-const fromMock = vi.fn(() => ({ insert: insertMock, update: updateMock }));
+let currentPhoto: { data: { photo_url: string | null } | null; error: DbError | null };
+const maybeSingleMock = vi.fn(async () => currentPhoto);
+const selectCurrentMock = vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: maybeSingleMock })) }));
+const fromMock = vi.fn(() => ({ insert: insertMock, update: updateMock, select: selectCurrentMock }));
+
+// The service-photos bucket (B10), written with the admin's own session.
+const publicBase = "https://test.supabase.co/storage/v1/object/public/service-photos/";
+let uploadResult: { error: { message: string } | null };
+const uploadMock = vi.fn<(path: string, file: File, options: { contentType: string }) => Promise<typeof uploadResult>>(async () => uploadResult);
+const removeMock = vi.fn<(paths: string[]) => Promise<{ data: never[]; error: null }>>(async () => ({ data: [], error: null }));
+const getPublicUrlMock = vi.fn((path: string) => ({ data: { publicUrl: `${publicBase}${path}` } }));
+const storageFromMock = vi.fn(() => ({ upload: uploadMock, remove: removeMock, getPublicUrl: getPublicUrlMock }));
 
 vi.mock("@/lib/auth/dal", () => ({ authorize: authorizeMock }));
 vi.mock("@/lib/supabase/server", () => ({ createSupabaseServerClient: createClientMock }));
@@ -49,6 +60,15 @@ function form(values: Record<string, string>): FormData {
   return data;
 }
 
+function withPhoto(values: Record<string, string>, photo: File): FormData {
+  const data = form(values);
+  data.set("photo", photo);
+  return data;
+}
+
+const image = (type = "image/jpeg", bytes = 1000) => new File([new Uint8Array(bytes)], "foto.jpg", { type });
+const uuidName = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|png|webp)$/;
+
 function expectNoWrite() {
   expect(insertMock).not.toHaveBeenCalled();
   expect(updateMock).not.toHaveBeenCalled();
@@ -59,8 +79,10 @@ function expectNoWrite() {
 beforeEach(() => {
   vi.clearAllMocks();
   authorizeMock.mockResolvedValue(admin);
-  createClientMock.mockResolvedValue({ from: fromMock });
+  createClientMock.mockResolvedValue({ from: fromMock, storage: { from: storageFromMock } });
   insertResult = { error: null };
+  uploadResult = { error: null };
+  currentPhoto = { data: { photo_url: null }, error: null };
   updateResult = { data: [{ id: "uji-kasur" }], error: null };
 });
 
@@ -200,5 +222,90 @@ describe("updateService", () => {
 
     expect(await updateService(null, form(fields))).toMatchObject({ formError: "unavailable" });
     expect(updateTagMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("the service photo (B10)", () => {
+  it("uploads a new service's photo under a random name and stores its public address", async () => {
+    await createService(null, withPhoto(fields, image("image/webp")));
+
+    expect(storageFromMock).toHaveBeenCalledWith("service-photos");
+    const [path, , options] = uploadMock.mock.calls[0];
+    expect(path).toMatch(uuidName);
+    expect(path.endsWith(".webp")).toBe(true);
+    expect(options).toEqual({ contentType: "image/webp" });
+    expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({ id: "uji-kasur", photo_url: `${publicBase}${path}` }));
+    expect(updateTagMock).toHaveBeenCalledWith("catalog");
+  });
+
+  it("refuses anything but a JPEG, PNG or WebP image of at most 2 MB, before any upload or write", async () => {
+    for (const photo of [image("image/svg+xml"), image("text/html"), image("image/gif"), image("image/png", 2 * 1024 * 1024 + 1)]) {
+      vi.clearAllMocks();
+      const state = await createService(null, withPhoto(fields, photo));
+      expect(state, photo.type).toMatchObject({ fieldErrors: { photo: "photoInvalid" } });
+      expect(uploadMock).not.toHaveBeenCalled();
+      expectNoWrite();
+    }
+  });
+
+  it("checks the role before looking at the photo", async () => {
+    authorizeMock.mockResolvedValue(null);
+    expect(await createService(null, withPhoto(fields, image()))).toMatchObject({ formError: "forbidden" });
+    expect(uploadMock).not.toHaveBeenCalled();
+  });
+
+  it("does not upload when the rest of the form is invalid", async () => {
+    await createService(null, withPhoto({ ...fields, priceIdr: "" }, image()));
+    expect(uploadMock).not.toHaveBeenCalled();
+    expectNoWrite();
+  });
+
+  it("writes nothing when the upload fails", async () => {
+    uploadResult = { error: { message: "new row violates row-level security policy" } };
+    expect(await createService(null, withPhoto(fields, image()))).toMatchObject({ formError: "unavailable" });
+    expectNoWrite();
+  });
+
+  it("removes the uploaded file again when the service could not be saved", async () => {
+    insertResult = { error: { code: "23505", message: "duplicate key" } };
+    await createService(null, withPhoto(fields, image()));
+    const [path] = uploadMock.mock.calls[0];
+    expect(removeMock).toHaveBeenCalledWith([path]);
+  });
+
+  it("keeps the photo when an update sends none", async () => {
+    await updateService(null, form(fields));
+    expect(updateMock).toHaveBeenCalledWith(expect.not.objectContaining({ photo_url: expect.anything() }));
+    expect(uploadMock).not.toHaveBeenCalled();
+    expect(removeMock).not.toHaveBeenCalled();
+  });
+
+  it("replaces the photo and removes the old file from the bucket after the update", async () => {
+    currentPhoto = { data: { photo_url: `${publicBase}11111111-2222-4333-8444-555555555555.jpg` }, error: null };
+
+    await updateService(null, withPhoto(fields, image("image/png")));
+
+    const [path] = uploadMock.mock.calls[0];
+    expect(path.endsWith(".png")).toBe(true);
+    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({ photo_url: `${publicBase}${path}` }));
+    expect(removeMock).toHaveBeenCalledWith(["11111111-2222-4333-8444-555555555555.jpg"]);
+    expect(updateMock.mock.invocationCallOrder[0]).toBeLessThan(removeMock.mock.invocationCallOrder[0]);
+  });
+
+  it("removes the photo when admin asks, and never touches a site image", async () => {
+    currentPhoto = { data: { photo_url: "/images/service-regular.jpg" }, error: null };
+
+    await updateService(null, form({ ...fields, removePhoto: "on" }));
+
+    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({ photo_url: null }));
+    expect(uploadMock).not.toHaveBeenCalled();
+    expect(removeMock).not.toHaveBeenCalled();
+  });
+
+  it("removes the new file again when the update changed nothing", async () => {
+    updateResult = { data: [], error: null };
+    expect(await updateService(null, withPhoto(fields, image()))).toMatchObject({ formError: "notFound" });
+    const [path] = uploadMock.mock.calls[0];
+    expect(removeMock).toHaveBeenCalledWith([path]);
   });
 });

@@ -54,7 +54,8 @@ export type ServiceErrorKey =
   | "durationRequired"
   | "durationInvalid"
   | "durationRange"
-  | "sortOrderInvalid";
+  | "sortOrderInvalid"
+  | "photoInvalid";
 
 /** A service as admin enters it, checked and typed. */
 export type ServiceInput = {
@@ -180,6 +181,35 @@ export function parseServiceForm(formData: FormData): ServiceParseResult {
 export function parseServiceId(value: unknown): string | null {
   const result = id.safeParse(value);
   return result.success ? result.data : null;
+}
+
+/** The service photo's limits (B10), the same as the service-photos bucket's own
+ * (supabase/migrations/20261114300000_service_photos.sql). The file extension comes from the type, never
+ * from the file name a visitor sent. */
+export const servicePhotoTypes = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" } as const;
+export const servicePhotoMaxBytes = 2 * 1024 * 1024;
+
+export type ServicePhotoChoice =
+  | { ok: true; upload: { file: File; extension: (typeof servicePhotoTypes)[keyof typeof servicePhotoTypes] } | null; remove: boolean }
+  | { ok: false };
+
+/**
+ * The form's photo: a new file to upload (field "photo"), the stored one removed (checkbox
+ * "removePhoto"), or neither (keep it). An empty file field means no new photo. A new photo wins over
+ * the removal box.
+ */
+const servicePhotoSchema = z
+  .instanceof(File)
+  .refine((file) => Object.hasOwn(servicePhotoTypes, file.type) && file.size <= servicePhotoMaxBytes);
+
+export function parseServicePhoto(formData: FormData): ServicePhotoChoice {
+  const photo = formData.get("photo");
+  const remove = formData.get("removePhoto") === "on";
+  if (!(photo instanceof File) || photo.size === 0) return { ok: true, upload: null, remove };
+  const parsed = servicePhotoSchema.safeParse(photo);
+  if (!parsed.success) return { ok: false };
+  const extension = servicePhotoTypes[parsed.data.type as keyof typeof servicePhotoTypes];
+  return { ok: true, upload: { file: parsed.data, extension }, remove: false };
 }
 
 /** Longest value sent back to refill the form; the real limits are far below it. */

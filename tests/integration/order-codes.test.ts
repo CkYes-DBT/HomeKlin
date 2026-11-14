@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { listAdminJobs } from "@/lib/jobs/jobs";
+import { listMyOrders } from "@/lib/booking/orders";
+import { listAdminJobs, listAgencyJobs, listMyJobs } from "@/lib/jobs/jobs";
 import { listLiveStreams } from "@/lib/stream/streams";
 import { adminClient } from "./test-project";
 import { createWorld, hours, type World } from "./world";
@@ -80,5 +81,22 @@ describe("order codes", { timeout: 60_000 }, () => {
     const orderId = await world.job({ startsAt: new Date(Date.now() + hours(2)) });
     const jobs = await listAdminJobs(world.users.admin.client);
     expect(jobs.find((job) => job.id === orderId)?.orderCode).toBe(await codeOf(orderId));
+  });
+
+  // B1: the redesign shows the order number on the customer's, the cleaner's and the agency's pages.
+  it("is listed with the customer's own orders, the cleaner's jobs and the agency's jobs", async () => {
+    const orderId = await world.job({ startsAt: new Date(Date.now() + hours(3)) });
+    const code = await codeOf(orderId);
+
+    const orders = await listMyOrders(world.users.customer.client);
+    expect(orders.find((order) => order.id === orderId)?.orderCode).toBe(code);
+    const cleanerJobs = await listMyJobs(world.users.cleanerA.client);
+    expect(cleanerJobs.find((job) => job.id === orderId)?.orderCode).toBe(code);
+    const agencyJobs = await listAgencyJobs(world.users.agencyA.client);
+    expect(agencyJobs.find((job) => job.id === orderId)?.orderCode).toBe(code);
+
+    // Nobody sees an order they could not see before: the other customer and agency B do not get it.
+    expect((await listMyOrders(world.users.otherCustomer.client)).some((order) => order.id === orderId)).toBe(false);
+    expect((await listAgencyJobs(world.users.agencyB.client)).some((job) => job.id === orderId)).toBe(false);
   });
 });

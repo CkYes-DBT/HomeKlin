@@ -37,6 +37,12 @@ describe("service photos", () => {
     expect(hasServicePhoto(added)).toBe(false);
   });
 
+  it("counts a photo admin added to the service itself (B10)", () => {
+    const added = { id: "test-new-service", photoUrl: "/images/service-regular.jpg" } as Service;
+    expect(hasServicePhoto(added)).toBe(true);
+    expect(hasServicePhoto({ id: "test-new-service", photoUrl: null } as Service)).toBe(false);
+  });
+
   it("describes what the photos show without naming who provides the cleaners", () => {
     expect(JSON.stringify([id.ServicePhotos, en.ServicePhotos])).not.toMatch(/agensi|agency|mitra|partner/i);
   });

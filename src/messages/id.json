@@ -451,7 +451,8 @@
       "phoneInvalid": "Periksa nomor HP Anda, misalnya 0812 3456 7890.",
       "emailRequired": "Masukkan email Anda.",
       "emailInvalid": "Periksa penulisan email Anda, misalnya nama@domain.com.",
-      "codeInvalid": "Kode salah atau sudah tidak berlaku. Periksa email Anda atau kirim kode baru."
+      "codeInvalid": "Kode salah atau sudah tidak berlaku. Periksa email Anda atau kirim kode baru.",
+      "noteTooLong": "Catatan terlalu panjang. Persingkat menjadi paling banyak 300 karakter."
     },
     "formErrors": {
       "notCustomer": "Hanya akun pelanggan yang dapat memesan. Masuk dengan akun pelanggan Anda, lalu coba lagi.",
@@ -1184,6 +1185,9 @@
     "emailInvalid": "Isi alamat email yang benar.",
     "emailTaken": "Email ini sudah dipakai akun lain.",
     "photoInvalid": "Foto harus JPG, PNG atau WebP dan paling besar 2 MB.",
+    "phoneInvalid": "Periksa nomor HP, misalnya 0812 3456 7890.",
+    "cleanerNotFound": "Petugas ini bukan petugas agensi Anda. Muat ulang halaman.",
+    "serviceInvalid": "Pilih layanan dari daftar.",
     "unavailable": "Perubahan belum bisa disimpan. Coba lagi sebentar lagi."
   },
   "AgencyLiveStream": {
@@ -1450,7 +1454,8 @@
       "durationRequired": "Masukkan durasi dalam menit.",
       "durationInvalid": "Tulis durasi sebagai angka menit, misalnya 120.",
       "durationRange": "Durasi antara 30 dan 720 menit.",
-      "sortOrderInvalid": "Tulis urutan sebagai angka bulat dari 0 sampai 9999."
+      "sortOrderInvalid": "Tulis urutan sebagai angka bulat dari 0 sampai 9999.",
+      "photoInvalid": "Foto harus JPG, PNG atau WebP dan paling besar 2 MB."
     },
     "formErrors": {
       "forbidden": "Hanya admin yang dapat mengubah layanan. Masuk dengan akun admin, lalu coba lagi.",

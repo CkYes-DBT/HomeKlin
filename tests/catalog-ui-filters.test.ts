@@ -98,6 +98,7 @@ describe("pickFeatured", () => {
     description: { id: "", en: "" },
     priceIdr: 100000,
     durationMinutes: 120,
+    photoUrl: null,
   });
   const list = ["a", "b", "c", "d", "e", "f"].map(service);
   const withPhoto = new Set(["b", "d", "e", "f"]);

@@ -71,7 +71,13 @@ describe("POST /api/payments/midtrans", () => {
       p_order: orderId,
       p_status: expected,
       p_amount: 85000,
+      p_payment_type: null,
     });
+  });
+
+  it("passes the payment method Midtrans names on to the order (B8)", async () => {
+    await answer(await post(signed({ transaction_status: "settlement", payment_type: "gopay" })));
+    expect(rpc).toHaveBeenCalledWith("apply_payment_result", { p_order: orderId, p_status: "paid", p_amount: 85000, p_payment_type: "gopay" });
   });
 
   it("answers a repeated notification the same way, with whatever the order already is", async () => {

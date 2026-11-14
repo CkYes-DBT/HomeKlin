@@ -45,6 +45,7 @@ export async function POST(request: Request) {
       p_order: notification.orderId,
       p_status: result,
       p_amount: amount,
+      p_payment_type: notification.paymentType ?? null,
     });
     if (error) {
       if (error.message === "order_not_found" || error.message === "amount_mismatch") {
