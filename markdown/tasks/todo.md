@@ -359,7 +359,9 @@ Conventions for every task: tests written first; `npm run typecheck`, `npm run l
 ### Checkpoint D: redesign review
 - [ ] Everything passes; the user reviews all groups and `docs/redesign-gaps.md`.
 
-## Phase 15: Backend for the redesign (proposed 2026-11-14, waiting for the user's approval)
+## Phase 15: Backend for the redesign (approved 2026-11-14)
+
+> User decision 2026-11-14: build tier 1 and tier 2 first, then from tier 3: B12 (services per agency), B13 for customers only (support chat without an account; no cleaner chat), and from B14 only the order page opened from the email link without signing in (B14a). The rest of B14 stays a documented gap.
 
 > From comparing every mock with the backend (`markdown/tasks/plan.md`, Phase 15). Each task: a migration on the test project with integration tests first; live only with the user's permission; the matching screen updated after. Tier 3 is a scope decision per item.
 
@@ -384,7 +386,8 @@ Conventions for every task: tests written first; `npm run typecheck`, `npm run l
 **Tier 3: new features (the user decides each)**
 - [ ] **B12 Services per agency** (L): `agency_services`; Partner-Services saves the choice; `free_slots` and `book_slot` route only to agencies offering the service.
 - [ ] **B13 Chat for cleaners and guests** (L): tickets opened by cleaners (Cleaner-Chat), and by visitors without an account (Customer-Support says "tidak perlu masuk akun"; needs abuse limits, see M3); read receipts ("Terbaca") need a read time per side.
-- [ ] **B14 Other mock features** (each M-L): availability per cleaner and cleaner status (Partner-Cleaners); order page from the email link without signing in (Customer-Email-Order); partner "waiting for approval" with an invitation email, PIC name and WhatsApp (Owner-PartnerNew); temporary admin password changed at first sign-in (Owner-AdminNew); recurring bookings (Customer-Booking "Berulang").
+- [ ] **B14a Order page from the email link** (M): a private per-order link in the emails opens that order's page without signing in (Customer-Email-Order, Customer-Email-Replay); the link shows only that order, can be revoked, and never opens other orders or the account.
+- [ ] **B14 Other mock features, not approved (gap)** (each M-L): availability per cleaner and cleaner status (Partner-Cleaners); order page from the email link without signing in (Customer-Email-Order); partner "waiting for approval" with an invitation email, PIC name and WhatsApp (Owner-PartnerNew); temporary admin password changed at first sign-in (Owner-AdminNew); recurring bookings (Customer-Booking "Berulang").
 
 ### Checkpoint E: backend for the redesign
 - [ ] Approved tiers built; all integration tests pass; migrated on test; live migration with the user's permission.
