@@ -358,3 +358,33 @@ Conventions for every task: tests written first; `npm run typecheck`, `npm run l
 
 ### Checkpoint D: redesign review
 - [ ] Everything passes; the user reviews all groups and `docs/redesign-gaps.md`.
+
+## Phase 15: Backend for the redesign (proposed 2026-11-14, waiting for the user's approval)
+
+> From comparing every mock with the backend (`markdown/tasks/plan.md`, Phase 15). Each task: a migration on the test project with integration tests first; live only with the user's permission; the matching screen updated after. Tier 3 is a scope decision per item.
+
+**Tier 1: read functions and small columns (no new behaviour)**
+- [ ] **B1 Order number everywhere** (S): `my_orders`, `my_jobs`, `agency_jobs` return `orders.code`. Screens: customer home/orders/replay, cleaner jobs, partner jobs/past/videos.
+  - Accept: each returns the same code as `admin_jobs`; nobody gains a column they could not read before. Verify: integration tests.
+- [ ] **B2 Admin order detail** (M): `admin_order_detail(order)` (admin only): service, window, area, address, customer name and phone, cleaner and agency, price, agency fee and HomeKlin income (from `order_fees`, else price × `payout_percent`), status times (created, paid, checked in, completed), stream status and its last change. Screens: Admin-Order, Admin-Order-Issue.
+  - Accept: non-admins get `not_admin`; the split adds up to the price. Verify: integration tests.
+- [ ] **B3 Assigned time** (S): `orders.assigned_at`, set by `assign_cleaner`; returned by B2, `agency_jobs`. Screens: the "Ditugaskan" step in every timeline.
+- [ ] **B4 Agency fee before completion** (S): `agency_jobs` returns the expected fee (price × the agency's percent) until `order_fees` holds the real one. Screens: Partner-Jobs, Partner-Job.
+- [ ] **B5 Periods and growth** (M): `owner_numbers(p_days)` and `agency_summary(p_days)` also return the previous period's total; owner gets payouts per agency for the period; `owner_agencies` adds completed, on-time share (check-in by start time), cancelled and paid out for the last 30 days; `owner_admins` adds last sign-in. Screens: Owner-Overview, Owner-Partners, Owner-Admins, Partner-Summary.
+  - Accept: 7, 30 and 90 only; customers' data never in owner numbers. Verify: integration tests.
+- [ ] **B6 Cleaner stats** (S): `my_job_stats()`: hours this week, jobs today, completed this month. Screen: Cleaner-Home.
+
+**Tier 2: small new behaviour**
+- [ ] **B7 Customer note** (M): `orders.customer_note` (0-300), a new `book_slot` argument (race tests unchanged), returned to the customer, the assigned cleaner, the agency and admin. Screens: Customer-Booking, Customer-Orders, Cleaner-Job, Partner-Job, Admin-Order.
+- [ ] **B8 Payment method** (S): store Midtrans `payment_type` from the checked notification; show it on the confirmation and the order. Optional: pass the chosen method as `enabled_payments` to Snap (no schema). Screens: Customer-Payment, Customer-Confirmed, Customer-Orders.
+- [ ] **B9 Emails** (M): "recording ready" email after check-out (Customer-Email-Replay); the cleaner's name and photo emailed when the agency assigns one (Customer-Email-Order shows them at payment, but no cleaner is known then); "Kirim ulang email" for the order's own customer, at most once per few minutes. Tests never send real email.
+- [ ] **B10 Service photo and types** (M): `services.photo_url` with an admin-only upload bucket (Admin-ServiceNew "Tambah foto"); decide whether the four types in the mock replace the three categories (enum change) or are only labels.
+- [ ] **B11 Full windows and cleaner details** (S): `free_slots` can also return full windows ("15.00, penuh", Main); `cleaners.phone` and area for Cleaner-Account, Cleaner-Home, Partner-Cleaners.
+
+**Tier 3: new features (the user decides each)**
+- [ ] **B12 Services per agency** (L): `agency_services`; Partner-Services saves the choice; `free_slots` and `book_slot` route only to agencies offering the service.
+- [ ] **B13 Chat for cleaners and guests** (L): tickets opened by cleaners (Cleaner-Chat), and by visitors without an account (Customer-Support says "tidak perlu masuk akun"; needs abuse limits, see M3); read receipts ("Terbaca") need a read time per side.
+- [ ] **B14 Other mock features** (each M-L): availability per cleaner and cleaner status (Partner-Cleaners); order page from the email link without signing in (Customer-Email-Order); partner "waiting for approval" with an invitation email, PIC name and WhatsApp (Owner-PartnerNew); temporary admin password changed at first sign-in (Owner-AdminNew); recurring bookings (Customer-Booking "Berulang").
+
+### Checkpoint E: backend for the redesign
+- [ ] Approved tiers built; all integration tests pass; migrated on test; live migration with the user's permission.
