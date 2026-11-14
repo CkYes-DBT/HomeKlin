@@ -343,3 +343,18 @@ Conventions for every task: tests written first; `npm run typecheck`, `npm run l
 
 ### Checkpoint C: admin live screen
 - [ ] Everything passes; matches the mock at 1440 and 360 px; user review.
+
+## Phase 14: Whole-app redesign from the Claude Design canvas (planned 2026-11-14)
+
+> User request 2026-11-14: build every screen of the canvas "HomeKlin App Screens" (52 mocks; local copies in the git-ignored `mocks/` folder, `mocks/canvas.json` lists each screen's title and role). Order (user): admin first, then partner agency, owner, cleaner, customer and landing. One pass, the user reviews at the end (Checkpoint D), not per group. Rules: UI only on the existing backend; where a mock shows data or a feature the app does not have, build what exists and log the gap in `docs/redesign-gaps.md` for the user (no new schema or dependency without the user). Earlier decisions stand over the mock (in-place add and edit of services, "Buka" opens full screen, admin menu keeps "Rekaman"). Built by `homeklin-frontend`, committed by the lead after each group.
+
+- [ ] **D1 Admin group**: M2 above, then order detail (`Admin-Order`, `Admin-Order-Issue`), support chats (`Admin-Support`), FAQ (`Admin-Faq`), service panel fields against `Admin-ServiceNew`
+- [ ] **D2 Partner agency group**: forest shell for agency, then `Partner-Summary`, `Partner-Services`, `Partner-Jobs`, `Partner-Job`, `Partner-Job-Done`, `Partner-Cleaners`, `Partner-Videos`, `Partner-Past`
+- [ ] **D3 Owner group**: forest shell for owner, then `Owner-Overview`, `Owner-Partners`, `Owner-PartnerNew`, `Owner-Admins`, `Owner-AdminNew`
+- [ ] **D4 Cleaner group** (phone): `Cleaner-Home`, `Cleaner-Jobs`, `Cleaner-Job`, `Cleaner-Live`, `Cleaner-Account`, `Cleaner-Chat`
+- [ ] **D5 Customer group** (desktop and phone pairs): `Landing`, `Customer-Home`, `Main` (services and time), `Customer-Booking`, `Customer-Payment`, `Customer-Confirmed`, `Customer-Orders`, `Customer-Live`, `Customer-Support`, `Customer-Chat`, `Customer-Replay`, and the two emails (`Customer-Email-Order`, `Customer-Email-Replay`)
+  - Accept (every group): matches the mock at its frame width; desktop pages one column at 360 px with no sideways scroll; both languages; status never colour alone; customer pages never name an agency.
+  - Verify (every group): `npm run check`; `npm run test:e2e`; screenshots under `docs/screenshots/d<n>/`.
+
+### Checkpoint D: redesign review
+- [ ] Everything passes; the user reviews all groups and `docs/redesign-gaps.md`.

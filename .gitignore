@@ -58,3 +58,6 @@ src/messages/*.d.json.ts
 
 # demo clips (npm run db:seed uploads them; large, and kept out of the public repo)
 /clips/
+
+# design mocks from the user's Claude Design canvas (local reference only)
+/mocks/
