@@ -42,6 +42,8 @@ export type AdminOrderDetail = {
   streamUpdatedAt: string | null;
   /** The customer's note for the cleaner (B7); empty when there is none. */
   customerNote: string;
+  /** How the order was paid, as Midtrans names it (B8); null until paid. */
+  paymentMethod: string | null;
 };
 
 type Row = {
@@ -71,6 +73,7 @@ type Row = {
   stream_status: StreamStatus | null;
   stream_updated_at: string | null;
   customer_note: string | null;
+  payment_type: string | null;
 };
 
 const iso = (value: string) => new Date(value).toISOString();
@@ -112,5 +115,6 @@ export async function getAdminOrderDetail(client: SupabaseClient, orderId: strin
     streamStatus: row.stream_status,
     streamUpdatedAt: isoOrNull(row.stream_updated_at),
     customerNote: row.customer_note ?? "",
+    paymentMethod: row.payment_type ?? null,
   };
 }

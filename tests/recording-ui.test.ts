@@ -89,6 +89,7 @@ const order = (fields: Partial<CustomerOrder> = {}): CustomerOrder => ({
   orderCode: "HK-1001",
   assignedAt: at(-4 * day),
   customerNote: "",
+  paymentMethod: "qris",
   ...fields,
 });
 

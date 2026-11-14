@@ -17,6 +17,8 @@ export type PaymentNotification = {
   signatureKey: string;
   transactionStatus: string;
   fraudStatus: string | undefined;
+  /** The payment method in Midtrans' own form ("bank_transfer", "qris"); undefined when absent or odd (B8). */
+  paymentType: string | undefined;
 };
 
 /** What a notification makes of an order. Matches the order_status values in the database. */
@@ -31,6 +33,8 @@ const notificationSchema = z.object({
   signature_key: z.string().regex(/^[0-9a-fA-F]{128}$/),
   transaction_status: z.string().min(1).max(32),
   fraud_status: z.string().max(32).optional(),
+  // Never a reason to refuse a signed notification: an odd value is dropped instead (B8).
+  payment_type: z.string().regex(/^[a-z][a-z0-9_]{0,31}$/).optional().catch(undefined),
 });
 
 /** The fields of a notification body the order needs, or null when it is not a Midtrans notification. */
@@ -45,6 +49,7 @@ export function parseNotification(body: unknown): PaymentNotification | null {
     signatureKey: n.signature_key,
     transactionStatus: n.transaction_status,
     fraudStatus: n.fraud_status,
+    paymentType: n.payment_type,
   };
 }
 

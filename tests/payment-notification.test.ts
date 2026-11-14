@@ -41,7 +41,15 @@ describe("parseNotification", () => {
       signatureKey: signature,
       transactionStatus: "settlement",
       fraudStatus: "accept",
+      paymentType: "bank_transfer",
     });
+  });
+
+  it("keeps the payment method only in Midtrans' own form, and never refuses a notification for it (B8)", () => {
+    expect(parseNotification({ ...body, payment_type: "qris" })?.paymentType).toBe("qris");
+    expect(parseNotification({ ...body, payment_type: "<script>" })?.paymentType).toBeUndefined();
+    expect(parseNotification({ ...body, payment_type: "x".repeat(40) })?.paymentType).toBeUndefined();
+    expect(parseNotification({ ...body, payment_type: undefined })?.paymentType).toBeUndefined();
   });
 
   it("accepts a notification without fraud_status (not every payment method sends one)", () => {
