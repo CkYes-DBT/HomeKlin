@@ -68,7 +68,8 @@ test.describe("as admin", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Pertanyaan umum" })).toBeVisible();
     await expect(page.getByTestId("faq-counts")).toHaveText(/^\d+ dipublikasikan, \d+ draf\.$/);
     const rows = page.getByRole("list", { name: "Daftar pertanyaan umum" }).getByRole("listitem");
-    expect(await rows.count()).toBeGreaterThan(0);
+    // count() does not wait, and the list streams in: wait for its first row instead.
+    await expect(rows.first()).toBeVisible();
     // Each status is a word with an icon, never colour alone.
     await expect(rows.first().locator("summary")).toContainText(/Dipublikasikan|Draf/);
   });
