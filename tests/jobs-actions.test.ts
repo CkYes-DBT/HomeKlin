@@ -8,7 +8,12 @@ import { jobProgress } from "@/lib/jobs/jobs";
 
 const orderId = "0b8f3c1e-1111-4222-8333-944455556666";
 const cleanerId = "1c9f4d2f-2222-4333-8444-a55566667777";
-const { rpc, attach } = vi.hoisted(() => ({ rpc: vi.fn(), attach: vi.fn() }));
+const { rpc, attach, emailCleanerAssigned, emailRecordingReady } = vi.hoisted(() => ({
+  rpc: vi.fn(),
+  attach: vi.fn(),
+  emailCleanerAssigned: vi.fn(),
+  emailRecordingReady: vi.fn(),
+}));
 let user: { role: string } | null = null;
 
 vi.mock("@/lib/auth/dal", () => ({ authorize: async (roles: string[]) => (user && roles.includes(user.role) ? user : null) }));
@@ -19,6 +24,9 @@ vi.mock("@/lib/recordings/attach", async (original) => ({
   ...(await original<typeof import("@/lib/recordings/attach")>()),
   attachRecording: attach,
 }));
+
+// B9: the emails these actions trigger (src/lib/email/order-emails.ts), replaced: nothing is sent.
+vi.mock("@/lib/email/order-emails", () => ({ emailCleanerAssigned, emailRecordingReady }));
 
 const { checkIn, checkOut, assignCleaner } = await import("@/lib/jobs/actions");
 
@@ -69,6 +77,16 @@ describe("checkOut", () => {
     expect(attach).toHaveBeenCalledWith(expect.anything(), orderId, { retentionDays: 7 });
   });
 
+  it("emails the customer that the recording is ready, only once it is attached (B9)", async () => {
+    await checkOut(null, form({ orderId }));
+    expect(emailRecordingReady).toHaveBeenCalledWith(orderId);
+    expect(attach.mock.invocationCallOrder[0]).toBeLessThan(emailRecordingReady.mock.invocationCallOrder[0]);
+    vi.clearAllMocks();
+    attach.mockRejectedValue(new Error("no clips"));
+    await checkOut(null, form({ orderId }));
+    expect(emailRecordingReady).not.toHaveBeenCalled();
+  });
+
   it("keeps the job completed and says so when the recording cannot be attached", async () => {
     attach.mockRejectedValue(new Error("no clips"));
     expect(await checkOut(null, form({ orderId }))).toEqual({ ok: true, recordingMissing: true });
@@ -86,6 +104,9 @@ describe("assignCleaner", () => {
     user = { role: "agency" };
     expect(await assignCleaner(null, form({ orderId, cleanerId }))).toEqual({ ok: true });
     expect(rpc).toHaveBeenCalledWith("assign_cleaner", { p_order: orderId, p_cleaner: cleanerId });
+    // B9: the customer learns the cleaner's name and photo by email, after the assignment only.
+    expect(emailCleanerAssigned).toHaveBeenCalledTimes(1);
+    expect(emailCleanerAssigned).toHaveBeenCalledWith(orderId);
     expect(await assignCleaner(null, form({ orderId, cleanerId: "nobody" }))).toEqual({ formError: "cleanerNotFound" });
     user = { role: "cleaner" };
     expect(await assignCleaner(null, form({ orderId, cleanerId }))).toEqual({ formError: "notAllowed" });

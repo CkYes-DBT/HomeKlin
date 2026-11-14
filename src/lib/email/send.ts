@@ -89,11 +89,11 @@ export type ConfirmationOrder = {
   orderUrl: string;
 };
 
-const escapeHtml = (value: string) =>
+export const escapeHtml = (value: string) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 /** "Senin, 26 Oktober 2026" / "Monday, 26 October 2026", in Jakarta time. */
-function jakartaDay(iso: string, locale: Locale): string {
+export function jakartaDay(iso: string, locale: Locale): string {
   const parts = new Intl.DateTimeFormat(locale === "id" ? "id-ID" : "en-GB", {
     timeZone: "Asia/Jakarta",
     weekday: "long",
@@ -106,7 +106,7 @@ function jakartaDay(iso: string, locale: Locale): string {
 }
 
 /** "08.00", in Jakarta time, the Indonesian way in both languages (as on the site). */
-function jakartaTime(iso: string): string {
+export function jakartaTime(iso: string): string {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Asia/Jakarta",
     hour: "2-digit",

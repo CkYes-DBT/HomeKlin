@@ -3,6 +3,7 @@
 import { refresh } from "next/cache";
 import { z } from "zod";
 import { authorize } from "@/lib/auth/dal";
+import { emailCleanerAssigned, emailRecordingReady } from "@/lib/email/order-emails";
 import { attachRecording, RecordingError } from "@/lib/recordings/attach";
 import { retentionDaysFromEnv } from "@/lib/recordings/retention";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -111,6 +112,8 @@ export async function checkOut(_previous: JobActionState, formData: FormData): P
     refresh();
     return { ok: true, recordingMissing: true };
   }
+  // B9: the customer's "recording ready" email; best effort, it never fails the check-out.
+  await emailRecordingReady(parsed.data.orderId);
   refresh();
   return { ok: true };
 }
@@ -123,6 +126,8 @@ export async function assignCleaner(_previous: JobActionState, formData: FormDat
   const supabase = await createSupabaseServerClient({ writeCookies: true });
   const { error } = await supabase.rpc("assign_cleaner", { p_order: parsed.data.orderId, p_cleaner: parsed.data.cleanerId });
   if (error) return failure(error);
+  // B9: the customer's email with the cleaner's name and photo; best effort, it never fails the assignment.
+  await emailCleanerAssigned(parsed.data.orderId);
   refresh();
   return { ok: true };
 }
