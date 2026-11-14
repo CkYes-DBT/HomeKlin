@@ -42,6 +42,11 @@ function job(overrides: Partial<AgencyJob>): AgencyJob {
     recordingDeleted: false,
     address: "Jl. Contoh No. 1",
     contactPhone: null,
+    orderCode: "HK-1001",
+    assignedAt: null,
+    agencyFeeIdr: 59_500,
+    agencyFeeFinal: false,
+    customerNote: "",
     ...overrides,
   };
 }
