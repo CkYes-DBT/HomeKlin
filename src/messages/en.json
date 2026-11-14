@@ -1187,7 +1187,8 @@
       "durationRequired": "Enter the duration in minutes.",
       "durationInvalid": "Write the duration as a number of minutes, for example 120.",
       "durationRange": "The duration must be between 30 and 720 minutes.",
-      "sortOrderInvalid": "Write the order as a whole number from 0 to 9999."
+      "sortOrderInvalid": "Write the order as a whole number from 0 to 9999.",
+      "photoInvalid": "The photo must be a JPG, PNG or WebP file of at most 2 MB."
     },
     "formErrors": {
       "forbidden": "Only an admin can change services. Log in with an admin account, then try again.",

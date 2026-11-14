@@ -1,11 +1,12 @@
 import { DoorOpen, House, Sofa, type LucideIcon } from "lucide-react";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { Service, ServiceCategory } from "@/lib/catalog/catalog";
 import { servicePhoto } from "./service-photos";
 
-// A service's picture: its photo when it has one (src/components/customer/service-photos.ts),
-// otherwise its type's icon on a quiet tile of the same size, so a new service never leaves a hole.
+// A service's picture: the photo admin added to it (B10, services.photo_url), else the app's own photo
+// for it (src/components/customer/service-photos.ts), otherwise its type's icon on a quiet tile of the
+// same size, so a new service never leaves a hole.
 // The tile is decorative: the service's name sits right next to it.
 const typeIcons: Record<ServiceCategory, LucideIcon> = {
   "whole-home": House,
@@ -44,7 +45,25 @@ export function ServiceVisual({
   tone = "evergreen",
 }: ServiceVisualProps) {
   const t = useTranslations("ServicePhotos");
+  const locale = useLocale();
   const match = servicePhoto(service.id);
+
+  if (service.photoUrl) {
+    // Admin's photo has no written description, so its alt text is the service's name. Its size is not
+    // known, so it is cropped into the same 3:2 frame as the app's photos. A bucket photo is served as
+    // it is (unoptimized), as the cleaner photos are, so no remote host has to be allowed for next/image.
+    const size = fill ? { fill: true } : { width: 1200, height: 800 };
+    return (
+      <Image
+        src={service.photoUrl}
+        alt={service.name[locale]}
+        sizes={sizes}
+        {...size}
+        unoptimized={!service.photoUrl.startsWith("/")}
+        className={`object-cover ${tones[tone].photo} ${className}`}
+      />
+    );
+  }
 
   if (!match) {
     const Icon = typeIcons[service.category];

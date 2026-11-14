@@ -1,8 +1,9 @@
 import type { Service } from "@/lib/catalog/catalog";
 
 // The photos of HomeKlin's services (stock photos in public/images, credits in
-// markdown/image-sources.md), by service id. The catalog in the database holds no images, so a
-// service admin adds later has none until one is added here; the pages show its type's icon instead.
+// markdown/image-sources.md), by service id. Since B10 admin can add a photo to a service itself
+// (services.photo_url), which comes first; this map is the fallback for the services without one, and a
+// service with neither shows its type's icon.
 // Each photo's alt text is ServicePhotos.<id> in src/messages/*.json.
 
 export type ServicePhoto = {
@@ -32,5 +33,5 @@ export function servicePhoto(serviceId: string): { key: ServicePhotoKey; photo: 
 }
 
 export function hasServicePhoto(service: Service): boolean {
-  return servicePhoto(service.id) !== null;
+  return Boolean(service.photoUrl) || servicePhoto(service.id) !== null;
 }

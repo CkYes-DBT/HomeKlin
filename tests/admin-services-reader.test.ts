@@ -21,6 +21,7 @@ const row = {
   duration_minutes: 120,
   is_active: false,
   sort_order: 4,
+  photo_url: null,
 };
 
 const service: AdminService = {
@@ -32,6 +33,7 @@ const service: AdminService = {
   durationMinutes: 120,
   isActive: false,
   sortOrder: 4,
+  photoUrl: null,
 };
 
 /** A stand-in for supabase.from("services"): records the query and answers with `answer`. */

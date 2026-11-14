@@ -32,6 +32,9 @@ export type Service = {
   /** The full price in whole rupiah; there are no other fees. */
   priceIdr: number;
   durationMinutes: number;
+  /** The photo admin added (B10): a site image or a file in the service-photos bucket. Null: the app's
+   * own photo for the service (src/components/customer/service-photos.ts), else its type's icon. */
+  photoUrl: string | null;
 };
 
 export type ServiceArea = {
@@ -68,6 +71,7 @@ type ServiceRow = {
   description_en: string;
   price_idr: number;
   duration_minutes: number;
+  photo_url?: string | null;
 };
 
 type AreaRow = { id: string; name_id: string; name_en: string };
@@ -81,6 +85,7 @@ function toService(row: ServiceRow): Service {
     description: { id: row.description_id, en: row.description_en },
     priceIdr: row.price_idr,
     durationMinutes: row.duration_minutes,
+    photoUrl: row.photo_url ?? null,
   };
 }
 

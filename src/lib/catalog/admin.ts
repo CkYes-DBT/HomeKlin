@@ -28,10 +28,11 @@ type AdminServiceRow = {
   duration_minutes: number;
   is_active: boolean;
   sort_order: number;
+  photo_url: string | null;
 };
 
 const columns =
-  "id, category, name_id, name_en, description_id, description_en, price_idr, duration_minutes, is_active, sort_order";
+  "id, category, name_id, name_en, description_id, description_en, price_idr, duration_minutes, is_active, sort_order, photo_url";
 
 function toAdminService(row: AdminServiceRow): AdminService {
   return {
@@ -43,6 +44,7 @@ function toAdminService(row: AdminServiceRow): AdminService {
     durationMinutes: row.duration_minutes,
     isActive: row.is_active,
     sortOrder: row.sort_order,
+    photoUrl: row.photo_url ?? null,
   };
 }
 

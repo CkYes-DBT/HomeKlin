@@ -1187,7 +1187,8 @@
       "durationRequired": "Masukkan durasi dalam menit.",
       "durationInvalid": "Tulis durasi sebagai angka menit, misalnya 120.",
       "durationRange": "Durasi antara 30 dan 720 menit.",
-      "sortOrderInvalid": "Tulis urutan sebagai angka bulat dari 0 sampai 9999."
+      "sortOrderInvalid": "Tulis urutan sebagai angka bulat dari 0 sampai 9999.",
+      "photoInvalid": "Foto harus JPG, PNG atau WebP dan paling besar 2 MB."
     },
     "formErrors": {
       "forbidden": "Hanya admin yang dapat mengubah layanan. Masuk dengan akun admin, lalu coba lagi.",
