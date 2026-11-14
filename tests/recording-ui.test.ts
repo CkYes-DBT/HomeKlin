@@ -86,6 +86,7 @@ const order = (fields: Partial<CustomerOrder> = {}): CustomerOrder => ({
   recordingId: "00000000-0000-4000-8000-0000000000aa",
   recordingExpiresAt: at(4 * day),
   recordingDeleted: false,
+  orderCode: "HK-1001",
   ...fields,
 });
 

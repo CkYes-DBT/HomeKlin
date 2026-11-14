@@ -366,8 +366,9 @@ Conventions for every task: tests written first; `npm run typecheck`, `npm run l
 > From comparing every mock with the backend (`markdown/tasks/plan.md`, Phase 15). Each task: a migration on the test project with integration tests first; live only with the user's permission; the matching screen updated after. Tier 3 is a scope decision per item.
 
 **Tier 1: read functions and small columns (no new behaviour)**
-- [ ] **B1 Order number everywhere** (S): `my_orders`, `my_jobs`, `agency_jobs` return `orders.code`. Screens: customer home/orders/replay, cleaner jobs, partner jobs/past/videos.
+- [x] **B1 Order number everywhere** (S): `my_orders`, `my_jobs`, `agency_jobs` return `orders.code`. Screens: customer home/orders/replay, cleaner jobs, partner jobs/past/videos.
   - Accept: each returns the same code as `admin_jobs`; nobody gains a column they could not read before. Verify: integration tests.
+  - Done 2026-11-14: `order_code` on the three functions, `orderCode` on the readers (`20261114100000_order_code_everywhere.sql`, `tests/integration/order-codes.test.ts`).
 - [ ] **B2 Admin order detail** (M): `admin_order_detail(order)` (admin only): service, window, area, address, customer name and phone, cleaner and agency, price, agency fee and HomeKlin income (from `order_fees`, else price × `payout_percent`), status times (created, paid, checked in, completed), stream status and its last change. Screens: Admin-Order, Admin-Order-Issue.
   - Accept: non-admins get `not_admin`; the split adds up to the price. Verify: integration tests.
 - [ ] **B3 Assigned time** (S): `orders.assigned_at`, set by `assign_cleaner`; returned by B2, `agency_jobs`. Screens: the "Ditugaskan" step in every timeline.

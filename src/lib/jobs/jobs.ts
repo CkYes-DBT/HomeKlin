@@ -33,6 +33,8 @@ export type CleanerJob = {
   streamConsent: boolean;
   checkedInAt: string | null;
   completedAt: string | null;
+  /** The short order number, "HK-1042" (20261114100000_order_code_everywhere.sql). */
+  orderCode: string;
 };
 
 type CleanerJobRow = {
@@ -47,6 +49,7 @@ type CleanerJobRow = {
   stream_consent: boolean;
   checked_in_at: string | null;
   completed_at: string | null;
+  order_code: string;
 };
 
 /** The cleaner's jobs for today and later, and those finished in the last day, earliest first. */
@@ -63,6 +66,7 @@ export async function listMyJobs(client: SupabaseClient): Promise<CleanerJob[]> 
     streamConsent: row.stream_consent,
     checkedInAt: isoOrNull(row.checked_in_at),
     completedAt: isoOrNull(row.completed_at),
+    orderCode: row.order_code,
   }));
 }
 
@@ -82,7 +86,8 @@ export type BackOfficeJob = {
   recordingDeleted: boolean;
 };
 
-export type AgencyJob = BackOfficeJob & { address: string; contactPhone: string | null };
+/** orderCode: the short order number, "HK-1042" (20261114100000_order_code_everywhere.sql). */
+export type AgencyJob = BackOfficeJob & { address: string; contactPhone: string | null; orderCode: string };
 /** orderCode: the short order number, "HK-1042" (20261112100000_admin_jobs_code.sql). */
 export type AdminJob = BackOfficeJob & { agencyName: string; orderCode: string };
 
@@ -120,11 +125,12 @@ function backOfficeJob(row: BackOfficeRow): BackOfficeJob {
 
 /** The paid jobs routed to the signed-in agency, latest first. */
 export async function listAgencyJobs(client: SupabaseClient): Promise<AgencyJob[]> {
-  type Row = BackOfficeRow & { address: string; contact_phone: string | null };
+  type Row = BackOfficeRow & { address: string; contact_phone: string | null; order_code: string };
   return (await read<Row>(client, "agency_jobs")).map((row) => ({
     ...backOfficeJob(row),
     address: row.address,
     contactPhone: row.contact_phone,
+    orderCode: row.order_code,
   }));
 }
 
