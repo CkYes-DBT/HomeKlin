@@ -102,6 +102,8 @@ describe("checkOut", () => {
 describe("assignCleaner", () => {
   it("is the agency's, with a job and a cleaner", async () => {
     user = { role: "agency" };
+    // assign_cleaner answers true when the job got a different cleaner (review L4).
+    rpc.mockResolvedValue({ data: true, error: null });
     expect(await assignCleaner(null, form({ orderId, cleanerId }))).toEqual({ ok: true });
     expect(rpc).toHaveBeenCalledWith("assign_cleaner", { p_order: orderId, p_cleaner: cleanerId });
     // B9: the customer learns the cleaner's name and photo by email, after the assignment only.
@@ -110,6 +112,19 @@ describe("assignCleaner", () => {
     expect(await assignCleaner(null, form({ orderId, cleanerId: "nobody" }))).toEqual({ formError: "cleanerNotFound" });
     user = { role: "cleaner" };
     expect(await assignCleaner(null, form({ orderId, cleanerId }))).toEqual({ formError: "notAllowed" });
+  });
+});
+
+describe("assignCleaner's email (review L4)", () => {
+  it("emails the customer only when the job got a different cleaner", async () => {
+    user = { role: "agency" };
+    rpc.mockResolvedValue({ data: false, error: null });
+    expect(await assignCleaner(null, form({ orderId, cleanerId }))).toEqual({ ok: true });
+    expect(emailCleanerAssigned).not.toHaveBeenCalled();
+
+    rpc.mockResolvedValue({ data: true, error: null });
+    expect(await assignCleaner(null, form({ orderId, cleanerId }))).toEqual({ ok: true });
+    expect(emailCleanerAssigned).toHaveBeenCalledTimes(1);
   });
 });
 

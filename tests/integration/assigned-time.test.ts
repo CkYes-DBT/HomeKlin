@@ -47,6 +47,14 @@ describe("the assigned time", { timeout: 60_000 }, () => {
     expect(new Date(second ?? 0).getTime()).toBeGreaterThan(new Date(first ?? 0).getTime());
   });
 
+  it("answers whether the job got a different cleaner, so the email goes only then (review L4)", async () => {
+    const job = await world.job({ startsAt: new Date(Date.now() + hours(8)), cleaner: null });
+    expect(await assign(job)).toMatchObject({ data: true, error: null });
+    expect(await assign(job)).toMatchObject({ data: false, error: null });
+    expect(await assign(job, world.users.cleanerA2)).toMatchObject({ data: true, error: null });
+    expect(await assign(job, world.users.cleanerA2)).toMatchObject({ data: false, error: null });
+  });
+
   it("is not changed by a refused assignment", async () => {
     const job = await world.job({ startsAt: new Date(Date.now() + hours(7)), cleaner: null });
     // Agency B's cleaner is not agency A's to assign.

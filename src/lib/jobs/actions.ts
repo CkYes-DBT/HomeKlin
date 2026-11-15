@@ -124,10 +124,12 @@ export async function assignCleaner(_previous: JobActionState, formData: FormDat
   if (!parsed.success) return { formError: parsed.error.issues.some((issue) => issue.path[0] === "cleanerId") ? "cleanerNotFound" : "notFound" };
 
   const supabase = await createSupabaseServerClient({ writeCookies: true });
-  const { error } = await supabase.rpc("assign_cleaner", { p_order: parsed.data.orderId, p_cleaner: parsed.data.cleanerId });
+  const { data: changed, error } = await supabase.rpc("assign_cleaner", { p_order: parsed.data.orderId, p_cleaner: parsed.data.cleanerId });
   if (error) return failure(error);
-  // B9: the customer's email with the cleaner's name and photo; best effort, it never fails the assignment.
-  await emailCleanerAssigned(parsed.data.orderId);
+  // B9: the customer's email with the cleaner's name and photo; best effort, it never fails the
+  // assignment. Only when the job got a different cleaner (review L4): picking the same one again
+  // sends nothing.
+  if (changed === true) await emailCleanerAssigned(parsed.data.orderId);
   refresh();
   return { ok: true };
 }
