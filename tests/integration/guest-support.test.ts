@@ -131,6 +131,55 @@ describe("a guest's support chat", { timeout: 60_000 }, () => {
   });
 });
 
+describe("the guest's hashes (review M1)", { timeout: 60_000 }, () => {
+  it("are never readable by an admin's or a customer's session, while every other column is", async () => {
+    const { data: ticketId } = await open(newToken());
+    for (const client of [user("admin").client, user("customer").client]) {
+      for (const column of ["guest_ip_hash", "guest_token_hash", "*"]) {
+        const { error } = await client.from("support_tickets").select(column).eq("id", ticketId);
+        expect(error?.code, column).toBe("42501");
+      }
+    }
+    const columns =
+      "id, customer_id, order_id, question, urgency, status, created_at, last_message_at, guest_name, guest_email, customer_read_at, admin_read_at";
+    const { data, error } = await user("admin").client.from("support_tickets").select(columns).eq("id", ticketId).single();
+    expect(error).toBeNull();
+    expect(data).toMatchObject({ id: ticketId, customer_id: null, guest_name: "Uji Tamu", guest_email: "tamu@example.com" });
+  });
+
+  it("still reach an admin through Realtime, without the two hashes", async () => {
+    const token = newToken();
+    const { data: ticketId } = await open(token);
+    const client = user("admin").client;
+    const { data: session } = await client.auth.getSession();
+    await client.realtime.setAuth(session.session?.access_token ?? null);
+    const received: Record<string, unknown>[] = [];
+    const channel = await new Promise<ReturnType<typeof client.channel>>((resolve) => {
+      const joined = client
+        .channel(`m1-${randomUUID()}`)
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "support_tickets", filter: `id=eq.${ticketId}` }, (payload) => {
+          received.push(payload.new as Record<string, unknown>);
+        })
+        .subscribe((status) => {
+          if (status === "SUBSCRIBED") resolve(joined);
+        });
+    });
+    // Realtime can start a little after it confirms the subscription: the guest writes again (up to 4
+    // times) until admin has a change.
+    for (let attempt = 1; attempt <= 4 && received.length === 0; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await server().rpc("guest_post_message", { p_ticket: ticketId, p_token_hash: hash(token), p_body: `Pesan waktu nyata ${attempt}` });
+      const deadline = Date.now() + 8000;
+      while (received.length === 0 && Date.now() < deadline) await new Promise((r) => setTimeout(r, 250));
+    }
+    await channel.unsubscribe();
+    expect(received.length).toBeGreaterThan(0);
+    expect(received[0]).toMatchObject({ id: ticketId, status: "open" });
+    expect(received[0]).not.toHaveProperty("guest_ip_hash");
+    expect(received[0]).not.toHaveProperty("guest_token_hash");
+  }, 60_000);
+});
+
 describe("read times", { timeout: 60_000 }, () => {
   it("are kept per side: the customer's (or guest's) and admin's", async () => {
     const opened = await user("customer").client.rpc("open_ticket", { p_question: "Kapan petugas datang?" });

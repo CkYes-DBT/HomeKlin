@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, createHmac, randomBytes } from "node:crypto";
 import { cookies, headers } from "next/headers";
 import { z } from "zod";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
@@ -8,8 +8,8 @@ import { messageFromRow, SupportError, type TicketMessage, type TicketStatus, ty
 // The guest is known by a random token the server keeps in an httpOnly cookie ("<ticket id>.<token>");
 // only its SHA-256 leaves the server. The guest functions answer the secret key alone, so they are
 // called with the service client, after the cookie has shown the chat is this visitor's. The visitor's
-// address is hashed before it is sent, for the database's abuse limits. Realtime does not reach a guest
-// (no session), so the guest's page reloads the chat (router.refresh) instead.
+// address is hashed with a server-only key before it is sent, for the database's abuse limits.
+// Realtime does not reach a guest (no session), so the guest's page reloads the chat (router.refresh).
 
 export const guestCookieName = "hk_guest_ticket";
 /** How long a browser keeps its guest chat: 30 days. */
@@ -22,11 +22,21 @@ export const tokenHash = (token: string) => sha256(token);
 /** A new random token (256 bits, base64url). */
 export const newGuestToken = () => randomBytes(32).toString("base64url");
 
-/** The visitor's address as the database sees it: a hash, never the address itself. */
+/**
+ * The visitor's address as the database sees it: a keyed hash, never the address itself (review M1).
+ * A plain SHA-256 of an IPv4 address can be reversed by hashing all 2^32 addresses, so this is an
+ * HMAC-SHA-256 whose key only the server knows. The key is derived from the server-only
+ * SUPABASE_SECRET_KEY, so no extra environment variable is needed:
+ *   key = SHA-256("homeklin-guest-address|" + SUPABASE_SECRET_KEY), hash = HMAC-SHA-256(key, address).
+ * Rotating the secret key starts every address's abuse count afresh, which is harmless.
+ */
 export async function visitorAddressHash(): Promise<string> {
+  const secret = process.env.SUPABASE_SECRET_KEY;
+  if (!secret) throw new Error("SUPABASE_SECRET_KEY is not set: the guest chat's address hash needs it.");
   const list = await headers();
   const address = list.get("x-forwarded-for")?.split(",")[0]?.trim() || list.get("x-real-ip")?.trim() || "unknown";
-  return sha256(`homeklin-guest-address:${address}`);
+  const key = createHash("sha256").update(`homeklin-guest-address|${secret}`).digest();
+  return createHmac("sha256", key).update(address).digest("hex");
 }
 
 const cookieValue = z.string().regex(/^[0-9a-f-]{36}\.[A-Za-z0-9_-]{43}$/);

@@ -1,5 +1,5 @@
-import { createHash } from "node:crypto";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createHash, createHmac } from "node:crypto";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // The guest support chat's server side (B13; src/lib/support/guest-actions.ts and guest.ts) with
 // stand-in cookies, headers and Supabase clients. The rules live in the database
@@ -41,6 +41,10 @@ const { openGuestTicket, postGuestMessage, markGuestTicketRead, markTicketRead }
 const { getGuestTicket, guestCookieName } = await import("@/lib/support/guest");
 
 const sha256 = (text: string) => createHash("sha256").update(text).digest("hex");
+const serverSecret = "sb_secret_test_only_value";
+/** The address hash as the server makes it (review M1): HMAC-SHA-256, keyed from the secret key. */
+const addressHmac = (address: string, secret = serverSecret) =>
+  createHmac("sha256", createHash("sha256").update(`homeklin-guest-address|${secret}`).digest()).update(address).digest("hex");
 
 function form(values: Record<string, string>) {
   const data = new FormData();
@@ -61,8 +65,13 @@ beforeEach(() => {
   headerStore.clear();
   headerStore.set("x-forwarded-for", "203.0.113.7, 10.0.0.1");
   user = null;
+  vi.stubEnv("SUPABASE_SECRET_KEY", serverSecret);
   serviceRpc.mockResolvedValue({ data: ticketId, error: null });
   sessionRpc.mockResolvedValue({ data: null, error: null });
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 describe("openGuestTicket", () => {
@@ -91,6 +100,16 @@ describe("openGuestTicket", () => {
     const hashes = serviceRpc.mock.calls.map(([, args]) => (args as { p_ip_hash: string }).p_ip_hash);
     expect(hashes[0]).toBe(hashes[1]);
     expect(hashes[2]).not.toBe(hashes[0]);
+  });
+
+  it("keys the address hash with the server's secret (HMAC), so it cannot be worked back from a list of addresses", async () => {
+    await openGuestTicket(null, form({ name: "Tamu", question: "Pertanyaan pertama di sini." }));
+    vi.stubEnv("SUPABASE_SECRET_KEY", "another-secret");
+    await openGuestTicket(null, form({ name: "Tamu", question: "Pertanyaan kedua di sini." }));
+    const [first, second] = serviceRpc.mock.calls.map(([, args]) => (args as { p_ip_hash: string }).p_ip_hash);
+    expect(first).toBe(addressHmac("203.0.113.7"));
+    expect(first).not.toBe(sha256("homeklin-guest-address:203.0.113.7"));
+    expect(second).toBe(addressHmac("203.0.113.7", "another-secret"));
   });
 
   it("checks the form before anything is sent, and turns refusals into keys", async () => {
