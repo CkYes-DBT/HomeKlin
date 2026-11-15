@@ -23,6 +23,7 @@ export type GuestFailureKey =
   | "notFound"
   | "closed"
   | "tooMany"
+  | "noAddress"
   | "notAllowed"
   | "unavailable";
 export type GuestFormState = { ok?: true; formError?: GuestFailureKey } | null;
@@ -72,13 +73,17 @@ export async function openGuestTicket(_previous: GuestFormState, formData: FormD
     return { formError: field === "name" ? "nameInvalid" : field === "email" ? "emailInvalid" : "questionInvalid" };
   }
 
+  // Review L2: without the visitor's address there is no per-address limit, so no guest chat opens.
+  const addressHash = await visitorAddressHash();
+  if (!addressHash) return { formError: "noAddress" };
+
   const token = newGuestToken();
   const { data, error } = await createSupabaseServiceClient().rpc("guest_open_ticket", {
     p_name: parsed.data.name,
     p_email: parsed.data.email,
     p_question: parsed.data.question,
     p_token_hash: tokenHash(token),
-    p_ip_hash: await visitorAddressHash(),
+    p_ip_hash: addressHash,
   });
   if (error) return failure(error);
   const ticketId = String(data);

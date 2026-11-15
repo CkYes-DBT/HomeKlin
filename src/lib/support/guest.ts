@@ -29,12 +29,15 @@ export const newGuestToken = () => randomBytes(32).toString("base64url");
  * SUPABASE_SECRET_KEY, so no extra environment variable is needed:
  *   key = SHA-256("homeklin-guest-address|" + SUPABASE_SECRET_KEY), hash = HMAC-SHA-256(key, address).
  * Rotating the secret key starts every address's abuse count afresh, which is harmless.
+ * Null when the request carries no address (review L2): the caller refuses to open a chat rather than
+ * putting every such visitor in one shared "unknown" bucket.
  */
-export async function visitorAddressHash(): Promise<string> {
+export async function visitorAddressHash(): Promise<string | null> {
   const secret = process.env.SUPABASE_SECRET_KEY;
   if (!secret) throw new Error("SUPABASE_SECRET_KEY is not set: the guest chat's address hash needs it.");
   const list = await headers();
-  const address = list.get("x-forwarded-for")?.split(",")[0]?.trim() || list.get("x-real-ip")?.trim() || "unknown";
+  const address = list.get("x-forwarded-for")?.split(",")[0]?.trim() || list.get("x-real-ip")?.trim();
+  if (!address) return null;
   const key = createHash("sha256").update(`homeklin-guest-address|${secret}`).digest();
   return createHmac("sha256", key).update(address).digest("hex");
 }

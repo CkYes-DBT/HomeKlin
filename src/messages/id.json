@@ -396,7 +396,8 @@
       "unavailable": "Pesan belum terkirim karena ada gangguan. Coba lagi sebentar lagi.",
       "nameInvalid": "Tulis nama Anda, paling banyak 80 karakter.",
       "emailInvalid": "Periksa penulisan email Anda, misalnya nama@domain.com.",
-      "tooMany": "Terlalu banyak pesan dalam waktu singkat. Tunggu beberapa menit, lalu coba lagi."
+      "tooMany": "Terlalu banyak pesan dalam waktu singkat. Tunggu beberapa menit, lalu coba lagi.",
+      "noAddress": "Kami tidak dapat mengenali sambungan internet Anda, jadi percakapan tanpa akun belum bisa dibuka. Masuk dengan akun Anda, atau coba lagi dari jaringan lain."
     },
     "openJob": "Buka pekerjaan",
     "urgentBanner": "Mendesak, dikirim {time}",

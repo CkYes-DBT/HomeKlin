@@ -112,6 +112,20 @@ describe("openGuestTicket", () => {
     expect(second).toBe(addressHmac("203.0.113.7", "another-secret"));
   });
 
+  it("refuses to open a chat when the request carries no address, instead of sharing one bucket (review L2)", async () => {
+    headerStore.clear();
+    expect(await openGuestTicket(null, form({ name: "Tamu", question: "Pertanyaan yang cukup." }))).toEqual({ formError: "noAddress" });
+    headerStore.set("x-forwarded-for", " , ");
+    expect(await openGuestTicket(null, form({ name: "Tamu", question: "Pertanyaan yang cukup." }))).toEqual({ formError: "noAddress" });
+    expect(serviceRpc).not.toHaveBeenCalled();
+    expect(cookieStore.set).not.toHaveBeenCalled();
+
+    headerStore.clear();
+    headerStore.set("x-real-ip", "198.51.100.9");
+    await openGuestTicket(null, form({ name: "Tamu", question: "Pertanyaan yang cukup." }));
+    expect((serviceRpc.mock.calls[0] as [string, { p_ip_hash: string }])[1].p_ip_hash).toBe(addressHmac("198.51.100.9"));
+  });
+
   it("checks the form before anything is sent, and turns refusals into keys", async () => {
     expect(await openGuestTicket(null, form({ name: "", question: "Pertanyaan yang cukup." }))).toEqual({ formError: "nameInvalid" });
     expect(await openGuestTicket(null, form({ name: "Tamu", email: "nope", question: "Pertanyaan yang cukup." }))).toEqual({ formError: "emailInvalid" });

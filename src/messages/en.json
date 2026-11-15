@@ -396,7 +396,8 @@
       "unavailable": "Your message was not sent because of a problem on our side. Please try again shortly.",
       "nameInvalid": "Write your name, up to 80 characters.",
       "emailInvalid": "Check your email, for example name@domain.com.",
-      "tooMany": "Too many messages in a short time. Wait a few minutes, then try again."
+      "tooMany": "Too many messages in a short time. Wait a few minutes, then try again.",
+      "noAddress": "We could not recognise your internet connection, so a chat without an account cannot be opened. Log in with your account, or try again from another network."
     },
     "openJob": "Open job",
     "urgentBanner": "Urgent, sent {time}",
