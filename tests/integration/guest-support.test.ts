@@ -115,6 +115,13 @@ describe("a guest's support chat", { timeout: 60_000 }, () => {
     expect((await server().rpc("guest_post_message", { p_ticket: ticketId, p_token_hash: hash(token), p_body: "Satu lagi" })).error?.message).toBe("too_many_messages");
   });
 
+  it("keeps the 5-chat limit when many chats open from one address at the same moment (review L1)", async () => {
+    const ip = ipHash();
+    const results = await Promise.all(Array.from({ length: 30 }, () => open(newToken(), ip)));
+    expect(results.filter((result) => result.error === null)).toHaveLength(5);
+    expect(results.filter((result) => result.error?.message === "too_many_tickets")).toHaveLength(25);
+  });
+
   it("cannot be used with the public key or any user's session", async () => {
     const token = newToken();
     for (const client of [visitorClient(), user("customer").client, user("admin").client]) {
