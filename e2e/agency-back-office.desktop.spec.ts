@@ -451,7 +451,7 @@ test.describe("the agency", () => {
     await expect(page).toHaveURL("/agency?days=7");
     await expect(range.getByRole("link", { name: "7 hari" })).toHaveAttribute("aria-current", "true");
     // The numbers come from the T40 summary functions. The test project's agency role cannot read
-    // order_fees yet (docs/redesign-gaps-partner.md); the page then says so instead of showing 0.
+    // order_fees yet (docs/redesign-gaps.md, Partner agency); the page then says so instead of showing 0.
     await expect(page.getByRole("list", { name: "Angka utama, 7 hari terakhir" }).or(page.getByRole("main").getByRole("alert"))).toBeVisible();
   });
 

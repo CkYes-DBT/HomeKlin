@@ -33,7 +33,7 @@ type Read = { agency: MyAgency; cleaners: AgencyCleaner[]; jobs: AgencyJob[]; sl
 // is at a job now, and how many jobs each has this week; then the week's arrival windows as a grid of days and start times, with the free places of each
 // (?week= moves a week at a time, over the 60 days the database lists), linking to "Jadwal" where they
 // are changed; then the form that adds a cleaner. The schedule belongs to the agency, not to one
-// cleaner: the database keeps places per window, not who is free (docs/redesign-gaps-partner.md). Read
+// cleaner: the database keeps places per window, not who is free (docs/redesign-gaps.md, Partner agency). Read
 // with the agency's own session: agency_cleaners(), agency_jobs() and agency_slots() answer with this
 // agency's rows only.
 export async function CleanersContent({ searchParams }: { searchParams: Promise<SearchParams> }) {

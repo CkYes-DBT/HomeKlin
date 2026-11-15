@@ -21,7 +21,7 @@ type Read = { services: Service[]; choices: AgencyServiceChoice[] } | null;
 // changes with "Ubah pilihan" (ServicesChoice). The facts come from the public catalog (cached, the
 // same list customers see); the choice from agency_service_choices(), read with the agency's own
 // session, which answers for the caller's own agency only. A draft service ("belum tersedia" in the
-// mock) is not listed: the agency can read active services only (docs/redesign-gaps-partner.md).
+// mock) is not listed: the agency can read active services only (docs/redesign-gaps.md, Partner agency).
 export async function ServicesContent() {
   const [t, locale] = await Promise.all([getTranslations("AgencyServicesPage"), getLocale()]);
 
