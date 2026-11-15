@@ -4,7 +4,7 @@ import { signedInAs } from "./setup/auth-state";
 // Customer pages are mobile-first: on a phone the main navigation is a bottom bar.
 // A signed-in customer, because Pesanan (/orders) and Akun (/account) are theirs only (T5).
 const sections = [
-  { label: "Beranda", path: "/home", heading: "Pesan kebersihan rumah" },
+  { label: "Beranda", path: "/home", heading: "Pesanan Anda" },
   { label: "Layanan", path: "/services", heading: "Layanan" },
   { label: "Pesanan", path: "/orders", heading: "Pesanan" },
   { label: "Bantuan", path: "/support", heading: "Bantuan" },

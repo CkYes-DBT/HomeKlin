@@ -24,11 +24,12 @@ const recordingIcons: Record<Exclude<RecordingState, "none">, { Icon: LucideIcon
   unavailable: { Icon: VideoOff, text: "text-ink-muted" },
 };
 
-// The customer's orders on /orders (T12). The whole row is one link to the order's details
-// (/orders?order=<id>). A paid order's window is the job itself, so it stands out on a labelled line;
-// on any other order it is only what was asked for, in muted text. A finished job says whether its
-// recording can still be replayed, and until when (T15); the player itself is on the details. A job in
-// progress says it can be watched live from its details (T23).
+// "Riwayat pesanan" (T12, restyled in D5 after the Customer-Home mock): each order a white card that is
+// one link to its page (/orders?order=<id>), with the service and price on top, the order number and
+// time under it, and below a line its status pill (a word with an icon, never colour alone) and, for a
+// finished job, whether its recording can still be replayed and until when (T15). A paid order's time
+// is the job itself, so it stands out on a labelled line; on any other order it is only what was asked
+// for. A job in progress says it can be watched live (T23).
 export async function OrderList({ orders, serviceName, now }: OrderListProps) {
   const locale = await getLocale();
   const [t, tConfirmation, tRecording, tLive, words, labels] = await Promise.all([
@@ -50,46 +51,52 @@ export async function OrderList({ orders, serviceName, now }: OrderListProps) {
   }
 
   return (
-    <ul aria-label={t("listLabel")} className="grid gap-3 lg:grid-cols-2">
+    <ul aria-label={t("listLabel")} className="flex flex-col gap-3">
       {orders.map((order) => {
         const recording = recordingState(order, now.getTime());
         return (
           <li key={order.id} className="flex">
             <Link
               href={`/orders?order=${order.id}`}
-              className="group flex w-full flex-col gap-3 rounded-xl border border-border bg-surface p-4 shadow-card transition-colors duration-150 ease-out-quart hover:border-border-control active:bg-surface-sunken md:p-5"
+              className="group flex w-full flex-col gap-3 rounded-lg bg-card p-4 transition-shadow duration-150 ease-out-quart hover:shadow-card-hover active:bg-sunken md:p-6"
             >
-              <div className="flex items-start justify-between gap-3">
-                <h2 className="min-w-0 font-display text-lg font-semibold text-ink">{words.service(serviceName(order))}</h2>
-                <ChevronRight
-                  className="mt-0.5 size-5 shrink-0 text-ink-muted transition-colors duration-150 ease-out-quart group-hover:text-ink"
-                  aria-hidden="true"
-                />
-              </div>
-              <OrderStatusPill status={order.status} label={words.status(order.status)} />
-              {order.status === "paid" ? (
-                <span data-testid="job-slot" className="flex items-start gap-3 rounded-md bg-surface-sunken px-3 py-2.5">
-                  <CalendarCheck className="mt-0.5 size-5 shrink-0 text-brand-700" aria-hidden="true" />
-                  <span className="flex min-w-0 flex-col gap-0.5">
-                    <span className="text-sm text-ink-muted">{tConfirmation("fields.window")}</span>
-                    <span className="text-base font-semibold text-ink">{words.arrival(order)}</span>
+              <span className="flex items-start justify-between gap-3">
+                <span className="flex min-w-0 flex-col gap-0.5">
+                  <h3 className="font-display text-lg font-semibold text-ink">{words.service(serviceName(order))}</h3>
+                  <span className="text-sm text-ink-muted tabular-nums">
+                    {order.status === "paid"
+                      ? t("orderLine", { code: order.orderCode })
+                      : t("orderLineWithTime", { code: order.orderCode, arrival: words.arrival(order) })}
                   </span>
                 </span>
-              ) : (
-                <span className="text-sm text-ink-muted">{words.arrival(order)}</span>
-              )}
-              {liveInProgress(order) ? (
-                <span data-testid="live-line" className="flex items-start gap-2 text-sm font-medium text-ink">
-                  <Radio className="mt-0.5 size-4 shrink-0 text-brand-700" aria-hidden="true" />
-                  <span>{tLive("listLine")}</span>
+                <span className="flex shrink-0 items-center gap-1">
+                  <span className="font-display text-lg font-semibold whitespace-nowrap text-ink tabular-nums">
+                    {formatRupiah(order.priceIdr, locale)}
+                  </span>
+                  <ChevronRight
+                    className="size-5 shrink-0 text-ink-muted transition-transform duration-150 ease-out-quart group-hover:translate-x-0.5"
+                    aria-hidden="true"
+                  />
+                </span>
+              </span>
+              {order.status === "paid" ? (
+                <span data-testid="job-slot" className="flex items-start gap-3 rounded-md bg-sunken px-3 py-2.5">
+                  <CalendarCheck className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
+                  <span className="flex min-w-0 flex-col gap-0.5">
+                    <span className="text-sm text-ink-muted">{tConfirmation("fields.window")}</span>
+                    <span className="font-semibold text-ink">{words.arrival(order)}</span>
+                  </span>
                 </span>
               ) : null}
-              {recording !== "none" ? <RecordingLine state={recording} text={recordingText(order, recording)} /> : null}
-              <span className="mt-auto flex items-baseline justify-between gap-6">
-                <span className="text-sm text-ink-muted">{tConfirmation("fields.total")}</span>
-                <span className="font-display text-lg font-semibold whitespace-nowrap text-ink tabular-nums">
-                  {formatRupiah(order.priceIdr, locale)}
-                </span>
+              <span className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-border pt-3">
+                <OrderStatusPill status={order.status} label={words.status(order.status)} />
+                {liveInProgress(order) ? (
+                  <span data-testid="live-line" className="flex items-start gap-2 text-sm font-medium text-ink">
+                    <Radio className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+                    <span>{tLive("listLine")}</span>
+                  </span>
+                ) : null}
+                {recording !== "none" ? <RecordingLine state={recording} text={recordingText(order, recording)} /> : null}
               </span>
             </Link>
           </li>
@@ -103,7 +110,7 @@ function RecordingLine({ state, text }: { state: Exclude<RecordingState, "none">
   const { Icon, text: tone } = recordingIcons[state];
   return (
     <span data-testid="recording-line" className={`flex items-start gap-2 text-sm ${tone}`}>
-      <Icon className="mt-0.5 size-4 shrink-0 text-brand-700" aria-hidden="true" />
+      <Icon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
       <span>{text}</span>
     </span>
   );

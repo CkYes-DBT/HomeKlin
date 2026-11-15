@@ -36,7 +36,8 @@ async function placesTaken(slotId: string): Promise<number> {
   return data?.booked;
 }
 
-const confirmation = (page: Page) => page.getByRole("region", { name: "Pesanan Anda sudah dibuat" });
+// Step 3 (D5): "Pembayaran" while the order waits, "Pembayaran berhasil" once it is paid.
+const confirmation = (page: Page) => page.getByRole("region", { name: "Pembayaran" });
 
 test.describe("Midtrans' notification, as the customer sees it", () => {
   test.use(signedInAs.customer);
@@ -50,7 +51,7 @@ test.describe("Midtrans' notification, as the customer sees it", () => {
 
     expect(await notify(request, paid)).toEqual({ status: 200, body: { result: "paid" } });
     await page.reload();
-    await expect(confirmation(page).getByText("Sudah dibayar")).toBeVisible();
+    await expect(confirmation(page).getByText("Sudah dibayar", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Bayar sekarang" })).toHaveCount(0);
 
     expect(await notify(request, paid)).toEqual({ status: 200, body: { result: "paid" } });
@@ -67,7 +68,7 @@ test.describe("Midtrans' notification, as the customer sees it", () => {
     expect(await notify(request, denied)).toEqual({ status: 200, body: { result: "failed" } });
     expect(await notify(request, denied)).toEqual({ status: 200, body: { result: "failed" } });
     await page.reload();
-    await expect(confirmation(page).getByText("Pembayaran gagal")).toBeVisible();
+    await expect(confirmation(page).getByText("Pembayaran gagal", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Bayar sekarang" })).toHaveCount(0);
     expect(await placesTaken(slot_id)).toBe(taken - 1);
   });
@@ -82,7 +83,7 @@ test.describe("Midtrans' notification, as the customer sees it", () => {
       body: { result: "cancelled" },
     });
     await page.reload();
-    await expect(confirmation(page).getByText("Dibatalkan")).toBeVisible();
+    await expect(confirmation(page).getByText("Dibatalkan", { exact: true })).toBeVisible();
     expect(await placesTaken(slot_id)).toBe(taken - 1);
   });
 
@@ -96,7 +97,7 @@ test.describe("Midtrans' notification, as the customer sees it", () => {
     expect((await notify(request, cheaper)).status).toBe(403);
 
     await page.reload();
-    await expect(confirmation(page).getByText("Menunggu pembayaran")).toBeVisible();
+    await expect(confirmation(page).getByText("Menunggu pembayaran", { exact: true })).toBeVisible();
     expect((await orderRow(orderId)).status).toBe("pending_payment");
   });
 });

@@ -26,7 +26,7 @@ test.describe("customer navigation on desktop", () => {
 
     await nav.getByRole("link", { name: "Layanan", exact: true }).click();
     await expect(page).toHaveURL("/services");
-    await expect(page.getByRole("heading", { level: 1, name: "Layanan" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Pilih layanan dan jam" })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Layanan", exact: true })).toHaveAttribute(
       "aria-current",
       "page",
@@ -43,6 +43,7 @@ test.describe("customer navigation on desktop", () => {
     await page.goto("/orders");
     await page.getByRole("link", { name: "HomeKlin, ke beranda" }).click();
     await expect(page).toHaveURL("/home");
-    await expect(page.getByRole("heading", { level: 1, name: "Pesan kebersihan rumah" })).toBeVisible();
+    // A signed-in customer's home is "Pesanan Anda" (D5, mock Customer-Home).
+    await expect(page.getByRole("heading", { level: 1, name: "Pesanan Anda" })).toBeVisible();
   });
 });

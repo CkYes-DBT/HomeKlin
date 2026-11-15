@@ -1,22 +1,13 @@
 import { expect, test } from "@playwright/test";
+import { signedInAs } from "./setup/auth-state";
 
-// The customer app home at /home: HomeKlin's real services, prices and areas (T8) around a sample
-// running job (labelled as such until T12 brings real orders). The test project is shared with runs
-// that add and remove services, so the checks name seeded services instead of counting the list.
-test.describe("customer home", () => {
-  test("shows the current job first: live status, the Petugas HomeKlin and who can watch", async ({ page }) => {
-    await page.goto("/home");
-    const job = page.getByRole("region", { name: "Pesanan berjalan" });
-    await expect(job).toBeVisible();
-    await expect(job.getByText("Sedang berlangsung")).toBeVisible();
-    await expect(job.getByText("Wulan Anggraeni")).toBeVisible();
-    await expect(job.getByText("Petugas HomeKlin", { exact: true })).toBeVisible();
-    await expect(job.getByRole("img", { name: "Foto Wulan Anggraeni" })).toBeVisible();
-    await expect(job.getByRole("link", { name: "Tonton langsung" })).toHaveAttribute("href", "/orders");
-    await expect(job.getByText(/Hanya Anda dan tim pemantau HomeKlin yang dapat menonton/)).toBeVisible();
-  });
-
-  test("starts with the five service areas, Jakarta Selatan chosen, and leads to its free slots", async ({ page }) => {
+// The customer app home at /home (D5, mocks Customer-Home and Phone-Home). A visitor sees where to
+// start: the five service areas, which lead to step 1 of ordering, and HomeKlin's real services with
+// their full price and duration (T8). A signed-in customer sees "Pesanan Anda": their own orders, their
+// account and the way to help, which replaced the labelled sample job of T7. The test project is shared
+// with runs that add and remove services, so the checks name seeded services instead of counting.
+test.describe("customer home for a visitor", () => {
+  test("starts with the five service areas, Jakarta Selatan chosen, and leads to its free times", async ({ page }) => {
     await page.goto("/home");
     await expect(page.getByRole("heading", { level: 1, name: "Pesan kebersihan rumah" })).toBeVisible();
     const area = page.getByRole("combobox", { name: "Area layanan" });
@@ -31,29 +22,48 @@ test.describe("customer home", () => {
       "Jakarta Utara",
     ]);
 
-    // Choosing an area alone stays on the page; the button opens that area's services and free slots.
+    // Choosing an area alone stays on the page; the button opens step 1 in that area.
     await area.selectOption("jakarta-barat");
     await expect(page).toHaveURL("/home");
     await page.getByRole("button", { name: "Lihat jadwal" }).click();
     await expect(page).toHaveURL("/services?area=jakarta-barat");
-    await expect(page.getByRole("heading", { level: 2, name: "Jadwal kosong di Jakarta Barat" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Jam kosong di Jakarta Barat" })).toBeVisible();
   });
 
-  test("lists HomeKlin's services with their full price and duration", async ({ page }) => {
+  test("lists HomeKlin's services with their full price and duration, each leading to step 1", async ({ page }) => {
     await page.goto("/home");
     const services = page.getByRole("region", { name: "Layanan HomeKlin" });
     for (const name of ["Pembersihan Rutin", "Kasur"]) {
       const item = services.getByRole("listitem").filter({ has: page.getByRole("heading", { name }) });
       await expect(item.getByText(/^Rp\s[\d.]+$/)).toBeVisible();
       await expect(item.getByText(/^± \d+ (jam|menit)/)).toBeVisible();
-      await expect(item.getByRole("link")).toHaveAttribute("href", "/services");
+      await expect(item.getByRole("link")).toHaveAttribute("href", /^\/services\?layanan=[a-z0-9-]+$/);
     }
+    await expect(services.getByRole("link", { name: "Pembersihan Rutin" })).toHaveAttribute("href", "/services?layanan=regular");
     await expect(services).not.toContainText("mulai dari");
     await expect(services.getByRole("link", { name: /Semua layanan/ })).toHaveAttribute("href", "/services");
   });
 
-  test("says plainly that the running order is sample data", async ({ page }) => {
+  test("shows no sample data any more", async ({ page }) => {
     await page.goto("/home");
-    await expect(page.getByText("Pratinjau tampilan: pesanan berjalan di atas adalah data contoh.")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.getByText(/data contoh/i)).toHaveCount(0);
+  });
+});
+
+test.describe("customer home when signed in", () => {
+  test.use(signedInAs.customer);
+
+  test("shows Pesanan Anda with the account, the recording facts and the way to book again", async ({ page }) => {
+    await page.goto("/home");
+    await expect(page.getByRole("heading", { level: 1, name: "Pesanan Anda" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Riwayat pesanan" })).toBeVisible();
+    const aside = page.getByRole("complementary", { name: "Akun dan bantuan" });
+    await expect(aside.getByRole("heading", { name: "Akun Anda" })).toBeVisible();
+    await expect(aside.getByRole("button", { name: "Keluar" })).toBeVisible();
+    await expect(aside.getByText("Tersedia 7 hari, lalu dihapus otomatis.")).toBeVisible();
+    await expect(aside.getByRole("link", { name: "Hubungi bantuan" })).toHaveAttribute("href", "/support");
+    await expect(page.getByRole("link", { name: "Pesan layanan lagi" })).toHaveAttribute("href", "/services");
+    await expect(page.getByText(/data contoh/i)).toHaveCount(0);
   });
 });

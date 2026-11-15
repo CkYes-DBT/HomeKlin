@@ -79,8 +79,8 @@ export function CatalogForm({ action, defaultArea, pendingLabel, filters, childr
           className={`pointer-events-none absolute inset-x-0 top-0 flex justify-center ${pending ? "" : "sr-only"}`}
         >
           {pending ? (
-            <span className="flex items-center gap-2 rounded-full bg-surface px-4 py-2 text-sm font-medium text-ink shadow-raised">
-              <LoaderCircle className="size-4 shrink-0 animate-spin text-brand-700" aria-hidden="true" />
+            <span className="flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm font-medium text-ink shadow-float">
+              <LoaderCircle className="size-4 shrink-0 animate-spin text-primary motion-reduce:animate-none" aria-hidden="true" />
               {pendingLabel}
             </span>
           ) : null}

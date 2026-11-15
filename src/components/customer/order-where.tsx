@@ -4,6 +4,7 @@ import { CalendarX2, ChevronDown, CircleAlert, MapPin, MapPinOff, type LucideIco
 import { useTranslations } from "next-intl";
 import type { RefObject } from "react";
 import { FieldError, orderInputClass } from "./booking-controls";
+import { flowCard, flowCardTitle, flowTextLink } from "./flow-styles";
 import { WindowPicker, type BookingDay } from "./booking-window-picker";
 import type { OrderArea } from "./order-form";
 
@@ -14,8 +15,6 @@ type OrderWhereProps = {
   freeDays: BookingDay[];
   selected: { dayLabel: string; windowLabel: string } | null;
   startsAt: string | null;
-  pickerOpen: boolean;
-  onPickerOpenChange: (open: boolean) => void;
   onChooseArea: (areaId: string) => void;
   onChooseWindow: (startsAt: string) => void;
   disabled: boolean;
@@ -31,7 +30,7 @@ type OrderWhereProps = {
   windowAlert: RefObject<HTMLDivElement | null>;
 };
 
-const sectionTitle = "font-display text-lg font-semibold text-ink";
+const sectionTitle = flowCardTitle;
 
 // Where and when (T9b): the service area first, because it decides which free windows exist, then the
 // area's free arrival windows (the T9 picker, Jakarta time). Every area's windows came with the page,
@@ -43,8 +42,6 @@ export function OrderWhere({
   freeDays,
   selected,
   startsAt,
-  pickerOpen,
-  onPickerOpenChange,
   onChooseArea,
   onChooseWindow,
   disabled,
@@ -71,16 +68,16 @@ export function OrderWhere({
     };
 
   return (
-    <section aria-labelledby="order-where-title" className="rounded-xl border border-border bg-surface p-4 shadow-card md:p-5">
+    <section aria-labelledby="order-where-title" className={flowCard}>
       <h2 id="order-where-title" className={sectionTitle}>
         {tOrder("whereTitle")}
       </h2>
-      <div className="mt-3 flex flex-col gap-2">
-        <label htmlFor="order-area" className="px-1 text-sm font-medium text-ink">
+      <div className="mt-4 flex flex-col gap-1.5">
+        <label htmlFor="order-area" className="text-xs font-medium text-ink-muted">
           {tOrder("areaLabel")}
         </label>
         <span className="relative flex">
-          <MapPin className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-brand-700" aria-hidden="true" />
+          <MapPin className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-primary" aria-hidden="true" />
           <select
             id="order-area"
             name="areaId"
@@ -88,7 +85,7 @@ export function OrderWhere({
             onChange={(event) => onChooseArea(event.target.value)}
             aria-invalid={areaError ? true : undefined}
             aria-describedby={areaError ? "order-area-error" : undefined}
-            className={`${orderInputClass} h-12 cursor-pointer appearance-none pr-11 pl-10 font-semibold`}
+            className={`${orderInputClass} h-12 cursor-pointer appearance-none pr-11 pl-10 font-medium`}
           >
             {areas.map((option) => (
               <option key={option.id} value={option.id}>
@@ -109,7 +106,7 @@ export function OrderWhere({
         {/* Always on the page, so a screen reader announces what is put into it. */}
         <div ref={windowAlert} role="alert" aria-atomic="true" tabIndex={-1} className="rounded-md outline-offset-4">
           {justTaken ? (
-            <div key={answers} className="mt-3 flex items-start gap-3 rounded-md bg-warning-surface px-4 py-3 text-sm text-ink">
+            <div key={answers} className="mt-3 flex items-start gap-3 rounded-sm bg-warning-surface px-4 py-3 text-sm text-ink">
               <CircleAlert className="mt-0.5 size-5 shrink-0 text-warning" aria-hidden="true" />
               <div>
                 <p className="font-semibold">{t("justTakenTitle")}</p>
@@ -119,7 +116,7 @@ export function OrderWhere({
           ) : null}
         </div>
         {takenNotice && !state ? (
-          <div className="mt-3 flex items-start gap-3 rounded-md bg-warning-surface px-4 py-3 text-sm text-ink">
+          <div className="mt-3 flex items-start gap-3 rounded-sm bg-warning-surface px-4 py-3 text-sm text-ink">
             <CircleAlert className="mt-0.5 size-5 shrink-0 text-warning" aria-hidden="true" />
             <div>
               <h4 className="font-semibold">{t("takenTitle")}</h4>
@@ -129,17 +126,14 @@ export function OrderWhere({
         ) : null}
 
         {state ? (
-          <div className="mt-3 flex items-start gap-3 rounded-md bg-surface-sunken px-4 py-3 text-sm text-ink">
-            <state.icon className="mt-0.5 size-5 shrink-0 text-brand-700" aria-hidden="true" />
+          <div className="mt-3 flex items-start gap-3 rounded-sm bg-sunken px-4 py-3 text-sm text-ink">
+            <state.icon className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
             <div>
               <p className="font-semibold">{state.title}</p>
               <p className="mt-1 text-ink-muted">{state.body}</p>
               {state.retry ? (
                 // A plain link on purpose: a full page load reads the windows again.
-                <a
-                  href=""
-                  className="-mx-2 mt-1 inline-flex min-h-touch items-center rounded-full px-2 font-semibold text-brand-700 hover:bg-brand-50 hover:text-brand-800 active:bg-brand-100"
-                >
+                <a href="" className={`${flowTextLink} mt-1`}>
                   {tOrder("retry")}
                 </a>
               ) : null}
@@ -152,13 +146,9 @@ export function OrderWhere({
             days={freeDays}
             selected={selected}
             startsAt={startsAt}
-            open={pickerOpen}
-            onOpenChange={onPickerOpenChange}
             onChoose={onChooseWindow}
             disabled={disabled}
             error={windowError}
-            servicesHref="/services"
-            showBackLink={false}
           />
         )}
         {state ? <FieldError id="booking-window-error" message={windowError} /> : null}

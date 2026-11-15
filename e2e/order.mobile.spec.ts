@@ -30,7 +30,7 @@ test.afterAll(async () => {
 
 const consentSwitch = (page: Page) => page.getByRole("switch", { name: /Saya setuju/ });
 const sendCode = (page: Page) => page.getByRole("button", { name: "Kirim kode" });
-const placeButton = (page: Page) => page.getByRole("button", { name: "Pesan sekarang" });
+const placeButton = (page: Page) => page.getByRole("button", { name: "Lanjut ke pembayaran" });
 const codeField = (page: Page) => page.getByLabel("Kode 6 angka");
 
 /** Fills in the order form after the service and area are chosen. */
@@ -69,7 +69,7 @@ test.describe("as a guest", () => {
       .getByRole("link", { name: service.name })
       .click();
     await expect(page).toHaveURL(`/pesan?layanan=${service.id}`);
-    await expect(page.getByRole("heading", { level: 1, name: "Pesan layanan" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Detail pemesanan" })).toBeVisible();
     // The service is chosen already, the area is the default one until changed.
     await expect(page.getByLabel("Pilih layanan")).toHaveValue(service.id);
     await expect(page.getByLabel("Area layanan")).toHaveValue("jakarta-selatan");
@@ -92,7 +92,7 @@ test.describe("as a guest", () => {
     await placeButton(page).click();
     const orderId = await bookedId(page);
 
-    const confirmation = page.getByRole("region", { name: "Pesanan Anda sudah dibuat" });
+    const confirmation = page.getByRole("region", { name: "Pembayaran" });
     await expect(confirmation.getByText("Menunggu pembayaran")).toBeVisible();
     await expect(confirmation.getByText(service.name)).toBeVisible();
     await expect(confirmation.getByText(address)).toBeVisible();
@@ -247,7 +247,7 @@ test.describe("as a guest", () => {
     await page.getByRole("button", { name: "Masuk", exact: true }).click();
 
     await expect(page).toHaveURL(orderPage);
-    const confirmation = page.getByRole("region", { name: "Pesanan Anda sudah dibuat" });
+    const confirmation = page.getByRole("region", { name: "Pembayaran" });
     await expect(confirmation.getByText("Menunggu pembayaran")).toBeVisible();
     await expect(confirmation.getByText(address)).toBeVisible();
   });
@@ -275,7 +275,7 @@ test.describe("as a guest", () => {
     const email = guestEmail(guests);
     const target = await lateWindow(area, "13.00", 4);
     await page.goto(orderPath(service.id, area, undefined, "/en"));
-    await expect(page.getByRole("heading", { level: 1, name: "Book a cleaning" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Booking details" })).toBeVisible();
     await expect(page.getByLabel("Choose a service")).toHaveValue(service.id);
     await chooseWindow(page, target, "en");
     await page.getByLabel("Full address").fill(address);
@@ -285,7 +285,7 @@ test.describe("as a guest", () => {
     await page.getByRole("button", { name: "Send code" }).click();
     await expect(page.getByText(`We sent a 6-digit code to ${email}.`)).toBeVisible({ timeout: emailWait });
     await page.getByLabel("6-digit code").fill(await codeFor(email));
-    await page.getByRole("button", { name: "Book now" }).click();
+    await page.getByRole("button", { name: "Continue to payment" }).click();
     await expect(page).toHaveURL(/\/en\/orders\?booked=[0-9a-f-]{36}$/, { timeout: 15_000 });
     await expect(page.getByText("Awaiting payment")).toBeVisible();
     await cancelOrder(new URL(page.url()).searchParams.get("booked") ?? "");
@@ -294,7 +294,7 @@ test.describe("as a guest", () => {
   test("the old sign-up page leads to the order page", async ({ page }) => {
     await page.goto("/signup");
     await expect(page).toHaveURL("/pesan");
-    await expect(page.getByRole("heading", { level: 1, name: "Pesan layanan" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Detail pemesanan" })).toBeVisible();
     // No service in the address: the form asks for one.
     await expect(page.getByLabel("Pilih layanan")).toHaveValue("");
     await page.goto("/en/signup");

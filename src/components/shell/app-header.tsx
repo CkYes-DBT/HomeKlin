@@ -27,6 +27,13 @@ const accountSlotPlacement: Record<AppNavKey, string> = {
   cleaner: "hidden md:flex",
 };
 
+// The bar's width follows the pages under it: the customer pages since D5 use the wider redesign
+// column (the Main and Customer-* mocks, 1200 px), the cleaner app keeps its phone column.
+const barWidth: Record<AppNavKey, string> = {
+  customer: "max-w-dashboard",
+  cleaner: "max-w-content",
+};
+
 // The customer and cleaner app bar. On phones a slim 56 px bar: the wordmark (home link) on the left,
 // the language switch and the account corner on the right, and the sections stay in the bottom bar; it
 // scrolls away so the small screen keeps its height. From 768 px it becomes the 64 px sticky top bar
@@ -44,7 +51,7 @@ export function AppHeader({ nav, roleLabel, tone = "default" }: AppHeaderProps) 
     <header
       className={`md:sticky md:top-0 md:z-(--z-sticky) ${forest ? "bg-canvas md:border-b md:border-border" : "border-b border-border bg-surface"}`}
     >
-      <div className="mx-auto flex h-top-bar max-w-content items-center justify-between gap-3 px-safe md:h-16 md:gap-6 md:px-gutter-wide">
+      <div className={`mx-auto flex h-top-bar ${barWidth[nav]} items-center justify-between gap-3 px-safe md:h-16 md:gap-6 md:px-gutter-wide`}>
         <span className="flex min-w-0 items-center gap-2">
           <Link href={home.href} aria-label={t("homeLink")} className="inline-flex min-h-touch items-center rounded-full">
             <Wordmark palette={palette} />

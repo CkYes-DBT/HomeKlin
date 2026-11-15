@@ -64,7 +64,7 @@ test.describe("no separate sign-up", () => {
   test("the old sign-up address leads to the order page, and /login offers ordering instead", async ({ page }) => {
     await page.goto("/signup");
     await expect(page).toHaveURL("/pesan");
-    await expect(page.getByRole("heading", { level: 1, name: "Pesan layanan" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Detail pemesanan" })).toBeVisible();
 
     await page.goto("/login");
     await expect(page.getByRole("link", { name: "Daftar", exact: true })).toHaveCount(0);
@@ -116,7 +116,7 @@ test.describe("signing in", () => {
     expect(html).not.toContain("Tiket baru muncul otomatis");
     await page.goto("/admin/tickets");
     await expect(page).toHaveURL("/home");
-    await expect(page.getByRole("heading", { level: 1, name: "Pesan kebersihan rumah" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Pesanan Anda" })).toBeVisible();
 
     await page.goto("/cleaner");
     await expect(page).toHaveURL("/home");
@@ -158,7 +158,10 @@ test.describe("signing out", () => {
 
     await page.getByRole("banner").getByRole("link", { name: "Uji Pelanggan, akun Anda" }).click();
     await expect(page).toHaveURL("/account");
-    await expect(page.getByRole("main").getByText("Uji Pelanggan", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Akun" })).toBeVisible();
+    // The home just left stays in the page, hidden (Next.js keeps visited pages), and it names the
+    // customer too since D5; the account page's own name is the visible one.
+    await expect(page.getByRole("main").getByText("Uji Pelanggan", { exact: true }).filter({ visible: true })).toBeVisible();
     await page.getByRole("button", { name: "Keluar" }).click();
 
     await expect(page).toHaveURL("/");
@@ -191,7 +194,7 @@ test.describe("in English", () => {
     await page.getByLabel("Password", { exact: true }).fill(customer.password);
     await page.getByRole("button", { name: "Log in", exact: true }).click();
     await expect(page).toHaveURL("/en/home");
-    await expect(page.getByRole("heading", { level: 1, name: "Book a home cleaning" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Your orders" })).toBeVisible();
     await expect(page.getByRole("banner").getByRole("link", { name: "Uji Pelanggan, your account" })).toHaveAttribute(
       "href",
       "/en/account",

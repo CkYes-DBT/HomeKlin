@@ -38,7 +38,8 @@ test.afterAll(async () => {
 });
 
 const payButton = (page: Page) => page.getByRole("button", { name: "Bayar sekarang" });
-const confirmation = (page: Page) => page.getByRole("region", { name: "Pesanan Anda sudah dibuat" });
+// Step 3 of ordering (D5, mock Customer-Payment).
+const confirmation = (page: Page) => page.getByRole("region", { name: "Pembayaran" });
 
 const book = (page: Page, window: Window) => bookSignedIn(page, service, area, window);
 
@@ -83,7 +84,7 @@ test.describe("as a signed-in customer", () => {
     try {
       // The confirmation offers the payment: the total, where it happens, and that no real money moves.
       const card = confirmation(page);
-      await expect(card.getByText("Menunggu pembayaran")).toBeVisible();
+      await expect(card.getByText("Menunggu pembayaran", { exact: true })).toBeVisible();
       await expect(card.getByText(/^Rp\s[\d.]+$/)).toBeVisible();
       await expect(card.getByText(/halaman pembayaran aman Midtrans/)).toBeVisible();
       await expect(card.getByText(/Pembayaran simulasi, tidak ada uang sungguhan/)).toBeVisible();
@@ -100,7 +101,7 @@ test.describe("as a signed-in customer", () => {
       const note = page.getByRole("status").filter({ hasText: "Pembayaran sedang dikonfirmasi" });
       await expect(note).toBeVisible();
       await expect(note).toContainText("Status pesanan ini akan berubah dalam beberapa saat");
-      await expect(confirmation(page).getByText("Menunggu pembayaran")).toBeVisible();
+      await expect(confirmation(page).getByText("Menunggu pembayaran", { exact: true })).toBeVisible();
       await expect(confirmation(page).getByText(/^(Sudah dibayar|Lunas)$/)).toHaveCount(0);
 
       // Pressing again leads to the same transaction, not a second one.
@@ -156,7 +157,7 @@ test.describe("as a signed-in customer", () => {
       });
       // Once reloaded, the page shows the status and no payment button.
       await page.reload();
-      await expect(confirmation(page).getByText("Dibatalkan")).toBeVisible();
+      await expect(confirmation(page).getByText("Dibatalkan", { exact: true })).toBeVisible();
       await expect(payButton(page)).toHaveCount(0);
     } finally {
       await cancelOrder(orderId);
@@ -176,8 +177,8 @@ test.describe("as a signed-in customer", () => {
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
         expect(overflow).toBeLessThanOrEqual(0);
       }
-      const card = page.getByRole("region", { name: "Your order has been placed" });
-      await expect(card.getByText("Awaiting payment")).toBeVisible();
+      const card = page.getByRole("region", { name: "Payment" });
+      await expect(card.getByText("Awaiting payment", { exact: true })).toBeVisible();
       await expect(card.getByText(/Midtrans’ secure payment page/)).toBeVisible();
       await expect(card.getByText(/Simulated payment, no real money/)).toBeVisible();
       await expect(page.getByRole("status").filter({ hasText: "Your payment is being confirmed" })).toBeVisible();

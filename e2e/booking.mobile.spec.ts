@@ -11,13 +11,13 @@ import {
   windowText,
   type Window,
 } from "./booking-test-data";
-import { orderPath } from "./order-test-data";
+import { chooseWindow, jakartaDate, orderPath, stepOneChip } from "./order-test-data";
 import { readTestUsers, signedInAs } from "./setup/auth-state";
 
-// T9 on a phone (customers are mobile-first), on the order page since T9b (/pesan): a signed-in
-// customer goes from the price list to a booked order. The customer picks a service and a free
-// arrival window, gives the address and phone, switches on the streaming consent and books; the order
-// then waits for payment. Also: the consent is required, a window someone else takes in the meantime
+// T9 on a phone (customers are mobile-first), on the order page since T9b (/pesan), in the three steps
+// since D5: a signed-in customer goes from step 1 (/services: a service and a free time) to step 2
+// (/pesan: the address, the phone, a note for the Petugas, the streaming consent) and on to step 3,
+// the payment, where the order waits for payment. Also: the consent is required, a window someone else takes in the meantime
 // is refused with other windows offered, a window that is gone when the page opens, an unknown
 // service, and a visitor who opens the old booking address and signs in on the way. Guests ordering
 // with an emailed code are in e2e/order.mobile.spec.ts. To the customer HomeKlin is one company:
@@ -50,34 +50,43 @@ test.afterAll(async () => {
 
 const bookingForm = (page: Page) => page.getByRole("form", { name: "Pesan layanan" });
 const consentSwitch = (page: Page) => page.getByRole("switch", { name: /Saya setuju/ });
-const submitButton = (page: Page) => page.getByRole("button", { name: "Pesan sekarang" });
-
-async function chooseWindow(page: Page, window: Window) {
-  await page.getByRole("button", { name: "Ganti jadwal" }).click();
-  await page
-    .getByRole("group", { name: dayText(window.startsAt) })
-    .getByRole("radio", { name: windowText(window) })
-    .check();
-}
+const submitButton = (page: Page) => page.getByRole("button", { name: "Lanjut ke pembayaran" });
+const note = "Masuk lewat pintu samping. Kunci ada di pos satpam.";
 
 test.describe("as a signed-in customer", () => {
   test.use(signedInAs.customer);
 
   test("books a service for a free window and sees the order waiting for payment", async ({ page }) => {
+    const first = await windowFor("15.00", 1);
     const target = await windowFor("15.00");
 
+    // Step 1: a service and a time, with the summary following the choice.
     await page.goto(`/services?area=${area}`);
+    const currentStep = page.getByRole("list", { name: "Langkah pemesanan" }).locator('[aria-current="step"]');
+    await expect(currentStep).toContainText("Layanan");
+    await expect(page.getByText("Langkah 1 dari 3")).toBeVisible();
     const card = page
-      .getByRole("list", { name: "Daftar harga" })
+      .getByRole("list", { name: "Layanan", exact: true })
       .getByRole("listitem")
       .filter({ has: page.getByRole("heading", { name: service.name }) });
     const price = (await card.getByText(/^Rp\s[\d.]+$/).textContent()) ?? "";
     expect(price).toMatch(/^Rp/);
-    await card.getByRole("link", { name: `Pesan ${service.name}` }).click();
+    const summary1 = page.getByRole("form", { name: "Ringkasan" });
+    await expect(summary1.getByRole("button", { name: "Pesan sekarang" })).toBeDisabled();
+    await page.getByRole("radio", { name: service.name, exact: true }).check();
+    await expect(summary1.getByText(price, { exact: true })).toBeVisible();
+    const times = page.getByRole("region", { name: "Jam kosong di Jakarta Barat" });
+    await times.getByLabel("Tanggal").selectOption(jakartaDate(first.startsAt));
+    await times.getByRole("radio", { name: stepOneChip(first) }).check();
+    await summary1.getByRole("button", { name: "Pesan sekarang" }).click();
 
-    // The order page opens on the earliest free window, with the service, its full price and the area.
-    await expect(page).toHaveURL(/\/pesan\?layanan=regular&area=jakarta-barat&starts=\d{4}-/);
-    await expect(page.getByRole("heading", { level: 1, name: "Pesan layanan" })).toBeVisible();
+    // Step 2 opens with the service, the area and the time chosen, and the full price.
+    await expect(page).toHaveURL(/\/pesan\?/);
+    const url = new URL(page.url());
+    expect(Object.fromEntries(url.searchParams)).toEqual({ layanan: service.id, area, starts: first.startsAt });
+    await expect(page.getByRole("heading", { level: 1, name: "Detail pemesanan" })).toBeVisible();
+    await expect(currentStep).toContainText("Pesan");
+    await expect(page.getByText("Langkah 2 dari 3")).toBeVisible();
     const summary = page.getByRole("region", { name: "Layanan" });
     await expect(summary.getByLabel("Pilih layanan")).toHaveValue(service.id);
     await expect(summary.getByText(service.name, { exact: true })).toBeVisible();
@@ -89,10 +98,6 @@ test.describe("as a signed-in customer", () => {
 
     // Another window, late in the range; the choice goes into the address too.
     await chooseWindow(page, target);
-    // A tap picks the window and closes the long list again, back on the button that opened it.
-    const toggle = page.getByRole("button", { name: "Ganti jadwal" });
-    await expect(toggle).toHaveAttribute("aria-expanded", "false");
-    await expect(toggle).toBeFocused();
     const chosen = page.getByRole("group", { name: "Jadwal kedatangan" });
     await expect(chosen.getByText(dayText(target.startsAt), { exact: true })).toBeVisible();
     await expect(chosen.getByText(`${windowText(target)} WIB`, { exact: true })).toBeVisible();
@@ -100,6 +105,7 @@ test.describe("as a signed-in customer", () => {
 
     await page.getByLabel("Alamat lengkap").fill(address);
     await page.getByLabel("Nomor HP").fill(phone);
+    await page.getByLabel("Catatan untuk Petugas (opsional)").fill(note);
     // The streaming consent comes with a plain explanation, and booking waits for it.
     await expect(page.getByText(/Hanya Anda dan tim pemantau HomeKlin/)).toBeVisible();
     await expect(page.getByText(/disimpan 7 hari, lalu dihapus/)).toBeVisible();
@@ -112,7 +118,8 @@ test.describe("as a signed-in customer", () => {
     await expect(page).toHaveURL(/\/orders\?booked=[0-9a-f-]{36}$/, { timeout: 15_000 });
     const orderId = new URL(page.url()).searchParams.get("booked") ?? "";
     try {
-      const confirmation = page.getByRole("region", { name: "Pesanan Anda sudah dibuat" });
+      const confirmation = page.getByRole("region", { name: "Pembayaran" });
+      await expect(currentStep).toContainText("Bayar");
       await expect(confirmation.getByText("Menunggu pembayaran")).toBeVisible();
       await expect(confirmation.getByText(service.name)).toBeVisible();
       await expect(confirmation.getByText(price, { exact: true })).toBeVisible();
@@ -134,12 +141,13 @@ test.describe("as a signed-in customer", () => {
       // The order really waits for payment, at the chosen window.
       const { data } = await adminClient()
         .from("orders")
-        .select("status, starts_at, stream_consent, contact_phone")
+        .select("status, starts_at, stream_consent, contact_phone, customer_note")
         .eq("id", orderId)
         .single();
       expect(data?.status).toBe("pending_payment");
       expect(data?.contact_phone).toBe("+6281234567890");
       expect(data?.stream_consent).toBe(true);
+      expect(data?.customer_note).toBe(note);
       expect(new Date(data?.starts_at as string).toISOString()).toBe(target.startsAt);
     } finally {
       await cancelOrder(orderId);
@@ -153,7 +161,7 @@ test.describe("as a signed-in customer", () => {
     await page.getByLabel("Nomor HP").fill(phone);
     await expect(consentSwitch(page)).not.toBeChecked();
     await expect(submitButton(page)).toBeDisabled();
-    await expect(page.getByText("Nyalakan persetujuan siaran di atas untuk memesan.")).toBeVisible();
+    await expect(page.getByText("Nyalakan persetujuan siaran di atas untuk melanjutkan.")).toBeVisible();
 
     // Sent anyway (the button is only a hint; the server decides): refused, next to the switch.
     await bookingForm(page).evaluate((form) => (form as HTMLFormElement).requestSubmit());
@@ -240,14 +248,14 @@ test.describe("as a signed-in customer", () => {
   test("works in English, with times in Jakarta time", async ({ page }) => {
     const target = await windowFor("08.00", 1);
     await page.goto(orderPath(service.id, area, target.startsAt, "/en"));
-    await expect(page.getByRole("heading", { level: 1, name: "Book a cleaning" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Booking details" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Service" }).getByText(service.nameEn, { exact: true })).toBeVisible();
     await expect(
       page.getByRole("group", { name: "Arrival time" }).getByText(`${windowText(target)} WIB`, { exact: true }),
     ).toBeVisible();
     await expect(page.getByText(/Only you and the HomeKlin monitoring team/)).toBeVisible();
     await expect(page.getByRole("switch", { name: /I agree/ })).not.toBeChecked();
-    await expect(page.getByRole("button", { name: "Book now" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Continue to payment" })).toBeDisabled();
   });
 
   test.describe("at 360 px", () => {
@@ -257,8 +265,8 @@ test.describe("as a signed-in customer", () => {
       const target = await windowFor("13.00", 1);
       for (const prefix of ["", "/en"]) {
         await page.goto(orderPath(service.id, area, target.startsAt, prefix));
-        await expect(submitButton(page).or(page.getByRole("button", { name: "Book now" }))).toBeVisible();
-        await page.getByRole("button", { name: /^(Ganti jadwal|Change time)$/ }).click();
+        await expect(submitButton(page).or(page.getByRole("button", { name: "Continue to payment" }))).toBeVisible();
+        await expect(page.getByRole("radio").first()).toBeVisible();
         expect(await page.content()).not.toMatch(agencyWording);
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
         expect(overflow).toBeLessThanOrEqual(0);

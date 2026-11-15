@@ -1,20 +1,23 @@
 import { expect, test, type Page } from "@playwright/test";
+import { fillWindow, freeWindows } from "./booking-test-data";
+import { jakartaDate, stepOneChip } from "./order-test-data";
 
-// T8, the customer catalog on a phone (markdown/tasks/todo.md): find a service by area, type and
-// keyword in both languages, see the free arrival windows of a served area, the empty state where
-// nobody is free (Jakarta Utara, which no one serves in the seed), and a search with no match.
+// T8, the customer catalog on a phone (markdown/tasks/todo.md), step 1 of ordering since D5: find a
+// service by area, type and keyword in both languages, see the free times of a served area by day (a
+// full time shown and not choosable), the empty state where nobody is free (Jakarta Utara, which no one
+// serves in the seed), a search with no match, and the way on to step 2 with the choice.
 // The test project is shared with other test runs that add and remove services, so these checks name
 // specific seeded services and never count the whole list. The free windows come from the e2e setup
 // (e2e/setup/catalog.setup.ts): 08.00, 10.00, 13.00 and 15.00 WIB, Monday to Saturday.
 
 const seededStarts = ["08.00", "10.00", "13.00", "15.00"];
-const windowText = /^(08\.00-10\.00|10\.00-12\.00|13\.00-15\.00|15\.00-17\.00)$/;
+const chipName = /^\d{2}\.\d{2} (sampai|to) \d{2}\.\d{2} WIB(, (penuh|full))?$/;
 
-function priceList(page: Page, name = "Daftar harga") {
-  return page.getByRole("list", { name });
+function priceList(page: Page, name = "Layanan") {
+  return page.getByRole("list", { name, exact: true });
 }
 
-function card(page: Page, service: string, list = "Daftar harga") {
+function card(page: Page, service: string, list = "Layanan") {
   return priceList(page, list).getByRole("listitem").filter({ has: page.getByRole("heading", { name: service }) });
 }
 
@@ -22,8 +25,8 @@ test.describe("finding a service", () => {
   test("starts in Jakarta Selatan with its free slots and HomeKlin's full prices", async ({ page }) => {
     await page.goto("/services");
     await expect(page.getByRole("combobox", { name: "Area layanan" })).toHaveValue("jakarta-selatan");
-    await expect(page.getByRole("heading", { level: 2, name: "Jadwal kosong di Jakarta Selatan" })).toBeVisible();
-    await expect(page.getByText("Paling cepat")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Jam kosong di Jakarta Selatan" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Jam kosong di Jakarta Selatan" }).getByRole("radio").first()).toBeVisible();
 
     const regular = card(page, "Pembersihan Rutin");
     await expect(regular).toBeVisible();
@@ -37,7 +40,7 @@ test.describe("finding a service", () => {
     await page.goto("/services");
     await page.getByRole("combobox", { name: "Area layanan" }).selectOption("jakarta-timur");
     await expect(page).toHaveURL("/services?area=jakarta-timur");
-    await expect(page.getByRole("heading", { level: 2, name: "Jadwal kosong di Jakarta Timur" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Jam kosong di Jakarta Timur" })).toBeVisible();
 
     const types = page.getByRole("group", { name: "Jenis layanan" });
     await types.getByRole("button", { name: "Sofa, karpet & kasur" }).click();
@@ -81,32 +84,34 @@ test.describe("finding a service", () => {
     await expect(card(page, "Kasur")).toBeVisible();
     // ...and an Indonesian word on the English page.
     await page.goto("/en/services?q=kasur");
-    await expect(card(page, "Mattress", "Price list")).toBeVisible();
+    await expect(card(page, "Mattress", "Services")).toBeVisible();
   });
 
   test("works in English, with prices and times the Indonesian way", async ({ page }) => {
     await page.goto("/en/services");
     await expect(page.getByRole("combobox", { name: "Service area" })).toHaveValue("jakarta-selatan");
-    await expect(page.getByRole("heading", { level: 2, name: "Free slots in South Jakarta" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Free times in South Jakarta" })).toBeVisible();
     await page.getByRole("searchbox", { name: "Search services" }).fill("sofa");
     await page.getByRole("button", { name: "Search", exact: true }).click();
     await expect(page).toHaveURL("/en/services?q=sofa");
-    const sofa = card(page, "Sofa & Carpet", "Price list");
+    const sofa = card(page, "Sofa & Carpet", "Services");
     await expect(sofa.getByText(/^Rp\s[\d.]+$/)).toBeVisible();
     await expect(sofa.getByText(/^About \d+ hours?/)).toBeVisible();
     // No price is a starting price ("from Rp ...").
-    await expect(priceList(page, "Price list")).not.toContainText(/\bfrom\b/i);
+    await expect(priceList(page, "Services")).not.toContainText(/\bfrom\b/i);
   });
 });
 
 test.describe("free slots", () => {
-  test("shows the earliest free slot and every free slot of the next two weeks by day", async ({ page }) => {
+  test("shows the free times of the next two weeks, a day at a time", async ({ page }) => {
     await page.goto("/services?area=jakarta-barat");
-    const panel = page.getByRole("region", { name: "Jadwal kosong di Jakarta Barat" });
-    await expect(panel.getByText(/^\d{2}\.\d{2}-\d{2}\.\d{2} WIB$/)).toBeVisible();
+    const panel = page.getByRole("region", { name: "Jam kosong di Jakarta Barat" });
+    await expect(panel.getByRole("radio").first()).toBeVisible();
+    for (const name of await panel.getByRole("radio").evaluateAll((radios) => radios.map((radio) => radio.getAttribute("aria-label")))) {
+      expect(name).toMatch(chipName);
+    }
 
-    await panel.getByText("Lihat semua jadwal kosong").click();
-    const days = panel.getByRole("heading", { level: 3 });
+    const days = panel.getByLabel("Tanggal").getByRole("option");
     expect(await days.count()).toBeGreaterThanOrEqual(5);
     await expect(days.first()).toHaveText(/^(Hari ini|Besok|Senin|Selasa|Rabu|Kamis|Jumat|Sabtu)\b/);
     // Monday to Saturday only: no Sunday in the seed.
@@ -114,18 +119,57 @@ test.describe("free slots", () => {
     await expect(panel.getByText(/Waktu dalam WIB/)).toBeVisible();
   });
 
+  test("shows a full time as full, which cannot be chosen", async ({ page }) => {
+    const [window] = (await freeWindows("jakarta-pusat")).slice(-1);
+    const restore = await fillWindow("jakarta-pusat", window.startsAt);
+    try {
+      await page.goto("/services?area=jakarta-pusat");
+      const panel = page.getByRole("region", { name: "Jam kosong di Jakarta Pusat" });
+      await panel.getByLabel("Tanggal").selectOption(jakartaDate(window.startsAt));
+      const full = panel.getByRole("radio", { name: `${stepOneChip(window)}, penuh` });
+      await expect(full).toBeDisabled();
+      await expect(panel.getByText(/, penuh$/)).toBeVisible();
+    } finally {
+      await restore();
+    }
+  });
+
+  test("leads to step 2 with the service, the area and the time chosen", async ({ page }) => {
+    const window = (await freeWindows("jakarta-barat")).at(-2);
+    if (!window) throw new Error("No free window in Jakarta Barat");
+    await page.goto("/services?area=jakarta-barat");
+    const summary = page.getByRole("form", { name: "Ringkasan" });
+    await expect(summary.getByText("Belum dipilih").first()).toBeVisible();
+    await page.getByRole("radio", { name: "Kasur", exact: true }).check();
+    await expect(summary.getByText("Kasur", { exact: true })).toBeVisible();
+    const panel = page.getByRole("region", { name: "Jam kosong di Jakarta Barat" });
+    await panel.getByLabel("Tanggal").selectOption(jakartaDate(window.startsAt));
+    await panel.getByRole("radio", { name: stepOneChip(window) }).check();
+    await expect(summary).toContainText(stepOneChip(window));
+    await summary.getByRole("button", { name: "Pesan sekarang" }).click();
+    await expect(page).toHaveURL(/\/pesan\?/);
+    const params = Object.fromEntries(new URL(page.url()).searchParams);
+    expect(params).toMatchObject({ area: "jakarta-barat", starts: window.startsAt });
+    expect(params.layanan).toMatch(/\S/);
+    await expect(page.getByRole("heading", { level: 1, name: "Detail pemesanan" })).toBeVisible();
+  });
+
   test.describe("in a browser set to another time zone", () => {
     test.use({ timezoneId: "Pacific/Honolulu", locale: "en-US" });
 
     test("still shows the windows in Jakarta time", async ({ page }) => {
       await page.goto("/services");
-      const panel = page.getByRole("region", { name: "Jadwal kosong di Jakarta Selatan" });
-      await panel.getByText("Lihat semua jadwal kosong").click();
-      const windows = panel.getByRole("listitem").filter({ hasText: windowText });
-      expect(await windows.count()).toBeGreaterThanOrEqual(8);
-      for (const text of await windows.allTextContents()) {
-        expect(seededStarts).toContain(text.slice(0, 5));
+      const panel = page.getByRole("region", { name: "Jam kosong di Jakarta Selatan" });
+      const days = await panel.getByLabel("Tanggal").getByRole("option").evaluateAll((options) => options.map((option) => (option as HTMLOptionElement).value));
+      let seen = 0;
+      for (const day of days.slice(0, 2)) {
+        await panel.getByLabel("Tanggal").selectOption(day);
+        for (const name of await panel.getByRole("radio").evaluateAll((radios) => radios.map((radio) => radio.getAttribute("aria-label") ?? ""))) {
+          expect(seededStarts).toContain(name.slice(0, 5));
+          seen += 1;
+        }
       }
+      expect(seen).toBeGreaterThanOrEqual(5);
     });
   });
 
@@ -144,7 +188,7 @@ test.describe("free slots", () => {
     await served.getByRole("link", { name: "Jakarta Selatan" }).click();
     await expect(page).toHaveURL("/services");
     await expect(page.getByRole("combobox", { name: "Area layanan" })).toHaveValue("jakarta-selatan");
-    await expect(page.getByRole("heading", { level: 2, name: "Jadwal kosong di Jakarta Selatan" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Jam kosong di Jakarta Selatan" })).toBeVisible();
   });
 });
 
@@ -181,7 +225,7 @@ test.describe("one brand and one screen width, in every state", () => {
   ]) {
     test(`${path} names no agency and has no horizontal scroll at 360 px`, async ({ page }) => {
       await page.goto(path);
-      await expect(page.getByRole("combobox")).toBeVisible();
+      await expect(page.getByRole("combobox").first()).toBeVisible();
       for (const details of await page.locator("details").all()) await details.locator("summary").click();
       expect(await page.content()).not.toMatch(/agensi|agency|mitra|partner/i);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
@@ -197,7 +241,7 @@ test.describe("while the catalog loads", () => {
 
   test("shows a placeholder that says the services are loading", async ({ page }) => {
     await page.goto("/services");
-    await expect(page.getByRole("heading", { level: 1, name: "Layanan" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Pilih layanan dan jam" })).toBeVisible();
     await expect(page.getByRole("status").filter({ hasText: "Memuat layanan…" })).toBeVisible();
   });
 });

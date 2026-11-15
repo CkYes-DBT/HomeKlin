@@ -2,9 +2,9 @@
 
 import { CalendarClock, Check, ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRef } from "react";
-import { Link } from "@/i18n/navigation";
+import { useState } from "react";
 import { FieldError } from "./booking-controls";
+import { flowInput } from "./flow-styles";
 
 /** One day of free windows, written on the server in Jakarta time. */
 export type BookingDay = {
@@ -22,35 +22,33 @@ type WindowPickerProps = {
   /** The chosen window as it is written, or null when none is chosen. */
   selected: { dayLabel: string; windowLabel: string } | null;
   startsAt: string | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   onChoose: (startsAt: string) => void;
   disabled: boolean;
   error?: string;
-  servicesHref: string;
-  /** Offer the way back to the services (when the chosen window was taken). */
-  showBackLink: boolean;
 };
 
-// The arrival window of a booking: the chosen one up front, in large type, and the area's other free
-// windows one tap away ("Ganti jadwal"), by day, as radio buttons named `startsAt` (the value is the
-// window's start exactly as the catalog gave it). The list stays in the form when it is closed, so the
-// chosen window is always sent. Times are Jakarta time, written by the server.
-export function WindowPicker({
-  areaName,
-  days,
-  selected,
-  startsAt,
-  open,
-  onOpenChange,
-  onChoose,
-  disabled,
-  error,
-  servicesHref,
-  showBackLink,
-}: WindowPickerProps) {
+// The arrival window of an order (T9, restyled in D5 after the Customer-Booking mock): the chosen one
+// up front, then the day as a native select ("Tanggal") and that day's free windows as chips, radio
+// buttons named `startsAt` (the value is the window's start exactly as the catalog gave it). Only the
+// shown day's chips are in the form; the chosen window's day is the one shown, so it is always sent.
+// When the chosen window is taken, the same day stays open with what is left. Times are Jakarta time,
+// written by the server.
+export function WindowPicker({ areaName, days, selected, startsAt, onChoose, disabled, error }: WindowPickerProps) {
   const t = useTranslations("Booking");
-  const toggle = useRef<HTMLButtonElement>(null);
+  const chosenDay = days.find((day) => day.windows.some((window) => window.startsAt === startsAt));
+  const [dayDate, setDayDate] = useState<string | null>(chosenDay?.date ?? null);
+  // A newly chosen window brings its day up; when that window is taken (startsAt null) the same day
+  // stays, so the customer sees what is left of it
+  // (https://react.dev/reference/react/useState#storing-information-from-previous-renders).
+  const [seenStart, setSeenStart] = useState(startsAt);
+  if (startsAt !== seenStart) {
+    setSeenStart(startsAt);
+    if (chosenDay) setDayDate(chosenDay.date);
+  }
+  const day = days.find((candidate) => candidate.date === dayDate) ?? chosenDay ?? days[0];
+  // Looking at another day keeps the chosen window in the form until another one is picked.
+  const chosenElsewhere = startsAt !== null && chosenDay !== undefined && chosenDay.date !== day?.date;
+
   return (
     <>
       <div
@@ -59,7 +57,7 @@ export function WindowPicker({
         aria-describedby="booking-window-note"
         className="mt-3 flex items-start gap-3"
       >
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-lime-wash text-on-lime-wash">
           <CalendarClock className="size-5" aria-hidden="true" />
         </span>
         {selected ? (
@@ -77,74 +75,61 @@ export function WindowPicker({
       <div className="mt-2">
         <FieldError id="booking-window-error" message={error} />
       </div>
-      <p id="booking-window-note" className="mt-2 text-sm text-ink-faint">
+      <p id="booking-window-note" className="mt-2 text-sm text-ink-muted">
         {t("arrivalNote")}
       </p>
 
-      <div className="mt-1 flex flex-wrap items-center gap-x-2">
-        <button
-          ref={toggle}
-          type="button"
-          aria-expanded={open}
-          aria-controls="booking-windows"
-          onClick={() => onOpenChange(!open)}
-          className="-ml-3 inline-flex min-h-touch items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-brand-700 transition-colors duration-150 ease-out-quart hover:bg-brand-50 hover:text-brand-800 active:bg-brand-100"
-        >
-          <ChevronDown
-            className={`size-4 shrink-0 transition-transform duration-150 ${open ? "rotate-180" : ""}`}
-            aria-hidden="true"
-          />
-          {t("changeWindow")}
-        </button>
-        {showBackLink ? (
-          <Link
-            href={servicesHref}
-            className="inline-flex min-h-touch items-center rounded-full px-3 text-sm font-semibold text-brand-700 transition-colors duration-150 ease-out-quart hover:bg-brand-50 hover:text-brand-800 active:bg-brand-100"
-          >
-            {t("backToServices")}
-          </Link>
-        ) : null}
-      </div>
-
-      <fieldset id="booking-windows" hidden={!open} disabled={disabled} className="mt-3 min-w-0">
-        <legend className="sr-only">{t("windowsLegend", { area: areaName })}</legend>
-        <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
-          {days.map((day) => (
-            <div key={day.date} role="group" aria-labelledby={`booking-day-${day.date}`}>
-              <h3 id={`booking-day-${day.date}`} className="text-sm font-semibold text-ink">
-                {day.label}
-              </h3>
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                {day.windows.map((window) => (
-                  <label
-                    key={window.startsAt}
-                    className="relative flex min-h-touch cursor-pointer items-center justify-center gap-1.5 rounded-md border border-border-control bg-surface px-3 text-sm text-ink tabular-nums transition-colors duration-150 ease-out-quart hover:border-brand-600 hover:bg-brand-50 active:bg-brand-100 has-checked:border-brand-600 has-checked:bg-brand-600 has-checked:font-semibold has-checked:text-on-brand has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus has-disabled:cursor-not-allowed has-disabled:opacity-60"
-                  >
-                    <input
-                      type="radio"
-                      name="startsAt"
-                      value={window.startsAt}
-                      checked={window.startsAt === startsAt}
-                      onChange={() => onChoose(window.startsAt)}
-                      onClick={(event) => {
-                        // A tap or a click picks and closes the long list, back on the choice; arrow
-                        // keys (a click without a pointer, detail 0) only move the choice.
-                        if (event.detail === 0) return;
-                        onOpenChange(false);
-                        toggle.current?.focus();
-                      }}
-                      aria-describedby={error ? "booking-window-error" : undefined}
-                      className="peer absolute inset-0 z-10 size-full cursor-pointer appearance-none rounded-md opacity-0 disabled:cursor-not-allowed"
-                    />
-                    <Check className="hidden size-4 shrink-0 peer-checked:block" strokeWidth={2.5} aria-hidden="true" />
-                    {window.label}
-                  </label>
+      {chosenElsewhere ? <input type="hidden" name="startsAt" value={startsAt ?? ""} /> : null}
+      {day ? (
+        <fieldset disabled={disabled} className="mt-4 flex min-w-0 flex-col gap-4">
+          <legend className="sr-only">{t("windowsLegend", { area: areaName })}</legend>
+          <div className="flex flex-col gap-1.5 sm:max-w-xs">
+            <label htmlFor="booking-day" className="text-xs font-medium text-ink-muted">
+              {t("dayLabel")}
+            </label>
+            <span className="relative flex">
+              <select
+                id="booking-day"
+                value={day.date}
+                onChange={(event) => setDayDate(event.target.value)}
+                className={`${flowInput} h-12 cursor-pointer appearance-none pr-11`}
+              >
+                {days.map((option) => (
+                  <option key={option.date} value={option.date}>
+                    {option.label}
+                  </option>
                 ))}
-              </div>
+              </select>
+              <ChevronDown className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-ink-muted" aria-hidden="true" />
+            </span>
+          </div>
+          <div role="group" aria-labelledby={`booking-day-${day.date}`}>
+            <p id={`booking-day-${day.date}`} className="text-xs font-medium text-ink-muted">
+              {day.label}
+            </p>
+            <div className="mt-1.5 flex flex-wrap gap-2.5">
+              {day.windows.map((window) => (
+                <label
+                  key={window.startsAt}
+                  className="relative flex min-h-touch cursor-pointer items-center justify-center gap-1.5 rounded-full bg-card px-4 text-sm font-semibold text-ink tabular-nums inset-ring-[1.5px] inset-ring-outline transition-colors duration-150 ease-out-quart hover:bg-sunken active:bg-lime-wash has-checked:bg-primary has-checked:text-on-primary has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus has-disabled:cursor-not-allowed has-disabled:opacity-60"
+                >
+                  <input
+                    type="radio"
+                    name="startsAt"
+                    value={window.startsAt}
+                    checked={window.startsAt === startsAt}
+                    onChange={() => onChoose(window.startsAt)}
+                    aria-describedby={error ? "booking-window-error" : undefined}
+                    className="peer absolute inset-0 z-10 size-full cursor-pointer appearance-none rounded-full opacity-0 disabled:cursor-not-allowed"
+                  />
+                  <Check className="hidden size-4 shrink-0 peer-checked:block" strokeWidth={2.5} aria-hidden="true" />
+                  {window.label}
+                </label>
+              ))}
             </div>
-          ))}
-        </div>
-      </fieldset>
+          </div>
+        </fieldset>
+      ) : null}
     </>
   );
 }

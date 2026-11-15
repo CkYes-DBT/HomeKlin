@@ -146,3 +146,70 @@ Built in D4 (2026-11-15). Mocks: `Cleaner-Home`, `Cleaner-Jobs`, `Cleaner-Job`, 
 |---|---|---|
 | Bottom navigation Beranda, Pekerjaan, Riwayat, Akun | Beranda, Pekerjaan, Akun. "Riwayat" is left out: `my_jobs` returns only today's and later jobs and those finished in the last day, so there is no history to show | A cleaner read of finished jobs (for example `my_past_jobs(p_days)`) |
 | App bar with the wordmark and the language switch only | The wordmark, the "Petugas" badge (T5: says which mode the user is in) and the switch; from 768 px the sections and the account chip join the bar | None |
+
+## Customer
+
+Pass 5a built in D5 (2026-11-15): the booking flow, the home and the orders. Mocks: `Main` and `Phone-Services`, `Customer-Booking` and `Phone-Booking`, `Customer-Payment` and `Phone-Payment`, `Customer-Confirmed` and `Phone-Confirmed`, `Customer-Orders` and `Phone-Orders`, `Customer-Home` and `Phone-Home`. Pass 5b (live, replay, support and guest chat, the `/o/<token>` page, the emails, the landing) follows. The `(customer)` layout now wears `theme-forest` with the redesign's fonts and the forest shell, so the pages of 5b already sit on the cream page with their old components until then. Pages: step 1 `/services`, step 2 `/pesan`, step 3 `/orders?booked=<id>` (payment, then the confirmation), an order's page `/orders?order=<id>`, the list `/orders`, the home `/home`. Backend used: `slot_windows` with `is_full` and the `serviceId` option (B11, B12), the form field `note` (B7), `order_code` (B1), `payment_type` as `paymentMethod` (B8), `resendOrderEmail` (B9), `assigned_at`, `checked_in_at`, `completed_at` (B3), the cleaner's name and photo.
+
+### Shell (all customer pages)
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| Marketing-style top bar (Layanan, Cara kerja, Keamanan, Bantuan) and a menu button on phones | The app shell in its forest tone: Beranda, Layanan, Pesanan, Bantuan, Akun in the bar from 768 px and in the bottom navigation on phones (customer pages are mobile-first with a bottom bar); the bar is as wide as the mocks' 1200 px column | None |
+| Footer "Bantuan, Kebijakan privasi, Syarat layanan" | Left out on the app pages, as before (the landing page has the footer) | None |
+| "CONTOH" badge beside the titles | Left out: the pages show real data | None |
+
+### Step 1, service and time (`Main`, `Phone-Services`), page `/services`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| Four services | Every active service, with the search and the type filter of T8 kept above the cards (the mock has neither; dropping them would drop a tested feature); each card keeps its rating and latest reviews (T30) | None |
+| "Pesan sekarang" always on | Disabled until a service is chosen, with "Pilih layanan dulu untuk melanjutkan." under it; without a time, step 2 asks for one | None |
+| Times for the chosen service | Yes (B12); before a service is chosen, the area's times over every service | None |
+| Without JavaScript | The step is one GET form to `/pesan`; switching the day needs JavaScript (the first day's times show) | None |
+
+### Step 2, details (`Customer-Booking`, `Phone-Booking`), page `/pesan`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| "Sekali / Berulang" (recurring bookings) | Left out: not approved (Phase 15 B14) | Recurring bookings (schedule, payment per visit) |
+| "Nama lengkap" field | Left out: `book_slot` takes no name; a guest's account gets its name later on the account page | A name argument on `book_slot` or on the code sign-in |
+| Service shown only in the summary with "Ubah" | The "Layanan" card with its select stays (the landing's links and the old `/book` address open step 2 directly), and "Ubah" in the summary leads back to step 1 with the choice | None |
+| Date as a calendar input | A select of the days that have free times, then that day's chips; the area select stays in the same card ("Area dan jadwal") | None |
+| Consent as a checkbox | The switch of T9 (the same field `consent`) | None |
+| "Lanjut ke pembayaran" for everyone | A signed-in customer: "Lanjut ke pembayaran". A guest: "Kirim kode" first, then "Lanjut ke pembayaran" on the code step (the emailed code places the order and makes the account) | None |
+| "... dikirim ke nadia.putri@email.id" | The note without the address (a guest types it below; a signed-in customer sees it on the form) | None |
+| Times for the chosen service | The service in the address decides the windows (B12); changing the service on step 2 keeps them, and booking checks the agency again | None |
+
+### Step 3, payment (`Customer-Payment`, `Phone-Payment`), page `/orders?booked=<id>`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| Choosing QRIS, virtual account or card on the page | The ways to pay as information ("Cara membayar"); the choice is made on Midtrans' Snap page | `enabled_payments` passed to Snap (B8, optional, not built) |
+| "Kembali ke detail pemesanan" | "Lihat detail pesanan" (the order is made already; step 2 cannot edit it), and "Kembali ke daftar pesanan" above the steps | Editing an unpaid order |
+| "Email" in the summary | Order number, service, time, area and address | None |
+| Not in the mock | A failed or cancelled order shows its status here with "Pesan lagi" instead of the button; back from Midtrans, "Pembayaran sedang dikonfirmasi" until the signed notification arrives | None |
+
+### Confirmation (`Customer-Confirmed`, `Phone-Confirmed`), the same page once paid
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| "Kami mengirim detail pesanan dan profil Petugas HomeKlin ke ..." | "Detail pesanan dikirim ke email Anda, dan nama serta foto Petugas HomeKlin menyusul setelah ditugaskan" (no cleaner is known at payment; B9 emails them on assignment) | None |
+| "Dibayar" pill | "Sudah dibayar", the app's status word | None |
+| Not in the mock | "Lihat pesanan" to the order's page | None |
+
+### Order page (`Customer-Orders`, `Phone-Orders`), page `/orders?order=<id>`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| "Dibayar, Senin, 2 Nov, 13.20" | "Dibayar" without a time: the payment time is not stored | `orders.paid_at` set from the notification |
+| Steps Dipesan, Dibayar, Check-in, Sedang berlangsung, Selesai | The same plus "Petugas ditugaskan" (B3); each step's state is also written for screen readers | None |
+| Hero for every order | Only for a paid order; one waiting for payment shows the steps and "Bayar sekarang" in its details | None |
+| Not in the mock | The live view (T23), the recording (T15) and the review (T30) on the same page, in white frames (restyled in 5b) | None |
+
+### Home and orders (`Customer-Home`, `Phone-Home`), pages `/home` and `/orders`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| "Putar ulang rekaman" button on a past order | Each order is one link to its page, where the player is; the card says until when the recording is kept | None |
+| `/home` shows only "Pesanan Anda" | For a signed-in customer `/home` is "Pesanan Anda" with the latest 3 orders and "Lihat semua pesanan"; for a visitor (and staff) it is where to start: the area, which opens step 1, and the services. The sample job of T7 is gone | None |

@@ -214,11 +214,13 @@
     "services": "HomeKlin services",
     "seeAll": "All services",
     "areaSubmit": "See free slots",
-    "previewNote": "Design preview: the current order above is sample data."
+    "lead": "Choose where your home is to see the free times, or start from the service you need. Every price is the full price, with no extra fees.",
+    "areaTitle": "Where is your home?"
   },
   "ServicesPage": {
-    "title": "Services",
-    "description": "One price list from HomeKlin. Prices are shown in full, with no extra fees."
+    "title": "Choose a service and a time",
+    "description": "Every price is the full price, with no extra fees. Choose a service, then a free time in your area.",
+    "metaTitle": "Services"
   },
   "CatalogFilters": {
     "searchLabel": "Search services",
@@ -234,7 +236,7 @@
     "pending": "Updating the list…"
   },
   "CatalogResults": {
-    "title": "Price list",
+    "title": "Services",
     "count": "{count, plural, one {# service} other {# services}}",
     "countForQuery": "{count, plural, one {# service} other {# services}} for “{query}”",
     "clearSearch": "Clear search",
@@ -264,11 +266,13 @@
     "loading": "Loading free slots…"
   },
   "OrdersPage": {
-    "title": "Orders",
+    "title": "Your orders",
     "listLabel": "Your orders",
     "backToList": "Back to your orders",
     "emptyTitle": "No orders yet",
-    "emptyBody": "Your orders appear here with their status, from paid to done. While your cleaner works, you can watch the live stream from this page."
+    "emptyBody": "Your orders appear here with their status, from paid to done. While your cleaner works, you can watch the live stream from this page.",
+    "orderLine": "Order {code}",
+    "orderLineWithTime": "Order {code}, {arrival}"
   },
   "SupportPage": {
     "title": "Help",
@@ -402,19 +406,9 @@
   "AreaPicker": {
     "label": "Service area"
   },
-  "JobStatusCard": {
-    "region": "Current order",
-    "detail": "{service}, finishing around {time}",
-    "privacy": "Only you and the HomeKlin monitoring team can watch. The recording is kept for 7 days.",
-    "watch": "Watch live"
-  },
-  "ServiceCard": {
-    "book": "Book",
-    "bookLabel": "Book {service}"
-  },
   "OrderPage": {
-    "title": "Book a cleaning",
-    "description": "Choose a service and a time, then add your address and contact details. No account needed first."
+    "title": "Booking details",
+    "description": "Add your address and contact details. No account needed. Everything about your order is sent to your email."
   },
   "Booking": {
     "formLabel": "Book a cleaning",
@@ -427,12 +421,10 @@
     "noWindow": "No time chosen yet",
     "noWindowHint": "Choose one of the free slots below.",
     "arrivalNote": "Your HomeKlin cleaner arrives within this time. Times are in Jakarta time (WIB).",
-    "changeWindow": "Change time",
     "windowsLegend": "Free slots in {area}",
     "takenTitle": "This slot is no longer free",
     "takenBody": "{day} at {time} WIB has been taken. Choose another slot below, or go back to the services.",
     "justTakenTitle": "This slot was just taken",
-    "backToServices": "Back to the services",
     "addressTitle": "Address",
     "addressLabel": "Full address",
     "addressHint": "Street, house number, RT/RW, neighbourhood and a landmark if needed. 10 to 300 characters.",
@@ -444,10 +436,10 @@
     },
     "consentLabel": "I agree to the work in my home being streamed live and recorded",
     "totalLabel": "Total",
-    "totalNote": "The full price, with no extra fees. You pay after the order is made.",
-    "submit": "Book now",
-    "pending": "Booking…",
-    "submitHint": "Turn on the streaming consent above to book.",
+    "totalNote": "Full price, no extra fees. You pay in the next step.",
+    "submit": "Continue to payment",
+    "pending": "Placing your order…",
+    "submitHint": "Turn on the streaming consent above to carry on.",
     "errorSummary": "{count, plural, one {Check the field that is marked.} other {Check the # fields that are marked.}}",
     "errors": {
       "serviceInvalid": "This service cannot be booked. Choose a service from the services list.",
@@ -470,7 +462,8 @@
       "tooManyUnpaid": "You still have 3 unpaid orders. Pay one, or wait until one is cancelled (2 hours after it was made), before ordering again.",
       "unavailable": "The order could not be made because something went wrong. Try again in a moment.",
       "rateLimited": "Too many attempts. Wait a few minutes, then try again."
-    }
+    },
+    "dayLabel": "Date"
   },
   "Order": {
     "serviceTitle": "Service",
@@ -486,7 +479,7 @@
     "slotsErrorTitle": "The slots in {area} could not be loaded",
     "slotsErrorBody": "Something went wrong while reading the slots. Reload the page to try again.",
     "retry": "Reload",
-    "contactTitle": "Address and contact",
+    "contactTitle": "Your contact details",
     "phoneLabel": "Mobile number",
     "phoneHint": "Your HomeKlin cleaner calls this number on the day.",
     "emailLabel": "Email",
@@ -498,11 +491,20 @@
     "sendNote": "Your order is placed once you enter the code from the email.",
     "codeTitle": "Enter the code from the email",
     "codeSentTo": "We sent a 6-digit code to <strong>{email}</strong>.",
-    "recapTitle": "Your order",
-    "recapWindow": "{day}, {window} WIB",
+    "recapTitle": "Summary",
+    "recapWindow": "Time",
     "staffTitle": "Staff accounts cannot book",
     "staffBody": "You are signed in with a HomeKlin staff account. Orders are made with a customer account. Log out first if you want to book as a customer.",
-    "staffLink": "Go to your work page"
+    "staffLink": "Go to your work page",
+    "recapService": "Service",
+    "recapDuration": "Takes",
+    "recapArea": "Area",
+    "recapChange": "Change",
+    "recapChangeLabel": "Change the service and time",
+    "noteLabel": "Note for your cleaner (optional)",
+    "noteHint": "For example where the key is or which door to use. Up to 300 characters.",
+    "emailNoteTitle": "After paying, check your email.",
+    "emailNoteBody": "Your order details and your HomeKlin cleaner’s profile are sent to your email."
   },
   "BookingUnavailable": {
     "serviceTitle": "This service cannot be booked",
@@ -517,8 +519,6 @@
     "back": "Back to the services"
   },
   "OrderConfirmation": {
-    "title": "Your order has been placed",
-    "lead": "We are holding this slot for you.",
     "detailsTitle": "Order details",
     "detailsLead": {
       "pending_payment": "Pay for this order to keep this slot.",
@@ -537,47 +537,22 @@
       "window": "Arrival time",
       "area": "Area",
       "address": "Address",
-      "total": "Total"
+      "total": "Total",
+      "code": "Order number",
+      "note": "Your note",
+      "payment": "Payment"
     },
     "windowValue": "{day}, {window} WIB",
     "serviceFallback": "HomeKlin service",
-    "nextTitle": "After payment",
-    "nextBody": "A HomeKlin cleaner is assigned to your order, and their name and photo appear here.",
-    "streamNote": "You agreed to the live stream. Only you and the HomeKlin monitoring team can watch it, and the recording is kept for 7 days.",
     "errorTitle": "Your order could not be shown",
     "errorBody": "Something went wrong while reading your order. Reload the page to try again.",
     "retry": "Reload",
     "detailsLeadCompleted": "This job is done.",
-    "job": {
-      "region": "HomeKlin cleaner",
-      "role": "HomeKlin cleaner",
-      "photoAlt": "Photo of {name}",
-      "unassignedName": "We are assigning your cleaner",
-      "unassignedBody": "Their name and photo appear here once they are assigned.",
-      "progressLabel": "Job progress",
-      "state": {
-        "done": "Done:",
-        "current": "Now:",
-        "upcoming": "Next:"
-      },
-      "steps": {
-        "assigned": {
-          "done": "Cleaner assigned",
-          "current": "Assigning a cleaner",
-          "upcoming": "Cleaner assigned"
-        },
-        "checkedIn": {
-          "done": "Checked in at your address at {time} WIB",
-          "current": "Check-in at your address",
-          "upcoming": "Check-in at your address"
-        },
-        "completed": {
-          "done": "Finished at {time} WIB",
-          "current": "Cleaning in progress",
-          "upcoming": "Job finished"
-        }
-      }
-    }
+    "paidWith": "{method}, {price}",
+    "helpLabel": "Help",
+    "helpTitle": "Need a hand?",
+    "helpBody": "Send a message to the HomeKlin admin, or read the quick answers.",
+    "helpLink": "Contact support"
   },
   "Recording": {
     "title": "Recording",
@@ -2059,6 +2034,219 @@
       "forbidden": "Only admins can change the FAQ. Sign in with an admin account and try again.",
       "notFound": "This question no longer exists. Reload the list and try again.",
       "unavailable": "The change could not be saved yet. Try again in a moment."
+    }
+  },
+  "BookingSteps": {
+    "label": "Booking steps",
+    "steps": {
+      "service": "Service",
+      "details": "Details",
+      "payment": "Payment"
+    },
+    "doneSuffix": ", done",
+    "progress": "Step {step} of 3",
+    "allDone": "All steps done"
+  },
+  "ServiceStep": {
+    "areaTitle": "Your area",
+    "areaLead": "Free times depend on where your home is.",
+    "windowsTitle": "Free times in {area}",
+    "windowsLead": "Time needed: {duration}. Your cleaner arrives within the time you choose.",
+    "windowsLeadNoService": "Choose a service above to see the times that suit it.",
+    "dayLabel": "Date",
+    "dayFull": "{day} (full)",
+    "windowsError": "The free times could not be loaded right now. Reload the page to try again.",
+    "windowsEmpty": "Every time in {area} for the next {days, plural, one {# day} other {# days}} is taken. Try again later, or choose another area.",
+    "chipsLegend": "Arrival time, {day}",
+    "chipLabel": "{start} to {end} WIB",
+    "chipFullLabel": "{start} to {end} WIB, full",
+    "chipFull": "{start}, full",
+    "timeNote": "Times are in Jakarta time (WIB). Full times cannot be chosen.",
+    "summaryTitle": "Summary",
+    "summaryService": "Service",
+    "summaryNoService": "Not chosen yet",
+    "summaryArea": "Area",
+    "summarySchedule": "Time",
+    "summaryWindow": "{start} to {end} WIB",
+    "summaryNoWindow": "Not chosen yet",
+    "total": "Total",
+    "totalNote": "Full price, no extra fees.",
+    "submit": "Book now",
+    "chooseServiceFirst": "Choose a service first to carry on.",
+    "nextNote": "You add your address and email in the next step. No account needed.",
+    "dayShort": "{weekday}, {date}",
+    "asideLabel": "Order summary",
+    "liveNoteTitle": "Your HomeKlin cleaner checks in at your address.",
+    "liveNoteBody": "You can watch the work live. Only you and the HomeKlin team can see it."
+  },
+  "PaymentMethod": {
+    "qris": "QRIS",
+    "bankTransfer": "Virtual account",
+    "card": "Credit or debit card",
+    "ewallet": "E-wallet",
+    "store": "Retail store",
+    "other": "Another method"
+  },
+  "OrderHero": {
+    "region": "HomeKlin cleaner",
+    "eyebrow": "Your HomeKlin cleaner",
+    "role": "HomeKlin cleaner",
+    "photoAlt": "Photo of {name}",
+    "unassignedName": "We are assigning your cleaner",
+    "unassignedBody": "Their name and photo appear here once assigned.",
+    "checkedInFact": "Checked in at your address at {time} WIB",
+    "liveFact": "You can watch it live from this page",
+    "livePill": "In progress",
+    "headlineUnassigned": "Your order is paid",
+    "headlineAssigned": "Your HomeKlin cleaner comes at the booked time",
+    "headlineCheckedIn": "Your cleaner checked in at {time} WIB",
+    "headlineDone": "The job finished at {time} WIB",
+    "orderLine": "Order {code}, {service}, {arrival}",
+    "privacy": "Only you and the HomeKlin team can watch.",
+    "watch": "Watch live"
+  },
+  "OrderTimeline": {
+    "title": "Job status",
+    "listLabel": "Job progress",
+    "when": "{day}, {time} WIB",
+    "estimate": "Expected at {time} WIB. The recording link is sent to your email.",
+    "state": {
+      "done": "Done:",
+      "current": "Now:",
+      "upcoming": "Next:"
+    },
+    "steps": {
+      "ordered": {
+        "done": "Ordered",
+        "current": "Ordered",
+        "upcoming": "Ordered"
+      },
+      "paid": {
+        "done": "Paid",
+        "current": "Awaiting payment",
+        "upcoming": "Paid"
+      },
+      "assigned": {
+        "done": "Cleaner assigned",
+        "current": "Assigning a cleaner",
+        "upcoming": "Cleaner assigned"
+      },
+      "checkedIn": {
+        "done": "Checked in at your address at {time} WIB",
+        "current": "Checking in at your address",
+        "upcoming": "Cleaner checks in at your address"
+      },
+      "inProgress": {
+        "done": "Worked on",
+        "current": "In progress",
+        "upcoming": "In progress"
+      },
+      "completed": {
+        "done": "Finished at {time} WIB",
+        "current": "Finished",
+        "upcoming": "Finished"
+      }
+    }
+  },
+  "PaymentStep": {
+    "title": "Payment",
+    "lead": "You pay exactly the price of the service. Your order is placed and its time is held for you.",
+    "closedLead": {
+      "pending_payment": "Pay for this order to keep its time.",
+      "paid": "This order is paid.",
+      "failed": "The payment did not go through, so this time is no longer held for you.",
+      "cancelled": "This order was cancelled, so this time is no longer held for you."
+    },
+    "closedBody": "This order can no longer be paid. Choose a new time to book.",
+    "bookAgain": "Book again",
+    "sandboxBody": "The Midtrans page that opens is its test mode (Sandbox).",
+    "methodsTitle": "Ways to pay",
+    "methodsLead": "You choose one on Midtrans’ page after pressing Pay now.",
+    "methods": {
+      "qris": "Scan the QR code from any bank or e-wallet app.",
+      "bankTransfer": "Transfer to a virtual account number from your bank.",
+      "card": "Visa and Mastercard.",
+      "ewallet": "GoPay or ShopeePay."
+    },
+    "orderLabel": "Your order",
+    "orderTitle": "Your order",
+    "fields": {
+      "code": "Order number",
+      "service": "Service",
+      "window": "Arrival time",
+      "area": "Area",
+      "address": "Address"
+    },
+    "total": "Total",
+    "seeOrder": "See the order details",
+    "emailNoteTitle": "After payment, we send you an email.",
+    "emailNoteBody": "It has your order details and a link to your order page. Your cleaner’s profile follows once assigned."
+  },
+  "PaymentConfirmed": {
+    "title": "Payment successful",
+    "body": "Order {code} is paid. The order details are on their way to your email, and your HomeKlin cleaner’s name and photo follow once assigned.",
+    "spam": "Nothing yet? Check your spam folder, or <link>contact support</link>.",
+    "nextTitle": "What happens next",
+    "next": {
+      "email": {
+        "title": "Open the email from HomeKlin",
+        "body": "It has your order details, your cleaner’s profile and a link to your order page."
+      },
+      "dayOf": {
+        "title": "Open that page on the day",
+        "body": "There you see the status and watch the live stream once your cleaner checks in."
+      },
+      "recording": {
+        "title": "The recording comes in a separate email",
+        "body": "After the job, the recording link arrives at the same email. It is kept for 7 days."
+      }
+    },
+    "summaryTitle": "Order summary",
+    "method": "Payment",
+    "totalPaid": "Total paid",
+    "seeOrder": "See the order",
+    "privacyTitle": "Only you and the HomeKlin team can watch.",
+    "privacyBody": "The live stream and the recording open from your order page."
+  },
+  "ResendEmail": {
+    "submit": "Send the email again",
+    "pending": "Sending…",
+    "sent": "We sent the email again.",
+    "errors": {
+      "notCustomer": "Your session has ended. Log in again to ask for the email.",
+      "notFound": "This order was not found in your account.",
+      "tooSoon": "The email was just sent. Try again in 5 minutes.",
+      "unavailable": "The email could not be sent yet. Please try again in a moment."
+    }
+  },
+  "OrdersOverview": {
+    "title": "Your orders",
+    "lead": "Here you see the orders in progress and your past orders, and replay the recordings of finished ones.",
+    "leadNamed": "Hello, {name}. Here you see the orders in progress and your past orders, and replay the recordings of finished ones.",
+    "bookAgain": "Book another service",
+    "ongoingTitle": "In progress",
+    "livePill": "In progress",
+    "orderLine": "Order {code}, {arrival}",
+    "photoAlt": "Photo of {name}",
+    "cleanerRole": "HomeKlin cleaner",
+    "cleanerCheckedIn": "HomeKlin cleaner, checked in at {time} WIB",
+    "recordingLater": "The recording is available once the job is done.",
+    "watch": "Watch live",
+    "seeOrder": "See the order",
+    "historyTitle": "Order history",
+    "emptyTitle": "No orders yet",
+    "emptyBody": "Your orders appear here with their status, from paid to done. While your cleaner works, you can watch the live stream from this page.",
+    "historyEmptyTitle": "No other orders yet",
+    "historyEmptyBody": "Orders that are done or waiting for their time appear here.",
+    "seeAll": "See all orders ({count})",
+    "asideLabel": "Account and help",
+    "accountTitle": "Your account",
+    "accountBody": "You log in with the email you gave when you ordered. Order and recording links are sent to this email.",
+    "recordingTitle": "About recordings",
+    "recordingFacts": {
+      "replay": "You can replay it once the order is done.",
+      "kept": "Kept for 7 days, then deleted automatically.",
+      "private": "Only you and the HomeKlin team can see it."
     }
   }
 }

@@ -10,6 +10,7 @@ import { getCatalogServices, getServiceAreas } from "@/lib/catalog/cached";
 import type { Service, ServiceArea } from "@/lib/catalog/catalog";
 import { resolveArea } from "@/lib/catalog/customer-filters";
 import { groupSlotsByJakartaDay } from "@/lib/catalog/slots-days";
+import { splitDuration } from "@/lib/catalog/customer-duration";
 import { formatRupiah } from "@/lib/format";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { findFreeWindow, jakartaDayOf } from "./booking-query";
@@ -36,7 +37,13 @@ export async function OrderContent({ searchParams }: { searchParams: Promise<Sea
   const [locale, user] = await Promise.all([getLocale(), getCurrentUser()]);
   if (user && user.role !== "customer") return <StaffNotice role={user.role} />;
 
-  const [t, labels] = await Promise.all([getTranslations("Booking"), getSlotLabels(locale)]);
+  const [t, tDuration, labels] = await Promise.all([getTranslations("Booking"), getTranslations("Service"), getSlotLabels(locale)]);
+  const durationText = (total: number) => {
+    const { hours, minutes } = splitDuration(total);
+    if (hours === 0) return tDuration("durationMinutes", { minutes });
+    if (minutes === 0) return tDuration("durationHours", { hours });
+    return tDuration("durationHoursMinutes", { hours, minutes });
+  };
   let areas: ServiceArea[];
   let services: Service[];
   try {
@@ -49,12 +56,16 @@ export async function OrderContent({ searchParams }: { searchParams: Promise<Sea
   const area = resolveArea(areas, query.areaId);
   if (!area || services.length === 0) return <BookingUnavailable kind="error" backHref="/services" />;
 
-  const now = new Date();
+  // The windows of the service in the address only (B12: agencies offering it); booking checks again.
+  const wanted = services.find((candidate) => candidate.id === query.serviceId);
   const slotsByArea = new Map(
     await Promise.all(
-      areas.filter((candidate) => candidate.isServed).map(async (candidate) => [candidate.id, await loadFreeSlots(candidate.id)] as const),
+      areas
+        .filter((candidate) => candidate.isServed)
+        .map(async (candidate) => [candidate.id, await loadFreeSlots(candidate.id, wanted?.id)] as const),
     ),
   );
+  const now = new Date();
   const orderAreas: OrderArea[] = areas.map((candidate) => {
     const slots = slotsByArea.get(candidate.id);
     const days: BookingDay[] | null =
@@ -70,7 +81,7 @@ export async function OrderContent({ searchParams }: { searchParams: Promise<Sea
     return { id: candidate.id, name: candidate.name[locale], served: candidate.isServed, days };
   });
 
-  const service = services.find((candidate) => candidate.id === query.serviceId);
+  const service = wanted;
   const selected = findFreeWindow(slotsByArea.get(area.id) ?? [], query.startsAt);
   // The window in the address is gone (booked, or it never existed): say which one, plainly.
   const takenNotice =
@@ -85,6 +96,7 @@ export async function OrderContent({ searchParams }: { searchParams: Promise<Sea
           id: candidate.id,
           name: candidate.name[locale],
           price: formatRupiah(candidate.priceIdr, locale),
+          duration: durationText(candidate.durationMinutes),
         }))}
         summaries={Object.fromEntries(services.map((candidate) => [candidate.id, <ServiceSummary key={candidate.id} service={candidate} />]))}
         areas={orderAreas}
@@ -113,12 +125,12 @@ async function ServiceSummary({ service }: { service: Service }) {
   const locale = await getLocale();
   return (
     <div className="flex items-start gap-4">
-      <ServiceVisual service={service} sizes="64px" className="size-16 shrink-0 rounded-md" iconClassName="size-6" />
+      <ServiceVisual service={service} sizes="64px" className="size-16 shrink-0 rounded-md" iconClassName="size-6" tone="forest" />
       <div className="flex min-w-0 flex-col gap-1">
         <p className="text-base font-semibold text-ink">{service.name[locale]}</p>
         <p className="text-sm text-ink-muted">{service.description[locale]}</p>
         <p className="flex items-center gap-1.5 text-sm text-ink-muted">
-          <Clock className="size-4 shrink-0 text-ink-faint" aria-hidden="true" />
+          <Clock className="size-4 shrink-0 text-ink-muted" aria-hidden="true" />
           <ServiceDuration minutes={service.durationMinutes} />
         </p>
       </div>
@@ -130,10 +142,12 @@ async function ServiceSummary({ service }: { service: Service }) {
 async function StaffNotice({ role }: { role: AppRole }) {
   const t = await getTranslations("Order");
   return (
-    <EmptyState icon={UserRoundX} title={t("staffTitle")}>
+    <EmptyState tone="forest" icon={UserRoundX} title={t("staffTitle")}>
       {t("staffBody")}
       <span className="mt-4 flex justify-center">
-        <ButtonLink href={roleHome[role]}>{t("staffLink")}</ButtonLink>
+        <ButtonLink href={roleHome[role]} variant="forest">
+          {t("staffLink")}
+        </ButtonLink>
       </span>
     </EmptyState>
   );

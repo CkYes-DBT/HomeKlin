@@ -2,14 +2,15 @@
 
 import { Check, CircleAlert } from "lucide-react";
 import type { InputHTMLAttributes } from "react";
+import { flowInput } from "./flow-styles";
 
-// Small pieces of the order form (T9, T9b), in the T3b customer look (markdown/design.md, Forms).
+// Small pieces of the order form (T9, T9b), in the redesign's look since D5 (markdown/design.md, Forms).
 
 /** A field's problem, under it, tied to it with aria-describedby by the caller. */
 export function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
   return (
-    <p id={id} className="flex items-start gap-1.5 px-1 text-sm font-medium text-danger">
+    <p id={id} className="flex items-start gap-1.5 text-sm font-medium text-danger">
       <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
       <span>{message}</span>
     </p>
@@ -17,8 +18,7 @@ export function FieldError({ id, message }: { id: string; message?: string }) {
 }
 
 /** The order form's input look, shared by its text fields, its textarea and its selects. */
-export const orderInputClass =
-  "w-full rounded-md border border-border-control bg-surface px-4 text-base text-ink caret-brand-700 transition-colors duration-150 ease-out-quart hover:border-brand-600 aria-invalid:border-danger aria-invalid:bg-danger-surface disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-sunken";
+export const orderInputClass = flowInput;
 
 type OrderFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "id" | "className"> & {
   id: string;
@@ -34,8 +34,8 @@ export function OrderField({ id, label, hint, error, ...input }: OrderFieldProps
   const errorId = `${id}-error`;
   const describedBy = [hintId, error ? errorId : undefined].filter(Boolean).join(" ") || undefined;
   return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor={id} className="px-1 text-sm font-medium text-ink">
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-xs font-medium text-ink-muted">
         {label}
       </label>
       <input
@@ -46,7 +46,7 @@ export function OrderField({ id, label, hint, error, ...input }: OrderFieldProps
         {...input}
       />
       {hint ? (
-        <p id={hintId} className="px-1 text-sm text-ink-faint">
+        <p id={hintId} className="text-sm text-ink-muted">
           {hint}
         </p>
       ) : null}
@@ -73,7 +73,7 @@ export function ConsentSwitch({ id, label, checked, onChange, error }: ConsentSw
     <div className="flex flex-col gap-2">
       <label
         htmlFor={id}
-        className="group relative -mx-2 flex min-h-touch cursor-pointer items-start gap-3 rounded-md px-2 py-2 transition-colors duration-150 ease-out-quart hover:bg-surface-sunken"
+        className="group relative -mx-2 flex min-h-touch cursor-pointer items-start gap-3 rounded-md px-2 py-2 transition-colors duration-150 ease-out-quart hover:bg-sunken"
       >
         <input
           id={id}
@@ -88,18 +88,18 @@ export function ConsentSwitch({ id, label, checked, onChange, error }: ConsentSw
         />
         <span
           aria-hidden="true"
-          className="relative mt-px inline-flex h-7 w-12 shrink-0 items-center rounded-full border border-border-control bg-surface-sunken transition-colors duration-150 ease-out-quart group-hover:border-brand-600 peer-checked:border-brand-600 peer-checked:bg-brand-600 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus peer-aria-invalid:border-danger"
+          className="relative mt-px inline-flex h-7 w-12 shrink-0 items-center rounded-full border border-border-control bg-sunken transition-colors duration-150 ease-out-quart group-hover:border-primary peer-checked:border-primary peer-checked:bg-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus peer-aria-invalid:border-danger"
         >
           <span
-            className={`absolute left-0.5 flex size-5.5 items-center justify-center rounded-full bg-surface shadow-card transition-transform duration-150 ease-out-quart ${checked ? "translate-x-5" : ""}`}
+            className={`absolute left-0.5 flex size-5.5 items-center justify-center rounded-full bg-card shadow-card transition-transform duration-150 ease-out-quart ${checked ? "translate-x-5" : ""}`}
           >
             <Check
-              className={`size-3.5 text-brand-700 transition-opacity duration-150 ${checked ? "opacity-100" : "opacity-0"}`}
+              className={`size-3.5 text-primary transition-opacity duration-150 ${checked ? "opacity-100" : "opacity-0"}`}
               strokeWidth={3}
             />
           </span>
         </span>
-        <span className="pt-0.5 text-sm font-medium text-ink">{label}</span>
+        <span className="pt-0.5 text-base text-ink">{label}</span>
       </label>
       <FieldError id={errorId} message={error} />
     </div>

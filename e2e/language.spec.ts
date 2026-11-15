@@ -101,7 +101,7 @@ test.describe("the customer app in English", () => {
 
     await nav.getByRole("link", { name: "Services", exact: true }).click();
     await expect(page).toHaveURL("/en/services");
-    await expect(page.getByRole("heading", { level: 1, name: "Services" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Choose a service and a time" })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Services", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(page).toHaveTitle("Services · HomeKlin");
   });

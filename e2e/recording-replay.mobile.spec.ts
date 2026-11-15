@@ -75,11 +75,18 @@ test.describe("the customer", () => {
     const job = page.getByRole("region", { name: "Petugas HomeKlin" });
     await expect(job.getByText(world.cleaners.withPhoto.name, { exact: true })).toBeVisible();
     await expect(job.getByRole("img", { name: `Foto ${world.cleaners.withPhoto.name}` })).toBeVisible();
-    const steps = job.getByRole("list", { name: "Perkembangan pekerjaan" }).getByRole("listitem");
-    await expect(steps).toHaveCount(3);
-    await expect(steps.nth(0)).toContainText("Petugas ditugaskan");
-    await expect(steps.nth(1)).toContainText(/Check-in di alamat Anda pukul \d{2}\.\d{2} WIB/);
-    await expect(steps.nth(2)).toContainText(/Selesai pukul \d{2}\.\d{2} WIB/);
+    // The status steps (D5, mock Customer-Orders): ordered, paid, assigned, checked in, worked on, finished.
+    const steps = page
+      .getByRole("region", { name: "Status pekerjaan" })
+      .getByRole("list", { name: "Perkembangan pekerjaan" })
+      .getByRole("listitem");
+    await expect(steps).toHaveCount(6);
+    await expect(steps.nth(0)).toContainText("Dipesan");
+    await expect(steps.nth(1)).toContainText("Dibayar");
+    await expect(steps.nth(2)).toContainText("Petugas ditugaskan");
+    await expect(steps.nth(3)).toContainText(/Check-in di alamat Anda pukul \d{2}\.\d{2} WIB/);
+    await expect(steps.nth(5)).toContainText(/Selesai pukul \d{2}\.\d{2} WIB/);
+    for (const step of await steps.all()) await expect(step).toContainText("Sudah:");
     await expect(details(page).getByText("Pekerjaan ini sudah selesai.")).toBeVisible();
     // The reminder of what happens after payment has done its job.
     await expect(page.getByText("Setelah pembayaran")).toHaveCount(0);
@@ -119,8 +126,10 @@ test.describe("the customer", () => {
     await expect(section.locator("video")).toHaveCount(1);
     await expect(section.getByText(/^Available until \S+, \d{1,2} \S+, \d{2}\.\d{2} WIB$/)).toBeVisible();
     await expect(section.getByText(/^(7 days|6 days 23 hours) left$/)).toBeVisible();
-    const job = page.getByRole("region", { name: "HomeKlin cleaner" });
-    await expect(job.getByRole("list", { name: "Job progress" })).toContainText(/Finished at \d{2}\.\d{2} WIB/);
+    await expect(page.getByRole("region", { name: "HomeKlin cleaner" })).toContainText(/Your HomeKlin cleaner/);
+    await expect(page.getByRole("region", { name: "Job status" }).getByRole("list", { name: "Job progress" })).toContainText(
+      /Finished at \d{2}\.\d{2} WIB/,
+    );
 
     await page.goto(`/en/orders?order=${world.orders.expired}`);
     await expect(recording(page, "Recording").getByText("The recording has been deleted")).toBeVisible();

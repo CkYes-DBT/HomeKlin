@@ -26,19 +26,21 @@ export async function BookingUnavailable(props: BookingUnavailableProps) {
     props.kind === "full" ? t("fullTitle", { area: props.areaName }) : t(`${props.kind}Title`);
   const body = props.kind === "full" ? t("fullBody", { days: props.days }) : t(`${props.kind}Body`);
   return (
-    <EmptyState icon={icons[props.kind]} title={title}>
+    <EmptyState tone="forest" icon={icons[props.kind]} title={title}>
       {body}
       <span className={linkRow}>
         {props.kind === "error" ? (
           // A plain link on purpose: a full page load reads the catalog and the windows again.
           <a
             href=""
-            className="inline-flex min-h-touch items-center justify-center rounded-full border border-border-control bg-surface px-5 text-sm font-semibold text-ink transition-colors duration-150 ease-out-quart hover:bg-surface-sunken active:bg-brand-50"
+            className="inline-flex min-h-touch items-center justify-center rounded-full bg-card px-5 text-sm font-semibold text-ink inset-ring-[1.5px] inset-ring-outline transition-colors duration-150 ease-out-quart hover:bg-sunken active:bg-lime-wash"
           >
             {t("retry")}
           </a>
         ) : null}
-        <ButtonLink href={props.backHref}>{t("back")}</ButtonLink>
+        <ButtonLink href={props.backHref} variant="forest">
+          {t("back")}
+        </ButtonLink>
       </span>
     </EmptyState>
   );

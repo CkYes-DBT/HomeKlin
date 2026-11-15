@@ -198,7 +198,7 @@ test.describe("with an order of each status", () => {
     await expect(details.getByText("Sudah dibayar")).toBeVisible();
     await expect(details.getByText(addressOf("Lunas"))).toBeVisible();
     await expect(details.getByText(arrival(windowOf("paid")))).toBeVisible();
-    await expect(page.getByText("Pesanan Anda sudah dibuat")).toHaveCount(0);
+    await expect(page.getByRole("region", { name: "Pembayaran" })).toHaveCount(0);
     await expect(details.getByRole("button", { name: "Bayar sekarang" })).toHaveCount(0);
 
     await backLink(page).click();
@@ -223,7 +223,7 @@ test.describe("with an order of each status", () => {
 
   test("the confirmation stays as it was, Midtrans' return included, and leads to the list", async ({ page }) => {
     await page.goto(`/orders?booked=${ids.waiting}`);
-    const confirmation = page.getByRole("region", { name: "Pesanan Anda sudah dibuat" });
+    const confirmation = page.getByRole("region", { name: "Pembayaran" });
     await expect(confirmation.getByText("Menunggu pembayaran")).toBeVisible();
     await expect(confirmation.getByRole("button", { name: "Bayar sekarang" })).toBeVisible();
     await expect(page.getByRole("status").filter({ hasText: "Pembayaran sedang dikonfirmasi" })).toHaveCount(0);
@@ -246,7 +246,7 @@ test.describe("with an order of each status", () => {
       for (const id of [ids.others, randomUUID()]) {
         await page.goto(`/orders?${param}=${id}`);
         await expect(ordersList(page).getByRole("listitem")).toHaveCount(6);
-        await expect(page.getByRole("region", { name: /Detail pesanan|Pesanan Anda sudah dibuat/ })).toHaveCount(0);
+        await expect(page.getByRole("region", { name: /Detail pesanan|Pembayaran/ })).toHaveCount(0);
         const html = await (await page.request.get(page.url())).text();
         for (const text of [await page.content(), html]) expect(text).not.toContain("Rahasia Orang Lain");
       }

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { expect, type Page } from "@playwright/test";
 import { adminClient } from "../tests/integration/test-project";
-import { cancelOrder, dayText, windowText, type Window } from "./booking-test-data";
+import { cancelOrder, dayText, jakartaTime, windowText, type Window } from "./booking-test-data";
 import { deleteAccountsByEmail } from "./setup/email-code";
 
 // Test data for the order specs and screenshots (T9b), in the shared Supabase test project. Guests
@@ -48,10 +48,17 @@ export async function removeGuests(emails: string[]): Promise<void> {
   await deleteAccountsByEmail([...wanted]);
 }
 
-/** Picks a window in the order form's list (opening the list first when it is closed). */
+/** The Jakarta day of a window as the day selects' values have it (YYYY-MM-DD). */
+export const jakartaDate = (iso: string) =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(iso));
+
+/** A time chip's name on step 1 (/services, D5): "15.00 sampai 17.00 WIB". */
+export const stepOneChip = (window: Window, language: "id" | "en" = "id") =>
+  `${jakartaTime(window.startsAt)} ${language === "id" ? "sampai" : "to"} ${jakartaTime(window.endsAt)} WIB`;
+
+/** Picks a window on the order form (step 2): its day in the "Tanggal" select, then its chip. */
 export async function chooseWindow(page: Page, window: Window, language: "id" | "en" = "id") {
-  const toggle = page.getByRole("button", { name: language === "id" ? "Ganti jadwal" : "Change time" });
-  if ((await toggle.getAttribute("aria-expanded")) === "false") await toggle.click();
+  await page.getByLabel(language === "id" ? "Tanggal" : "Date", { exact: true }).selectOption(jakartaDate(window.startsAt));
   await page
     .getByRole("group", { name: dayText(window.startsAt, language) })
     .getByRole("radio", { name: windowText(window) })
@@ -70,7 +77,7 @@ export async function bookSignedIn(page: Page, serviceId: string, areaId: string
   await page.getByLabel("Alamat lengkap").fill("Jl. Contoh Raya No. 12, RT 03/RW 05, Kembangan, Jakarta Barat");
   await page.getByLabel("Nomor HP").fill("0812 3456 7890");
   await page.getByRole("switch", { name: /Saya setuju/ }).check();
-  await page.getByRole("button", { name: "Pesan sekarang" }).click();
+  await page.getByRole("button", { name: "Lanjut ke pembayaran" }).click();
   // Booking and the redirect run on the server; under a full parallel run that can take over 5 s.
   await expect(page).toHaveURL(/\/orders\?booked=[0-9a-f-]{36}$/, { timeout: 15_000 });
   return new URL(page.url()).searchParams.get("booked") ?? "";

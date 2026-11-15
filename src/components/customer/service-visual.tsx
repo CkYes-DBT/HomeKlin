@@ -90,3 +90,13 @@ export function ServiceVisual({
     />
   );
 }
+
+/** The service type's icon alone, in a tile the caller sizes and colours (step 1's cards, D5). */
+export function ServiceTypeIcon({ service, className }: { service: Pick<Service, "category">; className: string }) {
+  const Icon = typeIcons[service.category];
+  return (
+    <span aria-hidden="true" className={className}>
+      <Icon className="size-5" strokeWidth={1.75} />
+    </span>
+  );
+}
