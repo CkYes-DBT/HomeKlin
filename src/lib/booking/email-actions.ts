@@ -9,9 +9,10 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 // "Kirim ulang email" (B9): the order's own customer asks for the order email again. A public POST
 // endpoint, so it checks the role and parses its input; claim_order_email_resend()
 // (supabase/migrations/20261114210000_order_emails.sql) checks that the order is the customer's and
-// allows one request per order every 5 minutes, before anything is sent.
+// allows one request per order every 5 minutes, and only for an order that waits for payment or is
+// paid (review L5), before anything is sent.
 
-export type ResendFailureKey = "notCustomer" | "notFound" | "tooSoon" | "unavailable";
+export type ResendFailureKey = "notCustomer" | "notFound" | "notResendable" | "tooSoon" | "unavailable";
 export type ResendState = { ok?: true; formError?: ResendFailureKey } | null;
 export type RevokeFailureKey = "notCustomer" | "notFound" | "unavailable";
 export type RevokeState = { ok?: true; formError?: RevokeFailureKey } | null;
@@ -31,6 +32,8 @@ export async function resendOrderEmail(_previous: ResendState, formData: FormDat
   const { error } = await supabase.rpc("claim_order_email_resend", { p_order: parsed.data.orderId });
   if (error) {
     if (error.message === "too_soon") return { formError: "tooSoon" };
+    // Review L5: only an order that waits for payment or is paid (20261115130000_resend_open_orders.sql).
+    if (error.message === "not_resendable") return { formError: "notResendable" };
     if (error.message === "order_not_found") return { formError: "notFound" };
     if (error.message === "not_customer") return { formError: "notCustomer" };
     return { formError: "unavailable" };

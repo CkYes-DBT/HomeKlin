@@ -126,6 +126,12 @@ describe("resendOrderEmail (Kirim ulang email)", () => {
     expect(sendAppEmail).not.toHaveBeenCalled();
   });
 
+  it("refuses an order that neither waits for payment nor is paid, with a plain message (review L5)", async () => {
+    sessionRpc.mockResolvedValue({ data: null, error: { message: "not_resendable" } });
+    expect(await resendOrderEmail(null, form({ orderId }))).toEqual({ formError: "notResendable" });
+    expect(sendAppEmail).not.toHaveBeenCalled();
+  });
+
   it("refuses anyone but a customer, and a malformed order id, before the database", async () => {
     expect(await resendOrderEmail(null, form({ orderId: "x" }))).toEqual({ formError: "notFound" });
     user = { role: "agency" };

@@ -2231,7 +2231,8 @@
       "notCustomer": "Sesi Anda sudah berakhir. Masuk lagi untuk meminta email.",
       "notFound": "Pesanan ini tidak ditemukan di akun Anda.",
       "tooSoon": "Email baru saja dikirim. Coba lagi dalam 5 menit.",
-      "unavailable": "Email belum dapat dikirim. Coba lagi dalam beberapa saat."
+      "unavailable": "Email belum dapat dikirim. Coba lagi dalam beberapa saat.",
+      "notResendable": "Email hanya bisa dikirim ulang untuk pesanan yang menunggu pembayaran atau sudah dibayar."
     }
   },
   "OrderEmails": {

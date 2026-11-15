@@ -62,6 +62,17 @@ describe("claim_order_email_resend", { timeout: 60_000 }, () => {
     expect((await claim()).error).toBeNull();
   });
 
+  it("works only while the order waits for payment or is paid (review L5)", async () => {
+    for (const status of ["failed", "cancelled"] as const) {
+      const order = await world.job({ startsAt: new Date(Date.now() + hours(8)), status, cleaner: null });
+      expect((await world.users.customer.client.rpc("claim_order_email_resend", { p_order: order })).error?.message, status).toBe("not_resendable");
+      const { data } = await adminClient().from("orders").select("email_resent_at").eq("id", order).single<{ email_resent_at: string | null }>();
+      expect(data?.email_resent_at, status).toBeNull();
+    }
+    const paid = await world.job({ startsAt: new Date(Date.now() + hours(9)) });
+    expect((await world.users.customer.client.rpc("claim_order_email_resend", { p_order: paid })).error).toBeNull();
+  });
+
   it("is refused for someone else's order, and to anyone but a customer", async () => {
     const order = await world.job({ startsAt: new Date(Date.now() + hours(7)) });
     expect((await world.users.otherCustomer.client.rpc("claim_order_email_resend", { p_order: order })).error?.message).toBe("order_not_found");

@@ -2231,7 +2231,8 @@
       "notCustomer": "Your session has ended. Log in again to ask for the email.",
       "notFound": "This order was not found in your account.",
       "tooSoon": "The email was just sent. Try again in 5 minutes.",
-      "unavailable": "The email could not be sent yet. Please try again in a moment."
+      "unavailable": "The email could not be sent yet. Please try again in a moment.",
+      "notResendable": "The email can only be sent again for an order that is waiting for payment or has been paid."
     }
   },
   "OrderEmails": {
