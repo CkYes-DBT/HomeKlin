@@ -17,6 +17,8 @@ import { OrderTimelineCard } from "./order-timeline-card";
 import { PaymentForm } from "./payment-form";
 import { paymentMethodKey } from "./payment-method";
 import { recordingState } from "./recording-time";
+import { ResendEmail } from "./resend-email";
+import { RevokeLinks } from "./revoke-links";
 
 type OrderDetailsProps = {
   order: CustomerOrder;
@@ -126,6 +128,8 @@ export async function OrderDetails({ order, serviceName, duration, areaName, now
               </div>
             ) : null}
           </section>
+
+          <OrderEmails orderId={order.id} canResend={paid || awaitingPayment} />
         </div>
 
         <aside aria-label={t("helpLabel")} className="flex flex-col gap-4 lg:sticky lg:top-24">
@@ -133,6 +137,29 @@ export async function OrderDetails({ order, serviceName, duration, areaName, now
         </aside>
       </div>
     </div>
+  );
+}
+
+/**
+ * "Email pesanan" (B9, B14a, review H1): "Kirim ulang email" while the order waits for payment or is
+ * paid (resendOrderEmail refuses other orders too), and "Batalkan tautan email" for any order, so a
+ * forwarded email's link can be stopped.
+ */
+async function OrderEmails({ orderId, canResend }: { orderId: string; canResend: boolean }) {
+  const t = await getTranslations("OrderEmails");
+  return (
+    <section aria-labelledby="email-pesanan" className={flowCard}>
+      <h2 id="email-pesanan" className={flowCardTitle}>
+        {t("title")}
+      </h2>
+      <p className="mt-1 max-w-prose text-sm text-ink-muted">{t("body")}</p>
+      <ClientMessages namespaces={["ResendEmail", "OrderEmails"]}>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:gap-4">
+          {canResend ? <ResendEmail orderId={orderId} /> : null}
+          <RevokeLinks orderId={orderId} />
+        </div>
+      </ClientMessages>
+    </section>
   );
 }
 

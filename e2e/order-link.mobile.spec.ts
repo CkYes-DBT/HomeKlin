@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import { adminClient } from "../tests/integration/test-project";
 import { agencyMarks } from "./booking-test-data";
-import { createJobWorld, seededAgencyId, type JobWorld } from "./job-test-data";
+import { createJobWorld, seededAgencyId, sessionOf, type JobWorld } from "./job-test-data";
 
 // B14a with its page (D5 pass 5b): the private link in the order emails, /o/<token>, opens that one
 // order's page without signing in. It shows the order number, the service, the time, the area, the
@@ -20,6 +20,7 @@ const otherAddress = "Jl. Pesanan Lain Contoh No. 7, Cakung, Jakarta Timur";
 let world: JobWorld;
 const tokens = { good: newToken(), revoked: newToken(), expired: newToken() };
 let code = "";
+let orderId = "";
 let otherCode = "";
 
 test.beforeAll(async () => {
@@ -29,6 +30,7 @@ test.beforeAll(async () => {
   const order = await world.job({ agencyId: seeded, cleaner, startsIn: 26 * 60, address, note: "Catatan rahasia" });
   const other = await world.job({ agencyId: seeded, cleaner, startsIn: 27 * 60, address: otherAddress });
   code = order.code;
+  orderId = order.id;
   otherCode = other.code;
   const admin = adminClient();
   // Every row names every column: a batch insert sends the missing ones as null.
@@ -94,4 +96,24 @@ test.describe("at 360 px", () => {
       expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
     }
   });
+});
+
+// Review H1: the order's customer cancels the links in its emails from the signed-in order page, and
+// the old link then opens nothing. Last in this serial file, because it revokes tokens.good.
+test("the customer cancels the email links, and the old link stops working", async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ baseURL, storageState: await sessionOf(browser, baseURL, world.customer) });
+  const page = await context.newPage();
+  await page.goto(`/orders?order=${orderId}`);
+  const emails = page.getByRole("region", { name: "Email pesanan" });
+  await expect(emails.getByRole("button", { name: "Kirim ulang email" })).toBeVisible();
+  await emails.getByRole("button", { name: "Batalkan tautan email" }).click();
+  await expect(emails.getByRole("status").getByText("Tautan di email lama tidak bisa dibuka lagi.")).toBeVisible();
+  await context.close();
+
+  const visitor = await browser.newContext({ baseURL, storageState: { cookies: [], origins: [] } });
+  const stranger = await visitor.newPage();
+  await stranger.goto(`/o/${tokens.good}`);
+  await expect(stranger.getByRole("heading", { level: 1, name: "Tautan ini tidak berlaku" })).toBeVisible();
+  await expect(stranger.getByText(code, { exact: true })).toHaveCount(0);
+  await visitor.close();
 });

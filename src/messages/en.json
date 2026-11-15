@@ -2233,6 +2233,20 @@
       "unavailable": "The email could not be sent yet. Please try again in a moment."
     }
   },
+  "OrderEmails": {
+    "title": "Order emails",
+    "body": "The link in the order emails opens this page without logging in. If an email reached someone else, cancel its links. The next email carries a new link.",
+    "revoke": {
+      "submit": "Cancel email links",
+      "pending": "Cancelling…",
+      "done": "The links in earlier emails no longer open.",
+      "errors": {
+        "notCustomer": "Your session has ended. Log in again to cancel the links.",
+        "notFound": "This order was not found in your account.",
+        "unavailable": "The links could not be cancelled yet. Please try again in a moment."
+      }
+    }
+  },
   "OrdersOverview": {
     "title": "Your orders",
     "lead": "Here you see the orders in progress and your past orders, and replay the recordings of finished ones.",

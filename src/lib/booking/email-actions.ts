@@ -13,6 +13,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type ResendFailureKey = "notCustomer" | "notFound" | "tooSoon" | "unavailable";
 export type ResendState = { ok?: true; formError?: ResendFailureKey } | null;
+export type RevokeFailureKey = "notCustomer" | "notFound" | "unavailable";
+export type RevokeState = { ok?: true; formError?: RevokeFailureKey } | null;
 
 const input = z.object({ orderId: z.uuid(), locale: z.enum(routing.locales).catch(routing.defaultLocale) });
 
@@ -41,7 +43,7 @@ export async function resendOrderEmail(_previous: ResendState, formData: FormDat
  * B14a: the customer revokes every private link of their own order (the links in its emails), for
  * example after forwarding an email by mistake. New emails carry new links.
  */
-export async function revokeOrderLinks(_previous: ResendState, formData: FormData): Promise<ResendState> {
+export async function revokeOrderLinks(_previous: RevokeState, formData: FormData): Promise<RevokeState> {
   if (!(await authorize(["customer"]))) return { formError: "notCustomer" };
   const entry = formData.get("orderId");
   const parsed = z.uuid().safeParse(typeof entry === "string" ? entry : undefined);

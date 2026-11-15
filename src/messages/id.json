@@ -2233,6 +2233,20 @@
       "unavailable": "Email belum dapat dikirim. Coba lagi dalam beberapa saat."
     }
   },
+  "OrderEmails": {
+    "title": "Email pesanan",
+    "body": "Tautan di email pesanan membuka halaman ini tanpa masuk. Jika email itu sampai ke orang lain, batalkan tautannya. Email berikutnya membawa tautan baru.",
+    "revoke": {
+      "submit": "Batalkan tautan email",
+      "pending": "Membatalkan…",
+      "done": "Tautan di email lama tidak bisa dibuka lagi.",
+      "errors": {
+        "notCustomer": "Sesi Anda sudah berakhir. Masuk lagi untuk membatalkan tautan.",
+        "notFound": "Pesanan ini tidak ditemukan di akun Anda.",
+        "unavailable": "Tautan belum dapat dibatalkan. Coba lagi dalam beberapa saat."
+      }
+    }
+  },
   "OrdersOverview": {
     "title": "Pesanan Anda",
     "lead": "Di sini Anda melihat pesanan yang sedang berjalan dan riwayat pesanan, serta memutar ulang rekaman pesanan yang sudah selesai.",
