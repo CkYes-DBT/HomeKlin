@@ -88,8 +88,8 @@
     }
   },
   "Hero": {
-    "title": "Jasa kebersihan rumah yang bisa Anda <accent>tonton langsung</accent>",
-    "lead": "Pilih layanan dan jadwal di area Anda, bayar di muka, lalu pantau Petugas HomeKlin bekerja dari ponsel.",
+    "title": "Rumah bersih yang bisa Anda <accent>tonton langsung</accent>",
+    "lead": "Pilih layanan dan jam di area Anda, bayar di muka, lalu tonton Petugas HomeKlin bekerja dari ponsel Anda.",
     "cta": "Pesan sekarang",
     "prices": "Lihat harga",
     "photoAlt": "Petugas kebersihan mengelap meja dapur"
@@ -109,13 +109,13 @@
       "stream": "Siaran hanya untuk Anda dan tim pemantau HomeKlin",
       "checkIn": "Petugas check-in di alamat Anda sebelum bekerja",
       "recordings": "Rekaman disimpan 7 hari, lalu dihapus",
-      "consent": "Persetujuan siaran ditanyakan saat memesan"
+      "consent": "Kami meminta persetujuan Anda untuk menyiarkan pekerjaan"
     }
   },
   "ServicesGrid": {
     "eyebrow": "Daftar harga",
-    "title": "Layanan dan harga, <accent>tanpa kejutan</accent>",
-    "note": "Harga tampil penuh. Tidak ada biaya tambahan saat Anda membayar.",
+    "title": "Layanan Kebersihan <accent>HomeKlin</accent>",
+    "note": "Harga ditampilkan penuh. Tidak ada biaya tambahan saat Anda membayar.",
     "all": "Lihat semua layanan"
   },
   "Service": {
@@ -139,8 +139,8 @@
     "photoAlt": "Petugas kebersihan merapikan bantal sofa"
   },
   "HowItWorks": {
-    "title": "Cara kerjanya, dalam <accent>lima langkah</accent>",
-    "lead": "Dari memesan sampai memutar ulang rekaman, semuanya dari ponsel Anda.",
+    "title": "Cara kerja, dalam <accent>lima langkah</accent>",
+    "lead": "Dari pemesanan sampai memutar ulang rekaman, semuanya dari ponsel Anda.",
     "steps": {
       "book": {
         "title": "Pesan",
@@ -166,7 +166,7 @@
   },
   "FaqTeaser": {
     "eyebrow": "Pertanyaan umum",
-    "title": "Ada pertanyaan? <accent>Ini jawabannya.</accent>",
+    "title": "Ada pertanyaan? Ini <accent>jawabannya.</accent>",
     "all": "Lihat semua pertanyaan",
     "questions": {
       "cleaner": {
@@ -189,7 +189,7 @@
   },
   "CtaShell": {
     "title": "Pilih jadwal yang masih kosong di area <accent>Anda</accent>",
-    "body": "Harga tampil penuh sebelum Anda membayar.",
+    "body": "Anda melihat harga penuh sebelum membayar.",
     "cta": "Pesan sekarang"
   },
   "MarketingFooter": {
@@ -276,7 +276,7 @@
   },
   "SupportPage": {
     "title": "Bantuan",
-    "description": "Cari jawaban atas pertanyaan umum. Jika belum terjawab, tanyakan langsung ke Tim HomeKlin.",
+    "description": "Cari jawaban cepat, atau tulis pesan ke admin HomeKlin. Anda tidak perlu masuk akun.",
     "search": {
       "formLabel": "Cari di Bantuan",
       "label": "Cari pertanyaan",
@@ -296,15 +296,18 @@
       "retry": "Muat ulang"
     },
     "contact": {
-      "title": "Masih butuh bantuan? Hubungi admin",
-      "body": "Tim HomeKlin membaca setiap pertanyaan dan membalas lewat chat di halaman ini.",
+      "title": "Perlu bantuan langsung? Hubungi admin",
+      "body": "Tulis pesan ke admin HomeKlin. Balasannya muncul di chat di halaman ini, dan Anda tidak perlu masuk akun.",
       "loading": "Memuat…",
       "signedOutBody": "Masuk dengan akun pelanggan Anda untuk mengirim pertanyaan. Balasan admin muncul di halaman ini.",
       "signIn": "Masuk untuk bertanya",
       "staffTitle": "Chat bantuan untuk akun pelanggan",
       "staffBody": "Anda masuk dengan akun staf. Pertanyaan pelanggan dijawab dari halaman kerja Anda.",
       "staffLink": "Ke halaman kerja Anda",
-      "adminLink": "Buka kotak tiket"
+      "adminLink": "Buka kotak tiket",
+      "guestOpenBody": "Anda sudah punya chat dengan admin dari browser ini. Lanjutkan di sana.",
+      "guestContinue": "Lanjutkan chat Anda",
+      "haveAccount": "Sudah pernah memesan?"
     },
     "tickets": {
       "title": "Pertanyaan Anda ke admin",
@@ -390,14 +393,18 @@
       "messageInvalid": "Pesan berisi 1 sampai 2.000 karakter.",
       "notFound": "Pesanan atau percakapan itu tidak ditemukan di akun Anda.",
       "closed": "Percakapan ini sudah ditutup, jadi tidak bisa dibalas lagi.",
-      "unavailable": "Pesan belum terkirim karena ada gangguan. Coba lagi sebentar lagi."
+      "unavailable": "Pesan belum terkirim karena ada gangguan. Coba lagi sebentar lagi.",
+      "nameInvalid": "Tulis nama Anda, paling banyak 80 karakter.",
+      "emailInvalid": "Periksa penulisan email Anda, misalnya nama@domain.com.",
+      "tooMany": "Terlalu banyak pesan dalam waktu singkat. Tunggu beberapa menit, lalu coba lagi."
     },
     "openJob": "Buka pekerjaan",
     "urgentBanner": "Mendesak, dikirim {time}",
     "guest": "Tamu, tanpa akun",
     "guestNoEmail": "Tidak memberi email",
     "read": "Terbaca",
-    "sent": "Terkirim"
+    "sent": "Terkirim",
+    "guestPolling": "Diperbarui otomatis setiap 10 detik"
   },
   "AccountPage": {
     "title": "Akun",
@@ -610,7 +617,7 @@
     "endedTitle": "Siaran sudah berakhir",
     "endedBody": "Jika petugas sudah check-out, muat ulang halaman untuk memutar rekamannya. Rekaman disimpan 7 hari.",
     "completedTitle": "Pekerjaan sudah selesai",
-    "completedBody": "Siaran berakhir saat petugas check-out. Rekamannya bisa Anda putar selama 7 hari di detail pesanan.",
+    "completedBody": "Siaran berakhir saat petugas check-out. Rekamannya bisa Anda putar selama 7 hari.",
     "seeRecording": "Lihat rekaman",
     "signedOutTitle": "Sesi Anda sudah berakhir",
     "signedOutBody": "Masuk lagi untuk melanjutkan menonton.",
@@ -622,7 +629,14 @@
     "errorBody": "Ada gangguan saat membuka siaran. Muat ulang halaman untuk mencoba lagi.",
     "retry": "Muat ulang halaman",
     "backToOrder": "Detail pesanan",
-    "listLine": "Sedang dikerjakan. Buka untuk menonton langsung."
+    "listLine": "Sedang dikerjakan. Buka untuk menonton langsung.",
+    "pageTitle": "Siaran langsung",
+    "backToCode": "Pesanan {code}",
+    "lead": "{service} di {address}",
+    "serviceFallback": "Layanan HomeKlin",
+    "asideLabel": "Petugas dan status pekerjaan",
+    "privacyTitle": "Hanya Anda dan tim pemantau HomeKlin yang dapat menonton siaran ini.",
+    "privacyBody": "Siaran berhenti saat Petugas check-out, lalu rekamannya tersedia 7 hari di halaman Rekaman."
   },
   "CleanerStream": {
     "title": "Siaran langsung",
@@ -2077,7 +2091,7 @@
     "dayShort": "{weekday}, {date}",
     "asideLabel": "Ringkasan pesanan",
     "liveNoteTitle": "Petugas HomeKlin check-in di alamat Anda.",
-    "liveNoteBody": "Anda dapat menonton siaran langsung pekerjaannya. Hanya Anda dan tim HomeKlin yang dapat melihatnya."
+    "liveNoteBody": "Anda dapat menonton siaran langsung pekerjaannya. Hanya Anda dan tim pemantau HomeKlin yang dapat melihatnya."
   },
   "PaymentMethod": {
     "qris": "QRIS",
@@ -2102,7 +2116,7 @@
     "headlineCheckedIn": "Petugas sudah check-in pukul {time} WIB",
     "headlineDone": "Pekerjaan selesai pukul {time} WIB",
     "orderLine": "Pesanan {code}, {service}, {arrival}",
-    "privacy": "Hanya Anda dan tim HomeKlin yang dapat menonton.",
+    "privacy": "Hanya Anda dan tim pemantau HomeKlin yang dapat menonton.",
     "watch": "Tonton langsung"
   },
   "OrderTimeline": {
@@ -2205,7 +2219,7 @@
     "method": "Pembayaran",
     "totalPaid": "Total dibayar",
     "seeOrder": "Lihat pesanan",
-    "privacyTitle": "Hanya Anda dan tim HomeKlin yang dapat menonton.",
+    "privacyTitle": "Hanya Anda dan tim pemantau HomeKlin yang dapat menonton.",
     "privacyBody": "Siaran langsung dan rekaman dibuka dari halaman pesanan Anda."
   },
   "ResendEmail": {
@@ -2247,6 +2261,53 @@
       "replay": "Dapat diputar ulang setelah pesanan selesai.",
       "kept": "Tersedia 7 hari, lalu dihapus otomatis.",
       "private": "Hanya Anda dan tim HomeKlin yang dapat melihatnya."
-    }
+    },
+    "seeRecordings": "Lihat semua rekaman"
+  },
+  "SupportGuestForm": {
+    "name": "Nama Anda",
+    "email": "Email (opsional)",
+    "emailHint": "Isi bila Anda ingin dihubungi lewat email juga.",
+    "question": "Pertanyaan Anda",
+    "tooShort": "Tulis pertanyaan Anda, paling sedikit 5 karakter.",
+    "submit": "Chat dengan admin",
+    "pending": "Membuka chat…"
+  },
+  "OrderLinkPage": {
+    "metaTitle": "Pesanan Anda",
+    "title": "Pesanan {code}",
+    "privateTitle": "Tautan ini khusus untuk Anda.",
+    "privateBody": "Jangan bagikan ke orang lain. Tautan berlaku sampai {day}. Alamat dan kontak Anda tidak ditampilkan di sini.",
+    "asideLabel": "Masuk dan bantuan",
+    "signInTitle": "Siaran dan rekaman",
+    "signInBody": "Untuk menonton siaran langsung dan memutar rekaman, masuk dengan email yang Anda pakai saat memesan.",
+    "signIn": "Masuk dengan email",
+    "recordingKept": "Rekaman tersedia sampai {day}, {time} WIB.",
+    "recordingGone": "Rekaman pesanan ini sudah dihapus atau tidak tersedia.",
+    "invalidTitle": "Tautan ini tidak berlaku",
+    "invalidBody": "Tautan ini salah, sudah dicabut, atau sudah lewat masa berlakunya. Masuk dengan email pesanan Anda untuk melihat pesanan.",
+    "errorTitle": "Pesanan belum bisa ditampilkan",
+    "errorBody": "Ada gangguan saat membaca tautan ini. Muat ulang halaman untuk mencoba lagi.",
+    "retry": "Muat ulang"
+  },
+  "Replay": {
+    "title": "Rekaman pekerjaan",
+    "backToCode": "Pesanan {code}",
+    "lead": "{service}, {day}, {start} sampai {end} WIB",
+    "asideLabel": "Rekaman Anda dan bantuan",
+    "listTitle": "Rekaman Anda",
+    "listNote": "Rekaman yang lebih dari 7 hari dihapus otomatis dan tidak bisa dipulihkan.",
+    "rowLine": "{code}, {day}, {detail}",
+    "rowSelected": "sedang dipilih",
+    "rowDeleted": "sudah dihapus",
+    "rowDaysLeft": "{days, plural, other {# hari}} lagi",
+    "rowSoon": "kurang dari sehari lagi",
+    "emptyTitle": "Belum ada rekaman",
+    "emptyBody": "Rekaman muncul di sini setelah Petugas HomeKlin check-out dari pekerjaan yang disiarkan, dan tersedia 7 hari.",
+    "toOrders": "Ke pesanan Anda",
+    "errorTitle": "Rekaman belum bisa ditampilkan",
+    "errorBody": "Ada gangguan saat membaca pesanan Anda. Muat ulang halaman untuk mencoba lagi.",
+    "retry": "Muat ulang",
+    "open": "Buka halaman rekaman"
   }
 }

@@ -38,19 +38,25 @@ export async function SupportContent({ searchParams }: { searchParams: Promise<S
   }
   const emphasis = entries !== null && entries.length > 0 ? "quiet" : "strong";
 
+  // D5 (mocks Customer-Support, Phone-Support): the FAQ in its own card, the contact panel beside it
+  // from 1024 px and under it on phones.
   return (
-    <>
-      <FaqSearch query={query} />
-      <FaqResults entries={entries} query={query} />
-      <Suspense
-        fallback={
-          <ContactPanel emphasis={emphasis}>
-            <ContactLoading />
-          </ContactPanel>
-        }
-      >
-        <ContactAdmin query={query} emphasis={emphasis} />
-      </Suspense>
-    </>
+    <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-6">
+      <div className="flex min-w-0 flex-col gap-5 rounded-lg bg-card p-5 md:p-7">
+        <FaqSearch query={query} />
+        <FaqResults entries={entries} query={query} />
+      </div>
+      <div className="flex min-w-0 flex-col gap-5">
+        <Suspense
+          fallback={
+            <ContactPanel emphasis={emphasis}>
+              <ContactLoading />
+            </ContactPanel>
+          }
+        >
+          <ContactAdmin query={query} emphasis={emphasis} />
+        </Suspense>
+      </div>
+    </div>
   );
 }

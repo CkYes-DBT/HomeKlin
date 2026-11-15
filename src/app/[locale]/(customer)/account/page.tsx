@@ -19,12 +19,14 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function AccountPage() {
   const t = useTranslations("AccountPage");
   return (
-    <PageContainer>
-      <PageHeader title={t("title")} size="large" />
+    <PageContainer wide>
+      <PageHeader title={t("title")} size="flow" />
       <Suspense fallback={<GateFallback />}>
         <RoleGate roles={["customer"]}>
-          <AccountSummary />
-          <p className="mt-4 max-w-prose px-1 text-sm text-ink-muted">{t("signInNote")}</p>
+          <div className="flex max-w-2xl flex-col gap-4">
+            <AccountSummary />
+            <p className="max-w-prose px-1 text-sm text-ink-muted">{t("signInNote")}</p>
+          </div>
         </RoleGate>
       </Suspense>
     </PageContainer>

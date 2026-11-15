@@ -22,8 +22,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function SupportPage({ searchParams }: PageProps<"/[locale]/support">) {
   const t = useTranslations("SupportPage");
   return (
-    <PageContainer>
-      <PageHeader title={t("title")} description={t("description")} size="large" />
+    <PageContainer wide>
+      <PageHeader title={t("title")} description={t("description")} size="flow" />
       <Suspense fallback={<GateFallback />}>
         <SupportContent searchParams={searchParams} />
       </Suspense>

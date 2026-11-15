@@ -5,8 +5,8 @@ import { expect, test, type Page } from "@playwright/test";
 // prefers; a chosen language is kept in the NEXT_LOCALE cookie for a year. Runs on a phone (the
 // header's compact switch) and on a desktop (the switch in the utility bar).
 const headline = {
-  id: "Jasa kebersihan rumah yang bisa Anda tonton langsung",
-  en: "A home cleaning service you can watch live",
+  id: "Rumah bersih yang bisa Anda tonton langsung",
+  en: "A clean home you can watch live",
 };
 
 // The switch is a group of links named by the page's language; each link is named by the language it

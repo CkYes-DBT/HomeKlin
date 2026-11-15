@@ -90,7 +90,7 @@ test.describe("as a visitor", () => {
     await expect(page.getByText(/Payment goes through Midtrans/)).toBeVisible();
   });
 
-  test("a search without a match says so and puts the contact panel forward, with sign-in first", async ({ page }) => {
+  test("a search without a match says so and puts the contact panel forward, with the guest chat and sign-in", async ({ page }) => {
     await page.goto("/support?q=zzzzqq");
     await expect(page.getByRole("heading", { name: "Belum ada jawaban untuk pencarian ini" })).toBeVisible();
     const panel = contactPanel(page);
@@ -98,7 +98,9 @@ test.describe("as a visitor", () => {
     await expect(panel).toHaveAttribute("data-emphasis", "strong");
     const signIn = panel.getByRole("link", { name: "Masuk untuk bertanya" });
     await expect(signIn).toHaveAttribute("href", "/login?next=%2Fsupport");
-    await expect(panel.getByRole("textbox")).toHaveCount(0);
+    // No account needed (B13, D5): the question carries over into the guest chat form.
+    await expect(panel.getByRole("textbox", { name: "Pertanyaan Anda" })).toHaveValue("zzzzqq");
+    await expect(panel.getByRole("button", { name: "Chat dengan admin" })).toBeVisible();
 
     await page.goto("/en/support?q=zzzzqq");
     await expect(page.getByRole("heading", { name: "No answer for this search yet" })).toBeVisible();

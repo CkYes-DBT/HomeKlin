@@ -13,7 +13,7 @@ type ButtonLinkProps = {
    * apps migrate: forest is the primary pill with a lime arrow circle, accent is the lime pill for
    * the one main action in a viewport.
    */
-  variant?: "primary" | "secondary" | "forest" | "accent";
+  variant?: "primary" | "secondary" | "forest" | "accent" | "outline";
   /** md (44 px) in the app; lg (52 px) for the landing hero and CTA band. */
   size?: "md" | "lg";
   /**
@@ -33,6 +33,8 @@ const variants = {
   secondary: "border border-border-control bg-surface text-ink hover:bg-surface-sunken active:bg-brand-50",
   forest: "bg-primary text-on-primary hover:bg-primary-container active:bg-band",
   accent: "bg-lime text-on-lime hover:brightness-95 active:brightness-90",
+  // The redesign's outlined pill on white or cream (the customer pages since D5).
+  outline: "bg-card text-ink inset-ring-[1.5px] inset-ring-outline hover:bg-sunken active:bg-lime-wash",
 };
 
 const sizes = {

@@ -41,7 +41,7 @@ const chips: Record<LiveStatus, { Icon: LucideIcon; tone: string }> = {
 };
 
 const outline =
-  "inline-flex min-h-touch shrink-0 items-center justify-center gap-2 rounded-full border border-border-control bg-surface px-4 text-sm font-semibold text-ink transition-[background-color,transform] duration-150 ease-out-quart hover:bg-surface-sunken active:scale-[0.98] active:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex min-h-touch shrink-0 items-center justify-center gap-2 rounded-full bg-card inset-ring-1 inset-ring-border-control px-4 text-sm font-semibold text-ink transition-[background-color,transform] duration-150 ease-out-quart hover:bg-sunken active:scale-[0.98] active:bg-lime-wash disabled:cursor-not-allowed disabled:opacity-60";
 
 // The customer's live view of their own job (T23). The server checked this viewer and made a short-lived
 // link before this rendered (./order-live.tsx); it plays muted, looped and inline, like a live feed,
@@ -193,7 +193,7 @@ export function LiveViewer({ orderId, src: firstSrc, status: firstStatus, cleane
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative overflow-hidden rounded-md bg-surface-sunken">
+      <div className="relative overflow-hidden rounded-md bg-sunken">
         {src ? (
           <video
             key={load}
@@ -215,7 +215,7 @@ export function LiveViewer({ orderId, src: firstSrc, status: firstStatus, cleane
           <div className="aspect-video w-full" />
         )}
         {shown === "weak" ? (
-          <div className="absolute inset-x-2 bottom-2 flex items-start gap-2.5 rounded-md bg-surface/95 px-3 py-2.5 shadow-card">
+          <div className="absolute inset-x-2 bottom-2 flex items-start gap-2.5 rounded-md bg-card/95 px-3 py-2.5">
             <SignalLow className="mt-0.5 size-5 shrink-0 text-warning" aria-hidden="true" />
             <div className="flex min-w-0 flex-col text-sm">
               <p className="font-semibold text-ink">{t("weakTitle")}</p>
@@ -224,8 +224,8 @@ export function LiveViewer({ orderId, src: firstSrc, status: firstStatus, cleane
           </div>
         ) : null}
         {shown === "disconnected" ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-surface/90 px-6 text-center">
-            <LoaderCircle className="size-6 shrink-0 animate-spin text-brand-700" aria-hidden="true" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-card/90 px-6 text-center">
+            <LoaderCircle className="size-6 shrink-0 animate-spin text-primary" aria-hidden="true" />
             <p className="font-semibold text-ink">{t("disconnectedTitle")}</p>
             <p className="max-w-xs text-sm text-ink-muted">{t("disconnectedBody")}</p>
           </div>
@@ -278,7 +278,7 @@ export function LiveViewer({ orderId, src: firstSrc, status: firstStatus, cleane
 
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <p className="flex items-center gap-2 text-sm text-ink">
-          <Clock className="size-4 shrink-0 text-brand-700" aria-hidden="true" />
+          <Clock className="size-4 shrink-0 text-primary" aria-hidden="true" />
           <span>{t("startedAt", { time: startedTime })}</span>
         </p>
         <button type="button" onClick={togglePlay} className={outline}>
@@ -288,7 +288,7 @@ export function LiveViewer({ orderId, src: firstSrc, status: firstStatus, cleane
       </div>
 
       <p className="flex items-start gap-2 text-sm text-ink-muted">
-        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-700" aria-hidden="true" />
+        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
         <span>{t("privacy")}</span>
       </p>
     </div>

@@ -417,6 +417,7 @@ export function OrderForm(props: OrderFormProps) {
       {current.step === "code" ? (
         <section aria-labelledby="order-code-title" className={`${card} lg:col-start-1 lg:row-start-1`}>
           <CodeEntry
+            tone="forest"
             id="order-code"
             titleId="order-code-title"
             title={tOrder("codeTitle")}

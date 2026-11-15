@@ -37,7 +37,7 @@ export async function ServiceRating({ serviceId, serviceName }: ServiceRatingPro
 
   return (
     <details className="group/reviews mt-2">
-      <summary className="-mx-2 flex min-h-touch w-fit cursor-pointer list-none items-center gap-1.5 rounded-full px-2 text-sm transition-colors duration-150 ease-out-quart hover:bg-surface-sunken active:bg-brand-50 [&::-webkit-details-marker]:hidden">
+      <summary className="-mx-2 flex min-h-touch w-fit cursor-pointer list-none items-center gap-1.5 rounded-full px-2 text-sm transition-colors duration-150 ease-out-quart hover:bg-sunken active:bg-lime-wash [&::-webkit-details-marker]:hidden">
         <Star className="size-4 shrink-0 fill-rating text-rating" strokeWidth={1.75} aria-hidden="true" />
         <span className="sr-only">{t("summary.label", { average, count: reviews.count })}</span>
         <span aria-hidden="true" className="font-semibold text-ink tabular-nums">
@@ -46,10 +46,10 @@ export async function ServiceRating({ serviceId, serviceName }: ServiceRatingPro
         <span aria-hidden="true" className="text-ink-muted">
           {t("summary.count", { count: reviews.count })}
         </span>
-        <span className="ml-1 font-semibold text-brand-700">{t("summary.show")}</span>
-        <ChevronDown className="size-4 shrink-0 text-brand-700 transition-transform duration-150 group-open/reviews:rotate-180" aria-hidden="true" />
+        <span className="ml-1 font-semibold text-primary">{t("summary.show")}</span>
+        <ChevronDown className="size-4 shrink-0 text-primary transition-transform duration-150 group-open/reviews:rotate-180" aria-hidden="true" />
       </summary>
-      <ul aria-label={t("summary.listLabel", { service: serviceName })} className="mt-2 flex flex-col divide-y divide-border rounded-md bg-surface-sunken px-3">
+      <ul aria-label={t("summary.listLabel", { service: serviceName })} className="mt-2 flex flex-col divide-y divide-border rounded-md bg-sunken px-3">
         {reviews.latest.map((review, index) => (
           <li key={`${review.createdAt}-${index}`} className="flex flex-col gap-1 py-3 text-sm">
             <p className="flex flex-wrap items-center gap-x-2">
@@ -57,7 +57,7 @@ export async function ServiceRating({ serviceId, serviceName }: ServiceRatingPro
               <span className="text-ink-muted">{t("stars", { count: review.serviceRating })}</span>
             </p>
             {review.comment ? <p className="text-base text-ink">{review.comment}</p> : null}
-            <p className="text-ink-faint">
+            <p className="text-ink-muted">
               {review.cleanerFirstName ? (
                 <>
                   {t("summary.cleaner", { name: review.cleanerFirstName })} <span aria-hidden="true">·</span>{" "}

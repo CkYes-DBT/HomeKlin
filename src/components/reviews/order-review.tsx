@@ -24,7 +24,7 @@ export async function OrderReview({ orderId, cleanerName }: OrderReviewProps) {
       <h3 id="review-title" className="font-display text-lg font-semibold text-ink">
         {t("title")}
       </h3>
-      <Suspense fallback={<div aria-hidden="true" className="h-32 animate-pulse rounded-md bg-surface-sunken motion-reduce:animate-none" />}>
+      <Suspense fallback={<div aria-hidden="true" className="h-32 animate-pulse rounded-md bg-sunken motion-reduce:animate-none" />}>
         <ReviewContent orderId={orderId} cleanerName={cleanerName} />
       </Suspense>
     </section>
@@ -81,9 +81,9 @@ async function ReviewContent({ orderId, cleanerName }: OrderReviewProps) {
         ))}
       </ul>
       {review.comment ? (
-        <blockquote className="rounded-md bg-surface-sunken px-4 py-3 text-base text-ink">{review.comment}</blockquote>
+        <blockquote className="rounded-md bg-sunken px-4 py-3 text-base text-ink">{review.comment}</blockquote>
       ) : null}
-      <p className="text-sm text-ink-faint">{t("given.date", { date: sent.format(new Date(review.createdAt)) })}</p>
+      <p className="text-sm text-ink-muted">{t("given.date", { date: sent.format(new Date(review.createdAt)) })}</p>
     </div>
   );
 }

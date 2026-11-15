@@ -40,7 +40,7 @@ export function RecordingCountdown({ expiresAt, renderedAt }: { expiresAt: strin
   const left = timeLeftMessage(recordingTimeLeft(expiresAt, moment));
 
   return (
-    <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-sm font-semibold text-brand-800 tabular-nums">
+    <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-lime-wash px-3 py-1 text-sm font-semibold text-on-lime-wash tabular-nums">
       <Clock className="size-4 shrink-0" aria-hidden="true" />
       <span>{t(left.key, left.values)}</span>
     </span>

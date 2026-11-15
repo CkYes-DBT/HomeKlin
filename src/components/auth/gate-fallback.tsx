@@ -15,8 +15,8 @@ export function GateFallback({ variant = "content" }: { variant?: "content" | "a
 function Loading() {
   const t = useTranslations("GateFallback");
   return (
-    <div className="flex min-h-48 items-center justify-center rounded-xl border border-dashed border-border bg-surface px-6 py-12">
-      <p role="status" className="flex items-center gap-2 text-sm text-ink-faint">
+    <div className="flex min-h-48 items-center justify-center rounded-lg border border-dashed border-border bg-card px-6 py-12">
+      <p role="status" className="flex items-center gap-2 text-sm text-ink-muted">
         <LoaderCircle className="size-4 shrink-0 animate-spin" aria-hidden="true" />
         {t("loading")}
       </p>

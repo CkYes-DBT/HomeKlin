@@ -71,13 +71,13 @@ async function Replay({ recordingId, now }: { recordingId: string; now: Date }) 
       <RecordingPlayer recordingId={recordingId} src={link.url} />
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-4">
         <p className="flex items-start gap-2 text-sm text-ink">
-          <CalendarClock className="mt-0.5 size-4 shrink-0 text-brand-700" aria-hidden="true" />
+          <CalendarClock className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
           <span>{t("availableUntil", { day, time: labels.time(until) })}</span>
         </p>
         <RecordingCountdown expiresAt={until} renderedAt={now.getTime()} />
       </div>
       <p className="flex items-start gap-2 text-sm text-ink-muted">
-        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-700" aria-hidden="true" />
+        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
         <span>{t("privacy")}</span>
       </p>
     </ClientMessages>
@@ -87,7 +87,7 @@ async function Replay({ recordingId, now }: { recordingId: string; now: Date }) 
 async function ReplayLoading() {
   const t = await getTranslations("Recording");
   return (
-    <div role="status" className="flex aspect-video w-full items-center justify-center rounded-md bg-surface-sunken">
+    <div role="status" className="flex aspect-video w-full items-center justify-center rounded-md bg-sunken">
       <span className="text-sm text-ink-muted">{t("loading")}</span>
     </div>
   );
@@ -118,7 +118,7 @@ async function ReplayUnavailable() {
       {/* A plain link on purpose: a full page load makes the link again. */}
       <a
         href=""
-        className="mt-2 inline-flex min-h-touch items-center justify-center rounded-full border border-border-control bg-surface px-5 text-sm font-semibold text-ink transition-colors duration-150 ease-out-quart hover:bg-surface-sunken active:bg-brand-50"
+        className="mt-2 inline-flex min-h-touch items-center justify-center rounded-full bg-card inset-ring-1 inset-ring-border-control px-5 text-sm font-semibold text-ink transition-colors duration-150 ease-out-quart hover:bg-sunken active:bg-lime-wash"
       >
         {t("retry")}
       </a>

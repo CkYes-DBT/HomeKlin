@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 // The landing page at / (markdown/SPEC.md "Landing page"): what HomeKlin is, services with their prices,
 // how it works, safety facts, a FAQ teaser and one primary action, "Pesan sekarang", into booking.
 // Built on the redesign system in markdown/design.md (T3c).
-const headline = "Jasa kebersihan rumah yang bisa Anda tonton langsung";
+const headline = "Rumah bersih yang bisa Anda tonton langsung";
 
 test.describe("landing page", () => {
   test("keeps the browser tab title as the product name", async ({ page }) => {
@@ -110,12 +110,12 @@ test.describe("landing page", () => {
     await expect(facts.nth(0)).toContainText("tim pemantau HomeKlin");
     await expect(facts.nth(1)).toContainText("check-in");
     await expect(facts.nth(2)).toContainText("7 hari");
-    await expect(facts.nth(3)).toContainText("Persetujuan");
+    await expect(facts.nth(3)).toContainText("persetujuan Anda");
   });
 
   test("shows four of HomeKlin's services with their full price, and no hidden fees", async ({ page }) => {
     await page.goto("/");
-    const services = page.getByRole("region", { name: "Layanan dan harga, tanpa kejutan" });
+    const services = page.getByRole("region", { name: "Layanan Kebersihan HomeKlin" });
     const items = services.getByRole("listitem");
     // Four cards whatever the catalog holds; the full list is one link away (T8).
     await expect(items).toHaveCount(4);
@@ -130,7 +130,7 @@ test.describe("landing page", () => {
       await expect(item.getByRole("link")).toHaveAttribute("href", /^\/pesan\?layanan=[a-z0-9-]+$/);
     }
     await expect(services).not.toContainText("mulai dari");
-    await expect(services.getByText("Harga tampil penuh. Tidak ada biaya tambahan saat Anda membayar.")).toBeVisible();
+    await expect(services.getByText("Harga ditampilkan penuh. Tidak ada biaya tambahan saat Anda membayar.")).toBeVisible();
     await expect(services.getByRole("link", { name: "Lihat semua layanan" })).toHaveAttribute("href", "/services");
   });
 
@@ -145,7 +145,7 @@ test.describe("landing page", () => {
 
   test("explains how it works in five steps, in order", async ({ page }) => {
     await page.goto("/");
-    const steps = page.getByRole("region", { name: "Cara kerjanya" }).getByRole("listitem");
+    const steps = page.getByRole("region", { name: "Cara kerja" }).getByRole("listitem");
     await expect(steps.getByRole("heading", { level: 3 })).toHaveText([
       "Pesan",
       "Bayar",

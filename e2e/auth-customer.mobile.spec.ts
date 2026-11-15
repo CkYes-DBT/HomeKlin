@@ -166,7 +166,7 @@ test.describe("signing out", () => {
 
     await expect(page).toHaveURL("/");
     await expect(
-      page.getByRole("heading", { level: 1, name: "Jasa kebersihan rumah yang bisa Anda tonton langsung" }),
+      page.getByRole("heading", { level: 1, name: "Rumah bersih yang bisa Anda tonton langsung" }),
     ).toBeVisible();
     await page.goto("/orders");
     await expect(page).toHaveURL(/\/login\?next=%2Forders$/);

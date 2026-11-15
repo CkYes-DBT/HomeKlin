@@ -44,7 +44,7 @@ export function LiveWaiting({ orderId }: { orderId: string }) {
         <p>{t("signedOutBody")}</p>
         <Link
           href="/login"
-          className="mt-3 inline-flex min-h-touch items-center justify-center rounded-full border border-border-control bg-surface px-4 text-sm font-semibold text-ink transition-colors duration-150 ease-out-quart hover:bg-surface-sunken active:bg-brand-50"
+          className="mt-3 inline-flex min-h-touch items-center justify-center rounded-full bg-card inset-ring-1 inset-ring-border-control px-4 text-sm font-semibold text-ink transition-colors duration-150 ease-out-quart hover:bg-sunken active:bg-lime-wash"
         >
           {t("signIn")}
         </Link>

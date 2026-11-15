@@ -88,7 +88,7 @@ export function RecordingPlayer({ recordingId, src: firstSrc }: { recordingId: s
         aria-label={t("playerLabel")}
         onError={handleError}
         onLoadedMetadata={resume}
-        className="aspect-video w-full rounded-md bg-surface-sunken object-contain"
+        className="aspect-video w-full rounded-md bg-sunken object-contain"
       >
         <p className="p-4 text-sm text-ink-muted">{t("unsupported")}</p>
       </video>
@@ -108,7 +108,7 @@ export function RecordingPlayer({ recordingId, src: firstSrc }: { recordingId: s
               type="button"
               onClick={() => void reload()}
               disabled={reloading}
-              className="inline-flex min-h-touch shrink-0 items-center justify-center gap-2 rounded-full border border-border-control bg-surface px-5 text-sm font-semibold text-ink transition-colors duration-150 ease-out-quart hover:bg-surface-sunken active:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-touch shrink-0 items-center justify-center gap-2 rounded-full bg-card inset-ring-1 inset-ring-border-control px-5 text-sm font-semibold text-ink transition-colors duration-150 ease-out-quart hover:bg-sunken active:bg-lime-wash disabled:cursor-not-allowed disabled:opacity-60"
             >
               <RotateCw className="size-4 shrink-0" aria-hidden="true" />
               {t("reload")}

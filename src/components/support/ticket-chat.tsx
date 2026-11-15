@@ -16,7 +16,7 @@ import {
 } from "react";
 import { Link } from "@/i18n/navigation";
 import { postTicketMessage, type SupportFormState } from "@/lib/support/actions";
-import { markTicketRead } from "@/lib/support/guest-actions";
+import { markTicketRead, type GuestFailureKey } from "@/lib/support/guest-actions";
 import type { TicketMessage, TicketStatus, TicketUrgency } from "@/lib/support/support";
 import { LiveStatus } from "./live-status";
 import { isReadBy, mergeMessages, messageFromChange, readTimeFromChange, statusFromChange } from "./ticket-messages";
@@ -45,6 +45,8 @@ type TicketChatProps = {
   customerReadAt?: string | null;
   /** Admin's view: the chat was opened without an account (B13), with the email the guest gave, if any. */
   guest?: { email: string | null } | null;
+  /** The customer's view: when admin last read the chat, for "Terkirim" or "Terbaca" (B13). */
+  adminReadAt?: string | null;
 };
 
 const jakarta = "Asia/Jakarta";
@@ -75,9 +77,18 @@ function messageTime(iso: string, locale: string): string {
 // draft stays in the box if sending fails, and an empty message is stopped before it is sent.
 // Opening the chat, and every new message from the other side while it is open, marks it read for this
 // side (markTicketRead, mark_ticket_read), which the other side sees as "Terbaca" (B13).
-export function TicketChat({ viewer, ticket, messages, customerName, actions, order, customerReadAt = null, guest = null }: TicketChatProps) {
+export function TicketChat({
+  viewer,
+  ticket,
+  messages,
+  customerName,
+  actions,
+  order,
+  customerReadAt = null,
+  guest = null,
+  adminReadAt = null,
+}: TicketChatProps) {
   const t = useTranslations("SupportChat");
-  const locale = useLocale();
   const router = useRouter();
 
   const [liveMessages, setLiveMessages] = useState<TicketMessage[]>([]);
@@ -88,6 +99,8 @@ export function TicketChat({ viewer, ticket, messages, customerName, actions, or
   // The customer's read time from Realtime counts until the server's own one catches up.
   const [liveRead, setLiveRead] = useState<string | null>(null);
   const readAt = latest(customerReadAt, liveRead);
+  // The same for admin's read time, on the customer's own messages.
+  const [liveAdminRead, setLiveAdminRead] = useState<string | null>(null);
 
   const changes: ChangeFilter[] = [
     { event: "INSERT", table: "ticket_messages", filter: `ticket_id=eq.${ticket.id}` },
@@ -103,6 +116,8 @@ export function TicketChat({ viewer, ticket, messages, customerName, actions, or
         if (next) setLiveStatus({ value: next, over: ticket.status });
         const read = readTimeFromChange(change.new, ticket.id, "customer");
         if (read) setLiveRead(read);
+        const adminRead = readTimeFromChange(change.new, ticket.id, "admin");
+        if (adminRead) setLiveAdminRead(adminRead);
       }
     },
     onJoin: () => router.refresh(),
@@ -127,7 +142,6 @@ export function TicketChat({ viewer, ticket, messages, customerName, actions, or
     seenCount.current = shown.length;
   }, [shown.length]);
 
-  const titleId = `chat-${ticket.id}`;
   if (viewer === "admin") {
     const author = (message: TicketMessage) => (message.fromAdmin ? t("team") : customerName || t("customerFallback"));
     return (
@@ -147,29 +161,15 @@ export function TicketChat({ viewer, ticket, messages, customerName, actions, or
     );
   }
 
-  // The customer's own messages sit on the right.
-  const ownSide = (message: TicketMessage) => !message.fromAdmin;
-  const author = (message: TicketMessage) => (message.fromAdmin ? t("team") : t("you"));
-
   return (
-    <section aria-labelledby={titleId} className="flex flex-col rounded-xl border border-border bg-surface shadow-card">
-      <header className="flex flex-col gap-3 border-b border-border p-4 md:p-5">
-        <div className="flex flex-col gap-1">
-          <h2 id={titleId} className="font-display text-lg font-semibold text-ink">
-            {t("titleCustomer")}
-          </h2>
-          <p className="text-sm text-ink-muted">
-            <time dateTime={ticket.createdAt} suppressHydrationWarning>
-              {t("opened", { time: messageTime(ticket.createdAt, locale) })}
-            </time>
-            {ticket.orderId ? <span> · {t("order", { reference: `#${ticket.orderId.slice(0, 8)}` })}</span> : null}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <TicketStatusPill status={status} label={t(`status.${status}`)} />
-          {ticket.urgency === "urgent" ? <UrgentPill label={t("urgent")} /> : null}
-        </div>
-        {status === "closed" ? null : (
+    <CustomerChatView
+      ticket={ticket}
+      status={status}
+      shown={shown}
+      lastMessage={lastMessage}
+      adminReadAt={latest(adminReadAt, liveAdminRead)}
+      live={
+        status === "closed" ? null : (
           <LiveStatus
             state={live}
             labels={{
@@ -180,44 +180,105 @@ export function TicketChat({ viewer, ticket, messages, customerName, actions, or
               reload: t("live.reload"),
             }}
           />
-        )}
-        {actions && status !== "closed" ? actions : null}
+        )
+      }
+      composer={<Composer ticketId={ticket.id} viewer="customer" />}
+    />
+  );
+}
+
+type CustomerChatViewProps = {
+  ticket: TicketChatProps["ticket"];
+  status: TicketStatus;
+  shown: TicketMessage[];
+  lastMessage: RefObject<HTMLLIElement | null>;
+  /** When admin last read the chat, for "Terkirim" or "Terbaca" under the customer's own messages (B13). */
+  adminReadAt: string | null;
+  /** Whether new messages arrive by themselves (Realtime), or how the guest's chat keeps up. */
+  live: ReactNode;
+  composer: ReactNode;
+};
+
+// The customer's chat in the redesign (D5, mocks Customer-Chat and Phone-Chat), for a signed-in
+// customer (TicketChat, Realtime) and a guest without an account (./guest-chat.tsx, refreshed by
+// polling): a dark forest header with Tim HomeKlin, the status row, the messages on the cream panel
+// (the customer's own on the right in forest with "Terkirim" or "Terbaca", admin's on the left in
+// white), and the pill composer with the round lime send button. The heading reads "Percakapan dengan
+// Tim HomeKlin" for screen readers, so the region keeps the name it always had.
+export function CustomerChatView({ ticket, status, shown, lastMessage, adminReadAt, live, composer }: CustomerChatViewProps) {
+  const t = useTranslations("SupportChat");
+  const locale = useLocale();
+  const titleId = `chat-${ticket.id}`;
+  const author = (message: TicketMessage) => (message.fromAdmin ? t("team") : t("you"));
+
+  return (
+    <section aria-labelledby={titleId} className="flex min-w-0 flex-col overflow-hidden rounded-lg bg-canvas ring-1 ring-border">
+      <header className="on-dark-focus flex flex-wrap items-center justify-between gap-3 bg-band px-4 py-3.5 text-on-band md:px-5">
+        <div className="flex min-w-0 items-center gap-3">
+          <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-band-raised text-lime">
+            <Headset className="size-4.5" />
+          </span>
+          <div className="flex min-w-0 flex-col leading-snug">
+            <h2 id={titleId} className="font-display text-lg font-semibold">
+              <span className="sr-only">{t("titleCustomer")}</span>
+              <span aria-hidden="true">{t("team")}</span>
+            </h2>
+            <p className="text-sm text-on-band-muted">
+              <time dateTime={ticket.createdAt} suppressHydrationWarning>
+                {t("opened", { time: messageTime(ticket.createdAt, locale) })}
+              </time>
+              {ticket.orderId ? <span> · {t("order", { reference: `#${ticket.orderId.slice(0, 8)}` })}</span> : null}
+            </p>
+          </div>
+        </div>
       </header>
 
-      <ol aria-label={t("messagesLabel")} aria-live="polite" aria-relevant="additions" className="flex flex-col gap-3 p-4 md:p-5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border bg-card px-4 py-1.5 md:px-5">
+        <TicketStatusPill status={status} label={t(`status.${status}`)} />
+        {ticket.urgency === "urgent" ? <UrgentPill label={t("urgent")} /> : null}
+        {live}
+      </div>
+
+      <ol
+        aria-label={t("messagesLabel")}
+        aria-live="polite"
+        aria-relevant="additions"
+        className="flex min-h-72 flex-col gap-2.5 px-3 py-4 md:px-5"
+      >
         {shown.map((message, index) => {
-          const own = ownSide(message);
+          const own = !message.fromAdmin;
+          const read = isReadBy(message, adminReadAt);
           return (
             <li
               key={message.id}
               ref={index === shown.length - 1 ? lastMessage : undefined}
-              className={`flex max-w-[min(36rem,88%)] flex-col gap-1 rounded-xl px-4 py-3 ${
-                own ? "self-end bg-brand-50 text-ink" : "self-start border border-border bg-surface-sunken text-ink"
+              className={`flex max-w-[min(36rem,88%)] flex-col gap-0.5 px-3.5 pt-2.5 pb-2 ${
+                own
+                  ? "self-end rounded-lg rounded-br-sm bg-primary text-on-primary"
+                  : "self-start rounded-lg rounded-bl-sm bg-card text-ink ring-1 ring-border"
               }`}
             >
-              <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink-muted">
-                <span className="inline-flex items-center gap-1.5 font-semibold text-ink">
-                  {message.fromAdmin ? <Headset className="size-3.5 shrink-0 text-brand-700" aria-hidden="true" /> : null}
-                  {author(message)}
-                </span>
+              <p className={`text-xs font-medium ${own ? "text-on-band-muted" : "text-ink-muted"}`}>{author(message)}</p>
+              <p className="text-body break-words whitespace-pre-wrap">{message.body}</p>
+              <p className={`mt-0.5 flex items-center gap-1.5 self-end text-xs tabular-nums ${own ? "text-on-band-muted" : "text-ink-muted"}`}>
                 <time dateTime={message.createdAt} suppressHydrationWarning>
                   {messageTime(message.createdAt, locale)}
                 </time>
+                {own ? <ReadTick read={read} label={t(read ? "read" : "sent")} /> : null}
               </p>
-              <p className="text-base break-words whitespace-pre-wrap">{message.body}</p>
             </li>
           );
         })}
       </ol>
 
-      <footer className="border-t border-border p-4 md:p-5">
+      <footer className="border-t border-border bg-card px-3 py-2.5 md:px-4">
         {status === "closed" ? (
-          <p className="flex items-start gap-2.5 rounded-md bg-surface-sunken px-4 py-3 text-sm text-ink-muted">
+          <p className="flex items-start gap-2.5 rounded-md bg-sunken px-4 py-3 text-sm text-ink-muted">
             <Lock className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
             <span>{t("closedCustomer")}</span>
           </p>
         ) : (
-          <Composer ticketId={ticket.id} viewer={viewer} />
+          composer
         )}
       </footer>
     </section>
@@ -231,9 +292,25 @@ function latest(a: string | null, b: string | null): string | null {
   return Date.parse(a) >= Date.parse(b) ? a : b;
 }
 
-function Composer({ ticketId, viewer }: { ticketId: string; viewer: "customer" | "admin" }) {
+type ComposerProps = {
+  ticketId: string;
+  viewer: "customer" | "admin";
+  /** The action that sends; the guest chat passes postGuestMessage (B13). Both answer the same way. */
+  send?: (previous: ComposerState, formData: FormData) => Promise<ComposerState>;
+};
+
+type ComposerState = { ok?: true; formError?: ChatErrorKey } | null;
+type ChatErrorKey = NonNullable<SupportFormState>["formError"] | GuestFailureKey;
+
+// The composer of both chats (D1 for admin, D5 for the customer, mocks Admin-Support and Customer-Chat):
+// a pill-shaped box and a round lime send button. The label stays for screen readers; the placeholder
+// says it for the eye.
+/** The signed-in chat's action (customer or admin); the previous answer is not needed to send. */
+const postSignedIn = (_previous: ComposerState, formData: FormData): Promise<ComposerState> => postTicketMessage(null, formData);
+
+export function Composer({ ticketId, viewer, send = postSignedIn }: ComposerProps) {
   const t = useTranslations("SupportChat");
-  const [state, formAction, pending] = useActionState<SupportFormState, FormData>(postTicketMessage, null);
+  const [state, formAction, pending] = useActionState<ComposerState, FormData>(send, null);
   const [body, setBody] = useState("");
   const [empty, setEmpty] = useState(false);
   // Counts the sends, so the same refusal twice is announced twice.
@@ -273,85 +350,45 @@ function Composer({ ticketId, viewer }: { ticketId: string; viewer: "customer" |
     }
   }
 
-  const errorLine = (
-    <div role="alert" aria-atomic="true">
-      {error ? (
-        <p key={sends} id={`${id}-error`} className="flex items-start gap-1.5 px-1 text-sm font-medium text-danger">
-          <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          <span>{error}</span>
-        </p>
-      ) : null}
-    </div>
-  );
-
-  if (viewer === "admin") {
-    // The redesign (the user's mock "Admin-Support"): a pill-shaped box and a round lime send button
-    // on the chat's cream footer. The label stays for screen readers; the placeholder says it for the eye.
-    const label = t("composer.labelAdmin");
-    return (
-      <form action={formAction} onSubmit={onSubmit} noValidate className="flex flex-col gap-2">
-        <input type="hidden" name="ticketId" value={ticketId} />
-        <label htmlFor={id} className="sr-only">
-          {label}
-        </label>
-        <div className="flex items-end gap-2">
-          <textarea
-            ref={field}
-            id={id}
-            name="body"
-            rows={1}
-            maxLength={2000}
-            value={body}
-            placeholder={label}
-            onChange={(event) => {
-              setBody(event.target.value);
-              if (empty) setEmpty(false);
-            }}
-            onKeyDown={onKeyDown}
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? `${id}-error` : undefined}
-            className="max-h-40 min-h-touch min-w-0 flex-1 resize-y rounded-lg border border-border-control bg-card px-4.5 py-2.5 text-base text-ink caret-primary transition-colors duration-150 ease-out-quart placeholder:text-ink-muted hover:border-primary aria-invalid:border-danger aria-invalid:bg-danger-surface lg:text-body"
-          />
-          <button
-            type="submit"
-            aria-disabled={pending || undefined}
-            aria-label={pending ? t("composer.pending") : t("composer.sendAdmin")}
-            className="inline-flex size-touch shrink-0 items-center justify-center rounded-full bg-lime text-on-lime transition-[filter,transform] duration-150 ease-out-quart hover:brightness-95 active:scale-[0.96] active:brightness-90 aria-disabled:cursor-progress"
-          >
-            {pending ? (
-              <LoaderCircle className="size-5 animate-spin motion-reduce:animate-none" aria-hidden="true" />
-            ) : (
-              <SendHorizontal className="size-5" aria-hidden="true" />
-            )}
-          </button>
-        </div>
-        {errorLine}
-      </form>
-    );
-  }
-
+  const label = viewer === "admin" ? t("composer.labelAdmin") : t("composer.labelCustomer");
+  const sendLabel = viewer === "admin" ? t("composer.sendAdmin") : t("composer.sendCustomer");
   return (
     <form action={formAction} onSubmit={onSubmit} noValidate className="flex flex-col gap-2">
       <input type="hidden" name="ticketId" value={ticketId} />
-      <label htmlFor={id} className="px-1 text-sm font-medium text-ink">
-        {t("composer.labelCustomer")}
+      <label htmlFor={id} className="sr-only">
+        {label}
       </label>
-      <textarea
-        ref={field}
-        id={id}
-        name="body"
-        rows={3}
-        maxLength={2000}
-        value={body}
-        onChange={(event) => {
-          setBody(event.target.value);
-          if (empty) setEmpty(false);
-        }}
-        onKeyDown={onKeyDown}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${id}-error` : undefined}
-        className="min-h-24 w-full resize-y rounded-xl border border-border-control bg-surface px-4 py-3 text-base text-ink caret-brand-700 transition-colors duration-150 ease-out-quart hover:border-brand-600 aria-invalid:border-danger aria-invalid:bg-danger-surface"
-      />
+      <div className="flex items-end gap-2">
+        <textarea
+          ref={field}
+          id={id}
+          name="body"
+          rows={1}
+          maxLength={2000}
+          value={body}
+          placeholder={label}
+          onChange={(event) => {
+            setBody(event.target.value);
+            if (empty) setEmpty(false);
+          }}
+          onKeyDown={onKeyDown}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
+          className="max-h-40 min-h-touch min-w-0 flex-1 resize-y rounded-lg border border-border-control bg-card px-4.5 py-2.5 text-base text-ink caret-primary transition-colors duration-150 ease-out-quart placeholder:text-ink-muted hover:border-primary aria-invalid:border-danger aria-invalid:bg-danger-surface lg:text-body"
+        />
+        <button
+          type="submit"
+          aria-disabled={pending || undefined}
+          aria-label={pending ? t("composer.pending") : sendLabel}
+          className="inline-flex size-touch shrink-0 items-center justify-center rounded-full bg-lime text-on-lime transition-[filter,transform] duration-150 ease-out-quart hover:brightness-95 active:scale-[0.96] active:brightness-90 aria-disabled:cursor-progress motion-reduce:active:scale-100"
+        >
+          {pending ? (
+            <LoaderCircle className="size-5 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+          ) : (
+            <SendHorizontal className="size-5" aria-hidden="true" />
+          )}
+        </button>
+      </div>
       <div role="alert" aria-atomic="true">
         {error ? (
           <p key={sends} id={`${id}-error`} className="flex items-start gap-1.5 px-1 text-sm font-medium text-danger">
@@ -360,22 +397,6 @@ function Composer({ ticketId, viewer }: { ticketId: string; viewer: "customer" |
           </p>
         ) : null}
       </div>
-      <button
-        type="submit"
-        disabled={pending}
-        className={`inline-flex min-h-touch items-center justify-center gap-2 self-end rounded-full px-5 text-sm font-semibold transition-[background-color,transform] duration-150 ease-out-quart ${
-          pending
-            ? "cursor-progress bg-brand-700 text-on-brand"
-            : "bg-brand-600 text-on-brand hover:bg-brand-700 active:scale-[0.98] active:bg-brand-800"
-        }`}
-      >
-        {pending ? (
-          <LoaderCircle className="size-4.5 shrink-0 animate-spin" aria-hidden="true" />
-        ) : (
-          <SendHorizontal className="size-4.5 shrink-0" aria-hidden="true" />
-        )}
-        {pending ? t("composer.pending") : t("composer.sendCustomer")}
-      </button>
     </form>
   );
 }
@@ -511,7 +532,7 @@ function AdminChat({ ticket, status, live, shown, lastMessage, customerName, ord
   );
 }
 
-/** Under admin's own message: "Terkirim" with one tick, or "Terbaca" with two. A word, never the ticks alone. */
+/** Under one's own message: "Terkirim" with one tick, or "Terbaca" with two. A word, never the ticks alone. */
 function ReadTick({ read, label }: { read: boolean; label: string }) {
   const Icon = read ? CheckCheck : Check;
   return (

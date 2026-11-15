@@ -9,7 +9,7 @@ type PageHeaderProps = {
    * "large" for customer pages: the title grows to text-3xl from tablet width. Back office keeps
    * text-2xl. "compact" for the redesigned back office (admin, Phase 13): a 22 px title (text-title).
    */
-  size?: "default" | "large" | "compact";
+  size?: "default" | "large" | "compact" | "flow";
   /** The page's one main action (a ButtonLink), right of the title from 640 px and under it below. */
   action?: ReactNode;
   /**
@@ -25,6 +25,8 @@ const sizes = {
   default: { title: "text-2xl", description: "text-sm" },
   large: { title: "text-2xl md:text-3xl md:tracking-display", description: "text-sm md:text-base" },
   compact: { title: "text-title", description: "text-sm" },
+  // The customer redesign (D5): 30 px on phones, 36 px from tablets, as the booking steps' titles.
+  flow: { title: "text-headline-sm md:text-4xl md:tracking-display", description: "text-base md:text-body-lg" },
 };
 
 export function PageHeader({ title, description, size = "default", action, back, align = "start" }: PageHeaderProps) {

@@ -10,7 +10,7 @@ const pill = "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full px-3 
 const statusStyles: Record<TicketStatus, { Icon: LucideIcon; tone: string }> = {
   open: { Icon: Hourglass, tone: "bg-warning-surface text-warning" },
   answered: { Icon: CircleCheck, tone: "bg-success-surface text-success" },
-  closed: { Icon: Lock, tone: "bg-surface-sunken text-ink-muted" },
+  closed: { Icon: Lock, tone: "bg-sunken text-ink-muted" },
 };
 
 export function TicketStatusPill({ status, label }: { status: TicketStatus; label: string }) {

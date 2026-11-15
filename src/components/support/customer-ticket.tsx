@@ -8,7 +8,9 @@ import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { roleHome } from "@/lib/auth/roles";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getGuestTicket } from "@/lib/support/guest";
 import { getTicket } from "@/lib/support/support";
+import { GuestChat } from "./guest-chat";
 import { TicketChat } from "./ticket-chat";
 
 // One help chat for the customer (T20): /support?ticket=<id>, at request time behind <Suspense>. The
@@ -20,12 +22,41 @@ export async function CustomerTicket({ ticketId }: { ticketId: string }) {
   const [t, user] = await Promise.all([getTranslations("SupportPage"), getCurrentUser()]);
 
   if (!user) {
+    // A chat opened without an account (B13) is read with this browser's cookie only; any other
+    // visitor, and any other ticket, gets the same sign-in note, which says nothing about the ticket.
+    let guest: Awaited<ReturnType<typeof getGuestTicket>> = null;
+    try {
+      guest = await getGuestTicket(ticketId);
+    } catch (error) {
+      unstable_rethrow(error);
+      console.error(error);
+    }
+    if (guest) {
+      return (
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+          <BackToHelp label={t("ticket.back")} />
+          <ClientMessages namespaces={["SupportChat"]}>
+            <GuestChat
+              key={guest.ticket.id}
+              ticket={{
+                id: guest.ticket.id,
+                status: guest.ticket.status,
+                urgency: guest.ticket.urgency,
+                createdAt: guest.ticket.createdAt,
+              }}
+              messages={guest.messages}
+              adminReadAt={guest.ticket.adminReadAt}
+            />
+          </ClientMessages>
+        </div>
+      );
+    }
     const next = encodeURIComponent(`/support?ticket=${ticketId}`);
     return (
-      <EmptyState icon={LogIn} title={t("ticket.signInTitle")}>
+      <EmptyState tone="forest" icon={LogIn} title={t("ticket.signInTitle")}>
         {t("ticket.signInBody")}
         <span className="mt-4 flex justify-center">
-          <ButtonLink href={`/login?next=${next}`} icon={LogIn}>
+          <ButtonLink href={`/login?next=${next}`} icon={LogIn} variant="forest">
             {t("contact.signIn")}
           </ButtonLink>
         </span>
@@ -35,10 +66,10 @@ export async function CustomerTicket({ ticketId }: { ticketId: string }) {
 
   if (user.role !== "customer") {
     return (
-      <EmptyState icon={UserRoundX} title={t("contact.staffTitle")}>
+      <EmptyState tone="forest" icon={UserRoundX} title={t("contact.staffTitle")}>
         {t("ticket.staffBody")}
         <span className="mt-4 flex justify-center">
-          <ButtonLink href={user.role === "admin" ? "/admin/tickets" : roleHome[user.role]} variant="secondary">
+          <ButtonLink href={user.role === "admin" ? "/admin/tickets" : roleHome[user.role]} variant="outline">
             {user.role === "admin" ? t("contact.adminLink") : t("contact.staffLink")}
           </ButtonLink>
         </span>
@@ -55,13 +86,13 @@ export async function CustomerTicket({ ticketId }: { ticketId: string }) {
     return (
       <div className="flex flex-col gap-2">
         <BackToHelp label={t("ticket.back")} />
-        <EmptyState icon={CircleAlert} title={t("ticket.errorTitle")}>
+        <EmptyState tone="forest" icon={CircleAlert} title={t("ticket.errorTitle")}>
           {t("ticket.errorBody")}
           <span className="mt-4 flex justify-center">
             {/* A plain link on purpose: a full page load reads the chat again. */}
             <a
               href=""
-              className="inline-flex min-h-touch items-center justify-center rounded-full border border-border-control bg-surface px-5 text-sm font-semibold text-ink transition-colors duration-150 ease-out-quart hover:bg-surface-sunken active:bg-brand-50"
+              className="inline-flex min-h-touch items-center justify-center rounded-full bg-card inset-ring-1 inset-ring-border-control px-5 text-sm font-semibold text-ink transition-colors duration-150 ease-out-quart hover:bg-sunken active:bg-lime-wash"
             >
               {t("ticket.retry")}
             </a>
@@ -75,7 +106,7 @@ export async function CustomerTicket({ ticketId }: { ticketId: string }) {
     return (
       <div className="flex flex-col gap-2">
         <BackToHelp label={t("ticket.back")} />
-        <EmptyState icon={MessageCircleOff} title={t("ticket.notFoundTitle")}>
+        <EmptyState tone="forest" icon={MessageCircleOff} title={t("ticket.notFoundTitle")}>
           {t("ticket.notFoundBody")}
         </EmptyState>
       </div>
@@ -84,7 +115,7 @@ export async function CustomerTicket({ ticketId }: { ticketId: string }) {
 
   const { ticket, messages } = found;
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-2">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
       <BackToHelp label={t("ticket.back")} />
       <ClientMessages namespaces={["SupportChat"]}>
         <TicketChat
@@ -98,6 +129,7 @@ export async function CustomerTicket({ ticketId }: { ticketId: string }) {
             orderId: ticket.orderId,
           }}
           messages={messages}
+          adminReadAt={ticket.adminReadAt}
         />
       </ClientMessages>
     </div>
@@ -108,7 +140,7 @@ function BackToHelp({ label }: { label: string }) {
   return (
     <Link
       href="/support"
-      className="inline-flex min-h-touch w-fit items-center gap-2 rounded-full pr-3 text-sm font-semibold text-brand-700 transition-colors duration-150 ease-out-quart hover:text-brand-800 hover:underline active:text-ink"
+      className="inline-flex min-h-touch w-fit items-center gap-2 rounded-sm pr-3 text-sm font-semibold text-primary underline-offset-4 transition-colors duration-150 ease-out-quart hover:underline active:text-band"
     >
       <ArrowLeft className="size-4.5 shrink-0" aria-hidden="true" />
       {label}

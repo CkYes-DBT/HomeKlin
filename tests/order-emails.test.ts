@@ -60,7 +60,7 @@ describe("the templates", () => {
     expect(email.text).toContain("Rina <b>Wulandari</b>");
     expect(email.html).toContain("Rina &lt;b&gt;Wulandari&lt;/b&gt;");
     expect(email.html).toContain(`<img src="${site}/images/cleaner-rina.jpg"`);
-    expect(email.text).toContain("Jumat, 20 November 2026, 08.00 - 10.00 WIB");
+    expect(email.text).toContain("Jumat, 20 November 2026, 08.00 sampai 10.00 WIB");
     expect(`${email.subject}${email.text}${email.html}`).not.toMatch(/agensi|agency|mitra|partner/i);
   });
 

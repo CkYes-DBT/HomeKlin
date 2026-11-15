@@ -14,6 +14,11 @@ type OrderHeroProps = {
   serviceName: string;
   /** "Kamis, 5 November, 09.00-11.00 WIB". */
   arrival: string;
+  /**
+   * Where "Tonton langsung" leads: the live view by default; the order-link page (B14a), whose visitor
+   * may not be signed in, sends them to sign in first.
+   */
+  watchHref?: string;
 };
 
 // The top of a paid order's page (D5, mock Customer-Orders): a dark forest band with the Petugas
@@ -21,7 +26,7 @@ type OrderHeroProps = {
 // (markdown/PRODUCT.md principle 6; listMyOrders never returns it), where the job stands in words, and
 // while it is in progress the one main action, "Tonton langsung" (/orders/live?order=<id>). The live
 // pill pairs the dot with words, so the state never rests on colour alone.
-export async function OrderHero({ order, serviceName, arrival }: OrderHeroProps) {
+export async function OrderHero({ order, serviceName, arrival, watchHref }: OrderHeroProps) {
   const [locale, t] = await Promise.all([getLocale(), getTranslations("OrderHero")]);
   const live = liveInProgress({ ...order });
   const time = (iso: string) => formatJakartaTime(iso, locale);
@@ -82,7 +87,7 @@ export async function OrderHero({ order, serviceName, arrival }: OrderHeroProps)
           <span>{t("privacy")}</span>
         </p>
         {live ? (
-          <Link href={`/orders/live?order=${order.id}`} className={`${flowAccentButton} mt-6`}>
+          <Link href={watchHref ?? `/orders/live?order=${order.id}`} className={`${flowAccentButton} mt-6`}>
             {t("watch")}
             <ArrowRight className="size-5 shrink-0" aria-hidden="true" />
           </Link>

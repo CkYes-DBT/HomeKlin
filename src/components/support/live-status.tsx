@@ -43,7 +43,7 @@ export function LiveStatus({ state, labels }: LiveStatusProps) {
           {/* A plain link on purpose: a full page load reads everything again. */}
           <a
             href=""
-            className="inline-flex min-h-touch items-center rounded-full px-3 font-semibold text-brand-700 underline-offset-2 transition-colors duration-150 ease-out-quart hover:text-brand-800 hover:underline active:text-ink"
+            className="inline-flex min-h-touch items-center rounded-full px-3 font-semibold text-primary underline-offset-2 transition-colors duration-150 ease-out-quart hover:text-band hover:underline active:text-ink"
           >
             {labels.reload}
           </a>

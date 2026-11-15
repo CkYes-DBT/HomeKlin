@@ -12,7 +12,7 @@ const statusStyles: Record<OrderStatus, { Icon: LucideIcon; pill: string }> = {
   pending_payment: { Icon: Hourglass, pill: "bg-warning-surface text-warning" },
   paid: { Icon: CircleCheck, pill: "bg-success-surface text-success" },
   failed: { Icon: CircleX, pill: "bg-danger-surface text-danger" },
-  cancelled: { Icon: Ban, pill: "bg-surface-sunken text-ink-muted" },
+  cancelled: { Icon: Ban, pill: "bg-sunken text-ink-muted" },
 };
 
 export function OrderStatusPill({ status, label }: { status: OrderStatus; label: string }) {

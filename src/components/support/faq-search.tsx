@@ -18,7 +18,7 @@ export async function FaqSearch({ query }: { query: string }) {
         <div className="flex gap-2">
           <span className="relative min-w-0 flex-1">
             <Search
-              className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-ink-faint"
+              className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-ink-muted"
               aria-hidden="true"
             />
             {/* Keyed by the words, so "Tampilkan semua pertanyaan" empties the field too. */}
@@ -32,12 +32,12 @@ export async function FaqSearch({ query }: { query: string }) {
               maxLength={100}
               autoComplete="off"
               enterKeyHint="search"
-              className="h-12 w-full rounded-full border border-border-control bg-surface pr-4 pl-10 text-base text-ink caret-brand-700 transition-colors duration-150 ease-out-quart placeholder:text-ink-faint hover:border-brand-600"
+              className="h-12 w-full rounded-full bg-card inset-ring-1 inset-ring-border-control pr-4 pl-10 text-base text-ink caret-primary transition-colors duration-150 ease-out-quart placeholder:text-ink-muted hover:inset-ring-primary"
             />
           </span>
           <button
             type="submit"
-            className="inline-flex h-12 shrink-0 items-center justify-center rounded-full bg-brand-600 px-5 text-sm font-semibold text-on-brand transition-[background-color,transform] duration-150 ease-out-quart hover:bg-brand-700 active:scale-[0.98] active:bg-brand-800"
+            className="inline-flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-on-primary transition-[background-color,transform] duration-150 ease-out-quart hover:bg-primary-container active:scale-[0.98] active:bg-band"
           >
             {t("search.submit")}
           </button>

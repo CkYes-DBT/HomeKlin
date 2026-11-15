@@ -70,7 +70,7 @@ export function ReviewForm({ orderId, cleanerName }: ReviewFormProps) {
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex min-h-touch w-full items-center justify-center gap-2 rounded-full bg-brand-600 px-6 text-sm font-semibold text-on-brand transition-[background-color,transform] duration-150 ease-out-quart hover:bg-brand-700 active:scale-[0.98] active:bg-brand-800 disabled:cursor-progress disabled:bg-brand-700 disabled:active:scale-100 sm:w-fit"
+        className="inline-flex min-h-touch w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-on-primary transition-[background-color,transform] duration-150 ease-out-quart hover:bg-primary-container active:scale-[0.98] active:bg-band disabled:cursor-progress disabled:bg-primary-container disabled:active:scale-100 sm:w-fit"
       >
         {pending ? <LoaderCircle className="size-4 shrink-0 animate-spin" aria-hidden="true" /> : null}
         {pending ? t("pending") : t("submit")}
@@ -110,7 +110,7 @@ function StarGroup({ name, label, accessibleLabel, detail, firstRef, invalid = f
           {label}
           {detail ? <span className="font-normal text-ink-muted"> · {detail}</span> : null}
         </p>
-        <p aria-hidden="true" className={`text-sm tabular-nums ${value ? "font-semibold text-ink" : "text-ink-faint"}`}>
+        <p aria-hidden="true" className={`text-sm tabular-nums ${value ? "font-semibold text-ink" : "text-ink-muted"}`}>
           {value ? t("chosen", { count: value }) : t("notChosen")}
         </p>
       </div>
@@ -118,7 +118,7 @@ function StarGroup({ name, label, accessibleLabel, detail, firstRef, invalid = f
         {ratingValues.map((star) => (
           <label
             key={star}
-            className="group relative inline-flex size-touch cursor-pointer items-center justify-center rounded-full transition-colors duration-150 ease-out-quart hover:bg-surface-sunken active:bg-brand-50 has-focus-visible:outline-2 has-focus-visible:outline-offset-[-2px] has-focus-visible:outline-focus"
+            className="group relative inline-flex size-touch cursor-pointer items-center justify-center rounded-full transition-colors duration-150 ease-out-quart hover:bg-sunken active:bg-lime-wash has-focus-visible:outline-2 has-focus-visible:outline-offset-[-2px] has-focus-visible:outline-focus"
           >
             <input
               ref={star === 1 ? firstRef : undefined}

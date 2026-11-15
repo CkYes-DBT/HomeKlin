@@ -155,6 +155,9 @@ export async function OrdersOverview({ orders, serviceName, account, now, limit 
                 </li>
               ))}
             </ul>
+            <Link href="/orders/recording" className={`${flowTextLink} mt-3`}>
+              {t("seeRecordings")}
+            </Link>
           </section>
           <HelpCard />
         </aside>

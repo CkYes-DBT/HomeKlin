@@ -168,8 +168,47 @@ test.describe("the customer", () => {
   });
 });
 
+test.describe("the customer's recordings page (D5, mock Customer-Replay)", () => {
+  test.use({ storageState: async ({}, provide) => provide(sessions.customer) });
+
+  test("plays the chosen recording and lists the others, kept or deleted", async ({ page }) => {
+    await page.goto(`/orders/recording?order=${world.orders.available}`);
+    await expect(page.getByRole("heading", { level: 1, name: "Rekaman pekerjaan" })).toBeVisible();
+    const player = page.getByRole("region", { name: "Rekaman", exact: true });
+    await expect(player.locator("video")).toHaveCount(1);
+    const list = page.getByRole("list", { name: "Rekaman Anda" });
+    const items = list.getByRole("listitem");
+    await expect(items).toHaveCount(2);
+    await expect(list.getByRole("link", { name: /sedang dipilih/ })).toHaveAttribute("aria-current", "page");
+    // The deleted one is listed, with no link and no player.
+    await expect(items.filter({ hasText: "sudah dihapus" })).toHaveCount(1);
+    await expect(items.filter({ hasText: "sudah dihapus" }).getByRole("link")).toHaveCount(0);
+    await expect(page.getByText("Rekaman yang lebih dari 7 hari dihapus otomatis dan tidak bisa dipulihkan.")).toBeVisible();
+
+    await page.goto(`/orders/recording?order=${world.orders.expired}`);
+    await expect(page.getByRole("region", { name: "Rekaman", exact: true }).getByText("Rekaman sudah dihapus")).toBeVisible();
+    await expect(page.locator("video")).toHaveCount(0);
+    expect(await page.content()).not.toContain("/storage/v1/object/sign/");
+  });
+
+  test("works in English", async ({ page }) => {
+    await page.goto(`/en/orders/recording?order=${world.orders.available}`);
+    await expect(page.getByRole("heading", { level: 1, name: "Job recording" })).toBeVisible();
+    await expect(page.getByRole("list", { name: "Your recordings" }).getByRole("listitem")).toHaveCount(2);
+  });
+});
+
 test.describe("another customer", () => {
   test.use({ storageState: async ({}, provide) => provide(sessions.other) });
+
+  test("cannot open the first customer's recordings page", async ({ page }) => {
+    await page.goto(`/orders/recording?order=${world.orders.available}`);
+    await expect(page.getByRole("heading", { name: "Belum ada rekaman" })).toBeVisible();
+    await expect(page.locator("video")).toHaveCount(0);
+    const html = await page.content();
+    expect(html).not.toContain("/storage/v1/object/sign/");
+    expect(html).not.toContain(world.cleaners.withPhoto.name);
+  });
 
   test("sees neither recording, nor the job, nor a link to the file", async ({ page }) => {
     for (const id of Object.values(world.orders)) {

@@ -81,7 +81,10 @@ test("before the stream starts, the customer is told the cleaner has not started
   const page = await pageAs(browser, baseURL, "customer");
   await page.goto(`/orders/live?order=${job.id}`);
   await settle(page);
-  await expect(page.getByRole("heading", { level: 1, name: "Tonton langsung" })).toBeVisible();
+  // D5 (mock Customer-Live): "Siaran langsung", with the Petugas HomeKlin and the job's steps beside it.
+  await expect(page.getByRole("heading", { level: 1, name: "Siaran langsung" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Petugas HomeKlin Anda" })).toContainText(cleanerName);
+  await expect(page.getByRole("region", { name: "Status pekerjaan" }).locator('[aria-current="step"]')).toContainText(/Sedang berlangsung|Menugaskan/);
   await expect(live(page).getByText("Petugas belum memulai siaran")).toBeVisible();
   await expect(page.locator("video")).toHaveCount(0);
   expect(await page.content()).not.toContain(signedPath);
@@ -279,7 +282,7 @@ test("check-out ends the stream, and the customer is pointed to the recording", 
   await customer.goto(`/orders/live?order=${job.id}`);
   await settle(customer);
   await expect(customer.getByText("Pekerjaan sudah selesai")).toBeVisible();
-  await expect(customer.getByRole("link", { name: "Lihat rekaman" })).toHaveAttribute("href", `/orders?order=${job.id}#recording`);
+  await expect(customer.getByRole("link", { name: "Lihat rekaman" })).toHaveAttribute("href", `/orders/recording?order=${job.id}`);
   await expect(customer.locator("video")).toHaveCount(0);
   await customer.context().close();
 });

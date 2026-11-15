@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import type { Locale } from "next-intl";
 import { formatRupiah } from "@/lib/format";
+import { emailHtml, emailText, type EmailLayout } from "./layout";
 
 // Email from the app (T9b): the order confirmation, sent over SMTP with nodemailer, through the same
 // Gmail account that Supabase Auth uses for the sign-in codes (scripts/supabase.mjs smtp). Gmail needs
@@ -89,8 +90,7 @@ export type ConfirmationOrder = {
   orderUrl: string;
 };
 
-export const escapeHtml = (value: string) =>
-  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+export { escapeHtml } from "./layout";
 
 /** "Senin, 26 Oktober 2026" / "Monday, 26 October 2026", in Jakarta time. */
 export function jakartaDay(iso: string, locale: Locale): string {
@@ -121,65 +121,54 @@ const copy = {
   id: {
     subject: "Pesanan HomeKlin Anda sudah dibuat",
     intro: "Terima kasih. Pesanan Anda sudah dibuat dan menunggu pembayaran.",
+    details: "Detail pesanan",
     service: "Layanan",
-    arrival: "Petugas datang",
+    date: "Tanggal",
+    time: "Jam",
+    window: (start: string, end: string) => `${start} sampai ${end} WIB`,
     address: "Alamat",
     total: "Total",
     open: "Lihat pesanan",
-    note: "Masuk dengan email ini untuk membayar, menonton pekerjaan secara langsung, dan memutar ulang rekamannya.",
+    note: "Bayar dari halaman pesanan. Setelah itu, nama dan foto Petugas HomeKlin dikirim ke email ini.",
   },
   en: {
     subject: "Your HomeKlin order has been placed",
     intro: "Thank you. Your order has been placed and is awaiting payment.",
+    details: "Order details",
     service: "Service",
-    arrival: "Cleaner arrives",
+    date: "Date",
+    time: "Time",
+    window: (start: string, end: string) => `${start} to ${end} WIB`,
     address: "Address",
     total: "Total",
     open: "View your order",
-    note: "Sign in with this email to pay, watch the job live and replay its recording.",
+    note: "Pay from the order page. After that, your HomeKlin cleaner's name and photo are sent to this email.",
   },
-} satisfies Record<Locale, Record<string, string>>;
+} as const;
 
-/** The order confirmation in the customer's language. Names HomeKlin only, never an agency. */
+/** The order confirmation in the customer's language, in the layout of ./layout.ts. Names HomeKlin only. */
 export function orderConfirmationEmail(order: ConfirmationOrder, locale: Locale): Omit<EmailMessage, "to"> {
   const t = copy[locale];
-  const arrival = `${jakartaDay(order.startsAt, locale)}, ${jakartaTime(order.startsAt)} - ${jakartaTime(order.endsAt)} WIB`;
-  const rows: [string, string][] = [
-    [t.service, order.serviceName],
-    [t.arrival, arrival],
-    [t.address, order.address],
-    [t.total, formatRupiah(order.priceIdr, locale)],
-  ];
-  const text = [t.intro, "", ...rows.map(([label, value]) => `${label}: ${value}`), "", `${t.open}: ${order.orderUrl}`, "", t.note].join("\n");
-  // Email HTML: tables and inline styles only (mail apps ignore <style> blocks), no images, the site's
-  // evergreen brand colour; the same look as the sign-in code email (scripts/supabase.mjs).
-  const detailRows = rows
-    .map(
-      ([label, value]) =>
-        `<tr><td style="padding:10px 0;border-bottom:1px solid #e3e9e6;font-size:13px;color:#5b6862;width:38%;vertical-align:top;">${escapeHtml(label)}</td>` +
-        `<td style="padding:10px 0;border-bottom:1px solid #e3e9e6;font-size:15px;color:#17231e;font-weight:bold;vertical-align:top;">${escapeHtml(value)}</td></tr>`,
-    )
-    .join("");
-  const html = `<!doctype html>
-<html lang="${locale}">
-<body style="margin:0;padding:0;background:#f2f6f4;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f6f4;padding:24px 12px;">
-<tr><td align="center">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#ffffff;border-radius:16px;font-family:Arial,Helvetica,sans-serif;color:#17231e;">
-<tr><td style="background:#1d6f55;border-radius:16px 16px 0 0;padding:20px 28px;"><span style="font-size:20px;font-weight:bold;color:#ffffff;">HomeKlin</span></td></tr>
-<tr><td style="padding:28px 28px 8px;">
-<p style="margin:0 0 8px;font-size:18px;font-weight:bold;">${escapeHtml(t.subject)}</p>
-<p style="margin:0 0 16px;font-size:15px;line-height:22px;color:#3d4a44;">${escapeHtml(t.intro)}</p>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${detailRows}</table>
-</td></tr>
-<tr><td style="padding:16px 28px 8px;">
-<a href="${escapeHtml(order.orderUrl)}" style="display:inline-block;background:#1d6f55;color:#ffffff;text-decoration:none;font-size:15px;font-weight:bold;padding:12px 24px;border-radius:999px;">${escapeHtml(t.open)}</a>
-</td></tr>
-<tr><td style="padding:12px 28px 28px;"><p style="margin:0;font-size:13px;line-height:20px;color:#5b6862;">${escapeHtml(t.note)}</p></td></tr>
-</table>
-</td></tr>
-</table>
-</body>
-</html>`;
-  return { subject: t.subject, html, text };
+  const layout: EmailLayout = {
+    locale,
+    title: t.subject,
+    intro: t.intro,
+    sections: [
+      {
+        kind: "rows",
+        title: t.details,
+        rows: [
+          [t.service, order.serviceName],
+          [t.date, jakartaDay(order.startsAt, locale)],
+          [t.time, t.window(jakartaTime(order.startsAt), jakartaTime(order.endsAt))],
+          [t.address, order.address],
+          [t.total, formatRupiah(order.priceIdr, locale)],
+        ],
+      },
+    ],
+    button: { label: t.open, url: order.orderUrl },
+    after: t.note,
+    siteUrl: (process.env.SITE_URL ?? "https://home-klin.vercel.app").replace(/\/+$/, ""),
+  };
+  return { subject: t.subject, html: emailHtml(layout), text: emailText(layout) };
 }

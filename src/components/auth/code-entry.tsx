@@ -30,12 +30,14 @@ type CodeEntryProps = {
   resent: boolean;
   onResend: () => void;
   onChangeEmail: () => void;
+  /** forest: inside the redesign's `theme-forest` (the order form, D5); the sign-in page keeps the default. */
+  tone?: "default" | "forest";
   /** Shown under the buttons (the order's recap). */
   children?: ReactNode;
 };
 
 const linkButton =
-  "inline-flex min-h-touch items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-brand-700 transition-colors duration-150 ease-out-quart hover:bg-brand-50 hover:text-brand-800 active:bg-brand-100 disabled:cursor-not-allowed disabled:text-ink-muted disabled:hover:bg-transparent";
+  "inline-flex min-h-touch items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-primary transition-colors duration-150 ease-out-quart hover:bg-sunken hover:text-band active:bg-lime-wash disabled:cursor-not-allowed disabled:text-ink-muted disabled:hover:bg-transparent";
 
 // The code step of the emailed-code forms (T9b): sign-in and the order page. It sits inside the form
 // that sends it, so the code goes out with that form's other fields. One field for the six digits:
@@ -43,8 +45,23 @@ const linkButton =
 // code from the email, and spaces are allowed (the server ignores them). "Kirim ulang kode" waits 60
 // seconds after each code, with the seconds left in its label; "Ganti email" goes back to the first
 // step with everything kept. The code itself is only ever checked on the server.
+// The two looks: the T3b sign-in page, and the redesign's forest inside the order form.
+const looks = {
+  default: {
+    well: "bg-brand-50 text-brand-700",
+    input: "rounded-md border border-border-control bg-surface caret-brand-700 hover:border-brand-600 aria-invalid:border-danger",
+    button: "bg-brand-600 text-on-brand hover:bg-brand-700 active:bg-brand-800 disabled:bg-brand-700",
+  },
+  forest: {
+    well: "bg-lime-wash text-on-lime-wash",
+    input: "rounded-sm bg-field caret-primary inset-ring-1 inset-ring-border-control hover:inset-ring-primary aria-invalid:inset-ring-2 aria-invalid:inset-ring-danger",
+    button: "bg-primary text-on-primary hover:bg-primary-container active:bg-band disabled:bg-primary-container",
+  },
+} as const;
+
 export function CodeEntry(props: CodeEntryProps) {
   const { id, titleId, title, sentTo, error, submitLabel, pendingLabel, pending, resending, sentCount, answerKey, resent } = props;
+  const look = looks[props.tone ?? "default"];
   const t = useTranslations("CodeEntry");
   const input = useRef<HTMLInputElement>(null);
   const errorId = `${id}-error`;
@@ -60,7 +77,7 @@ export function CodeEntry(props: CodeEntryProps) {
   return (
     <div className="flex flex-col">
       <div className="flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700">
+        <span className={`flex size-10 shrink-0 items-center justify-center rounded-full ${look.well}`}>
           <MailCheck className="size-5" aria-hidden="true" />
         </span>
         <div className="flex min-w-0 flex-col gap-1">
@@ -88,9 +105,9 @@ export function CodeEntry(props: CodeEntryProps) {
           required
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${hintId} ${errorId}` : hintId}
-          className="h-14 w-full max-w-60 rounded-md border border-border-control bg-surface px-4 font-display text-2xl font-semibold tracking-widest text-ink tabular-nums caret-brand-700 transition-colors duration-150 ease-out-quart hover:border-brand-600 aria-invalid:border-danger aria-invalid:bg-danger-surface"
+          className={`h-14 w-full max-w-60 px-4 font-display text-2xl font-semibold tracking-widest text-ink tabular-nums transition-colors duration-150 ease-out-quart aria-invalid:bg-danger-surface ${look.input}`}
         />
-        <p id={hintId} className="px-1 text-sm text-ink-faint">
+        <p id={hintId} className="px-1 text-sm text-ink-muted">
           {t("codeHint")}
         </p>
         {error ? (
@@ -112,7 +129,7 @@ export function CodeEntry(props: CodeEntryProps) {
       <button
         type="submit"
         disabled={pending}
-        className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-600 px-6 text-base font-semibold text-on-brand transition-[background-color,transform] duration-150 ease-out-quart hover:bg-brand-700 active:scale-[0.98] active:bg-brand-800 disabled:cursor-progress disabled:bg-brand-700 disabled:active:scale-100"
+        className={`mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full px-6 text-base font-semibold transition-[background-color,transform] duration-150 ease-out-quart active:scale-[0.98] disabled:cursor-progress disabled:active:scale-100 motion-reduce:active:scale-100 ${look.button}`}
       >
         {pending && !resending ? <LoaderCircle className="size-5 shrink-0 animate-spin" aria-hidden="true" /> : null}
         {pending && !resending ? pendingLabel : submitLabel}

@@ -88,7 +88,7 @@
     }
   },
   "Hero": {
-    "title": "A home cleaning service you can <accent>watch live</accent>",
+    "title": "A clean home you can <accent>watch live</accent>",
     "lead": "Choose a service and a time in your area, pay upfront, then watch your HomeKlin cleaner work from your phone.",
     "cta": "Book now",
     "prices": "See prices",
@@ -109,12 +109,12 @@
       "stream": "The live stream is only for you and the HomeKlin monitoring team",
       "checkIn": "Your cleaner checks in at your address before starting",
       "recordings": "Recordings are kept for 7 days, then deleted",
-      "consent": "We ask for your consent to stream when you book"
+      "consent": "We ask for your consent before streaming the work"
     }
   },
   "ServicesGrid": {
     "eyebrow": "Price list",
-    "title": "Services and prices, <accent>no surprises</accent>",
+    "title": "HomeKlin <accent>cleaning services</accent>",
     "note": "Prices are shown in full. There are no extra fees when you pay.",
     "all": "See all services"
   },
@@ -276,7 +276,7 @@
   },
   "SupportPage": {
     "title": "Help",
-    "description": "Search the answers to common questions. If yours is not there, ask the HomeKlin team directly.",
+    "description": "Find a quick answer, or write to the HomeKlin admin. You do not need to log in.",
     "search": {
       "formLabel": "Search Help",
       "label": "Search the questions",
@@ -296,15 +296,18 @@
       "retry": "Reload"
     },
     "contact": {
-      "title": "Still need help? Contact admin",
-      "body": "The HomeKlin team reads every question and replies in a chat on this page.",
+      "title": "Need help now? Contact admin",
+      "body": "Write to the HomeKlin admin. The reply appears in the chat on this page, and you do not need to log in.",
       "loading": "Loading…",
       "signedOutBody": "Sign in with your customer account to send a question. Admin’s reply appears on this page.",
       "signIn": "Sign in to ask",
       "staffTitle": "Help chat is for customer accounts",
       "staffBody": "You are signed in with a staff account. Customer questions are answered from your work pages.",
       "staffLink": "Go to your work pages",
-      "adminLink": "Open the ticket inbox"
+      "adminLink": "Open the ticket inbox",
+      "guestOpenBody": "You already have a chat with admin from this browser. Carry on there.",
+      "guestContinue": "Continue your chat",
+      "haveAccount": "Ordered before?"
     },
     "tickets": {
       "title": "Your questions to admin",
@@ -390,14 +393,18 @@
       "messageInvalid": "A message has 1 to 2,000 characters.",
       "notFound": "That order or chat was not found in your account.",
       "closed": "This chat is closed, so it cannot be answered any more.",
-      "unavailable": "Your message was not sent because of a problem on our side. Please try again shortly."
+      "unavailable": "Your message was not sent because of a problem on our side. Please try again shortly.",
+      "nameInvalid": "Write your name, up to 80 characters.",
+      "emailInvalid": "Check your email, for example name@domain.com.",
+      "tooMany": "Too many messages in a short time. Wait a few minutes, then try again."
     },
     "openJob": "Open job",
     "urgentBanner": "Urgent, sent {time}",
     "guest": "Guest, no account",
     "guestNoEmail": "No email given",
     "read": "Read",
-    "sent": "Sent"
+    "sent": "Sent",
+    "guestPolling": "Updates by itself every 10 seconds"
   },
   "AccountPage": {
     "title": "Account",
@@ -610,7 +617,7 @@
     "endedTitle": "The stream has ended",
     "endedBody": "If the cleaner has checked out, reload the page to play the recording. Recordings are kept for 7 days.",
     "completedTitle": "The job is finished",
-    "completedBody": "The stream ended when the cleaner checked out. You can play the recording for 7 days on the order details.",
+    "completedBody": "The stream ended when the cleaner checked out. You can replay the recording for 7 days.",
     "seeRecording": "See the recording",
     "signedOutTitle": "Your session has ended",
     "signedOutBody": "Log in again to keep watching.",
@@ -622,7 +629,14 @@
     "errorBody": "Something went wrong while opening the stream. Reload the page to try again.",
     "retry": "Reload page",
     "backToOrder": "Order details",
-    "listLine": "In progress. Open to watch live."
+    "listLine": "In progress. Open to watch live.",
+    "pageTitle": "Live stream",
+    "backToCode": "Order {code}",
+    "lead": "{service} at {address}",
+    "serviceFallback": "HomeKlin service",
+    "asideLabel": "Cleaner and job status",
+    "privacyTitle": "Only you and the HomeKlin monitoring team can watch this stream.",
+    "privacyBody": "The stream stops when your cleaner checks out, and the recording is then kept for 7 days on the Recording page."
   },
   "CleanerStream": {
     "title": "Live stream",
@@ -2077,7 +2091,7 @@
     "dayShort": "{weekday}, {date}",
     "asideLabel": "Order summary",
     "liveNoteTitle": "Your HomeKlin cleaner checks in at your address.",
-    "liveNoteBody": "You can watch the work live. Only you and the HomeKlin team can see it."
+    "liveNoteBody": "You can watch the work live. Only you and the HomeKlin monitoring team can see it."
   },
   "PaymentMethod": {
     "qris": "QRIS",
@@ -2102,7 +2116,7 @@
     "headlineCheckedIn": "Your cleaner checked in at {time} WIB",
     "headlineDone": "The job finished at {time} WIB",
     "orderLine": "Order {code}, {service}, {arrival}",
-    "privacy": "Only you and the HomeKlin team can watch.",
+    "privacy": "Only you and the HomeKlin monitoring team can watch.",
     "watch": "Watch live"
   },
   "OrderTimeline": {
@@ -2205,7 +2219,7 @@
     "method": "Payment",
     "totalPaid": "Total paid",
     "seeOrder": "See the order",
-    "privacyTitle": "Only you and the HomeKlin team can watch.",
+    "privacyTitle": "Only you and the HomeKlin monitoring team can watch.",
     "privacyBody": "The live stream and the recording open from your order page."
   },
   "ResendEmail": {
@@ -2247,6 +2261,53 @@
       "replay": "You can replay it once the order is done.",
       "kept": "Kept for 7 days, then deleted automatically.",
       "private": "Only you and the HomeKlin team can see it."
-    }
+    },
+    "seeRecordings": "See all recordings"
+  },
+  "SupportGuestForm": {
+    "name": "Your name",
+    "email": "Email (optional)",
+    "emailHint": "Add it if you would like to hear back by email too.",
+    "question": "Your question",
+    "tooShort": "Write your question, at least 5 characters.",
+    "submit": "Chat with admin",
+    "pending": "Opening the chat…"
+  },
+  "OrderLinkPage": {
+    "metaTitle": "Your order",
+    "title": "Order {code}",
+    "privateTitle": "This link is for you only.",
+    "privateBody": "Do not share it. It works until {day}. Your address and contact details are not shown here.",
+    "asideLabel": "Log in and help",
+    "signInTitle": "Live stream and recording",
+    "signInBody": "To watch live and replay the recording, log in with the email you used to order.",
+    "signIn": "Log in with email",
+    "recordingKept": "The recording is kept until {day}, {time} WIB.",
+    "recordingGone": "The recording of this order has been deleted or is not available.",
+    "invalidTitle": "This link does not work",
+    "invalidBody": "This link is wrong, has been revoked, or has expired. Log in with the email of your order to see it.",
+    "errorTitle": "The order cannot be shown yet",
+    "errorBody": "Something went wrong while reading this link. Reload the page to try again.",
+    "retry": "Reload"
+  },
+  "Replay": {
+    "title": "Job recording",
+    "backToCode": "Order {code}",
+    "lead": "{service}, {day}, {start} to {end} WIB",
+    "asideLabel": "Your recordings and help",
+    "listTitle": "Your recordings",
+    "listNote": "Recordings older than 7 days are deleted automatically and cannot be restored.",
+    "rowLine": "{code}, {day}, {detail}",
+    "rowSelected": "playing here",
+    "rowDeleted": "deleted",
+    "rowDaysLeft": "{days, plural, one {# day} other {# days}} left",
+    "rowSoon": "less than a day left",
+    "emptyTitle": "No recordings yet",
+    "emptyBody": "Recordings appear here once your HomeKlin cleaner checks out of a streamed job, and are kept for 7 days.",
+    "toOrders": "To your orders",
+    "errorTitle": "The recordings cannot be shown yet",
+    "errorBody": "Something went wrong while reading your orders. Reload the page to try again.",
+    "retry": "Reload",
+    "open": "Open the recording page"
   }
 }

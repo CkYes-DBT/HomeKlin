@@ -50,7 +50,7 @@ export function TicketForm({ initialQuestion, orders }: TicketFormProps) {
   }
 
   const radio =
-    "flex min-h-touch cursor-pointer items-start gap-3 rounded-md border border-border-control bg-surface px-4 py-3 transition-colors duration-150 ease-out-quart hover:border-brand-600 has-checked:border-brand-600 has-checked:bg-brand-50 active:bg-brand-50";
+    "flex min-h-touch cursor-pointer items-start gap-3 rounded-md bg-card inset-ring-1 inset-ring-border-control px-4 py-3 transition-colors duration-150 ease-out-quart hover:inset-ring-primary has-checked:inset-ring-2 has-checked:inset-ring-primary has-checked:bg-lime-wash active:bg-lime-wash";
 
   return (
     <form action={formAction} onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
@@ -73,9 +73,9 @@ export function TicketForm({ initialQuestion, orders }: TicketFormProps) {
           }}
           aria-invalid={questionError ? true : undefined}
           aria-describedby={questionError ? "pertanyaan-admin-hint pertanyaan-admin-error" : "pertanyaan-admin-hint"}
-          className="min-h-28 w-full resize-y rounded-xl border border-border-control bg-surface px-4 py-3 text-base text-ink caret-brand-700 transition-colors duration-150 ease-out-quart hover:border-brand-600 aria-invalid:border-danger aria-invalid:bg-danger-surface"
+          className="min-h-28 w-full resize-y rounded-lg bg-card inset-ring-1 inset-ring-border-control px-4 py-3 text-base text-ink caret-primary transition-colors duration-150 ease-out-quart hover:inset-ring-primary aria-invalid:bg-danger-surface aria-invalid:inset-ring-2 aria-invalid:inset-ring-danger"
         />
-        <p id="pertanyaan-admin-hint" className="px-1 text-sm text-ink-faint">
+        <p id="pertanyaan-admin-hint" className="px-1 text-sm text-ink-muted">
           {t("questionHint")}
         </p>
         {questionError ? (
@@ -89,14 +89,14 @@ export function TicketForm({ initialQuestion, orders }: TicketFormProps) {
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 px-1 text-sm font-medium text-ink">{t("urgency.legend")}</legend>
         <label className={radio}>
-          <input type="radio" name="urgency" value="normal" defaultChecked className="mt-0.5 size-5 shrink-0 accent-brand-600" />
+          <input type="radio" name="urgency" value="normal" defaultChecked className="mt-0.5 size-5 shrink-0 accent-primary" />
           <span className="flex flex-col gap-0.5">
             <span className="text-base font-semibold text-ink">{t("urgency.normal")}</span>
             <span className="text-sm text-ink-muted">{t("urgency.normalHint")}</span>
           </span>
         </label>
         <label className={radio}>
-          <input type="radio" name="urgency" value="urgent" className="mt-0.5 size-5 shrink-0 accent-brand-600" />
+          <input type="radio" name="urgency" value="urgent" className="mt-0.5 size-5 shrink-0 accent-primary" />
           <span className="flex flex-col gap-0.5">
             <span className="text-base font-semibold text-ink">{t("urgency.urgent")}</span>
             <span className="text-sm text-ink-muted">{t("urgency.urgentHint")}</span>
@@ -114,7 +114,7 @@ export function TicketForm({ initialQuestion, orders }: TicketFormProps) {
               id="pesanan-terkait"
               name="orderId"
               defaultValue=""
-              className="h-12 w-full cursor-pointer appearance-none truncate rounded-full border border-border-control bg-surface pr-12 pl-5 text-base text-ink transition-colors duration-150 ease-out-quart hover:border-brand-600"
+              className="h-12 w-full cursor-pointer appearance-none truncate rounded-full bg-card inset-ring-1 inset-ring-border-control pr-12 pl-5 text-base text-ink transition-colors duration-150 ease-out-quart hover:inset-ring-primary"
             >
               <option value="">{t("order.none")}</option>
               {orders.map((order) => (
@@ -145,8 +145,8 @@ export function TicketForm({ initialQuestion, orders }: TicketFormProps) {
         disabled={pending}
         className={`inline-flex h-12 w-full items-center justify-center gap-2 rounded-full px-6 text-base font-semibold transition-[background-color,transform] duration-150 ease-out-quart sm:w-fit ${
           pending
-            ? "cursor-progress bg-brand-700 text-on-brand"
-            : "bg-brand-600 text-on-brand hover:bg-brand-700 active:scale-[0.98] active:bg-brand-800"
+            ? "cursor-progress bg-primary-container text-on-primary"
+            : "bg-primary text-on-primary hover:bg-primary-container active:scale-[0.98] active:bg-band"
         }`}
       >
         {pending ? <LoaderCircle className="size-5 shrink-0 animate-spin" aria-hidden="true" /> : null}

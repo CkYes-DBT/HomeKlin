@@ -52,16 +52,16 @@ export async function AccountSummary({ variant = "page", tone = "default" }: Acc
   }
 
   return (
-    <div className="rounded-xl border border-border bg-surface p-5 shadow-card md:p-6">
+    <div className="rounded-lg bg-card p-5 md:p-6">
       <div className="flex items-center gap-4">
-        <UserAvatar name={user.fullName} size="lg" />
+        <UserAvatar name={user.fullName} size="lg" palette="forest" />
         <p className="flex min-w-0 flex-col gap-0.5">
           <span className="text-sm text-ink-muted">{t("signedInAs")}</span>
           <span className="font-display text-xl font-semibold break-words text-ink">{name}</span>
         </p>
       </div>
       <div className="mt-5 border-t border-border pt-5">
-        <SignOutButton className="w-full sm:w-fit" />
+        <SignOutButton className="w-full sm:w-fit" look="outline" />
       </div>
     </div>
   );

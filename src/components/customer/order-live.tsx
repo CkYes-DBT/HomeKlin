@@ -89,7 +89,7 @@ function Waiting({ orderId }: { orderId: string }) {
 async function LiveLoading() {
   const t = await getTranslations("LiveStream");
   return (
-    <div role="status" className="flex aspect-video w-full items-center justify-center rounded-md bg-surface-sunken">
+    <div role="status" className="flex aspect-video w-full items-center justify-center rounded-md bg-sunken">
       <span className="text-sm text-ink-muted">{t("loading")}</span>
     </div>
   );
@@ -103,7 +103,7 @@ async function LiveUnavailable() {
       {/* A plain link on purpose: a full page load asks for the stream again. */}
       <a
         href=""
-        className="mt-3 inline-flex min-h-touch items-center justify-center rounded-full border border-border-control bg-surface px-5 text-sm font-semibold text-ink transition-colors duration-150 ease-out-quart hover:bg-surface-sunken active:bg-brand-50"
+        className="mt-3 inline-flex min-h-touch items-center justify-center rounded-full bg-card inset-ring-1 inset-ring-border-control px-5 text-sm font-semibold text-ink transition-colors duration-150 ease-out-quart hover:bg-sunken active:bg-lime-wash"
       >
         {t("retry")}
       </a>

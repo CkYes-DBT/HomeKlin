@@ -65,7 +65,7 @@ test.describe("as a guest", () => {
 
     await page.goto("/");
     await page
-      .getByRole("region", { name: "Layanan dan harga, tanpa kejutan" })
+      .getByRole("region", { name: "Layanan Kebersihan HomeKlin" })
       .getByRole("link", { name: service.name })
       .click();
     await expect(page).toHaveURL(`/pesan?layanan=${service.id}`);

@@ -7,7 +7,7 @@ import { ClientMessages } from "@/i18n/client-messages";
 import { Link } from "@/i18n/navigation";
 import type { CustomerOrder } from "@/lib/booking/orders";
 import { formatRupiah } from "@/lib/format";
-import { flowCard, flowCardTitle, flowOutlineButton } from "./flow-styles";
+import { flowCard, flowCardTitle, flowOutlineButton, flowTextLink } from "./flow-styles";
 import { liveInProgress } from "./live-status";
 import { OrderHero } from "./order-hero";
 import { OrderLive } from "./order-live";
@@ -37,9 +37,10 @@ type OrderDetailsProps = {
 // as HomeKlin only: the order as the customer reads it never carries the agency (listMyOrders).
 export async function OrderDetails({ order, serviceName, duration, areaName, now }: OrderDetailsProps) {
   const locale = await getLocale();
-  const [t, tMethod, words] = await Promise.all([
+  const [t, tMethod, tReplay, words] = await Promise.all([
     getTranslations("OrderConfirmation"),
     getTranslations("PaymentMethod"),
+    getTranslations("Replay"),
     getOrderWords(locale),
   ]);
   const paid = order.status === "paid";
@@ -76,6 +77,11 @@ export async function OrderDetails({ order, serviceName, duration, areaName, now
           {recording !== "none" ? (
             <div className="overflow-hidden rounded-lg bg-card [&>section]:border-t-0">
               <OrderRecording recordingId={order.recordingId} state={recording} now={now} />
+              <p className="px-5 pb-5 md:px-6 md:pb-6">
+                <Link href={`/orders/recording?order=${order.id}`} className={flowTextLink}>
+                  {tReplay("open")}
+                </Link>
+              </p>
             </div>
           ) : null}
           {canReview(order) ? (

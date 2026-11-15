@@ -22,11 +22,11 @@ export async function MyTickets({ tickets }: { tickets: Ticket[] | null }) {
         {t("tickets.title")}
       </h2>
       {tickets === null ? (
-        <EmptyState icon={CircleAlert} title={t("tickets.errorTitle")}>
+        <EmptyState tone="forest" icon={CircleAlert} title={t("tickets.errorTitle")}>
           {t("tickets.errorBody")}
         </EmptyState>
       ) : tickets.length === 0 ? (
-        <EmptyState icon={MessagesSquare} title={t("tickets.emptyTitle")}>
+        <EmptyState tone="forest" icon={MessagesSquare} title={t("tickets.emptyTitle")}>
           {t("tickets.emptyBody")}
         </EmptyState>
       ) : (
@@ -35,7 +35,7 @@ export async function MyTickets({ tickets }: { tickets: Ticket[] | null }) {
             <li key={ticket.id}>
               <Link
                 href={`/support?ticket=${ticket.id}`}
-                className="group flex items-start gap-3 rounded-xl border border-border bg-surface p-4 shadow-card transition-colors duration-150 ease-out-quart hover:border-border-control active:bg-surface-sunken"
+                className="group flex items-start gap-3 rounded-lg border border-border bg-card p-4 transition-colors duration-150 ease-out-quart hover:border-border-control active:bg-sunken"
               >
                 <span className="flex min-w-0 flex-1 flex-col gap-2">
                   <span className="line-clamp-2 text-base font-semibold break-words text-ink">{ticket.question}</span>

@@ -149,7 +149,7 @@ Built in D4 (2026-11-15). Mocks: `Cleaner-Home`, `Cleaner-Jobs`, `Cleaner-Job`, 
 
 ## Customer
 
-Pass 5a built in D5 (2026-11-15): the booking flow, the home and the orders. Mocks: `Main` and `Phone-Services`, `Customer-Booking` and `Phone-Booking`, `Customer-Payment` and `Phone-Payment`, `Customer-Confirmed` and `Phone-Confirmed`, `Customer-Orders` and `Phone-Orders`, `Customer-Home` and `Phone-Home`. Pass 5b (live, replay, support and guest chat, the `/o/<token>` page, the emails, the landing) follows. The `(customer)` layout now wears `theme-forest` with the redesign's fonts and the forest shell, so the pages of 5b already sit on the cream page with their old components until then. Pages: step 1 `/services`, step 2 `/pesan`, step 3 `/orders?booked=<id>` (payment, then the confirmation), an order's page `/orders?order=<id>`, the list `/orders`, the home `/home`. Backend used: `slot_windows` with `is_full` and the `serviceId` option (B11, B12), the form field `note` (B7), `order_code` (B1), `payment_type` as `paymentMethod` (B8), `resendOrderEmail` (B9), `assigned_at`, `checked_in_at`, `completed_at` (B3), the cleaner's name and photo.
+Pass 5a built in D5 (2026-11-15): the booking flow, the home and the orders. Mocks: `Main` and `Phone-Services`, `Customer-Booking` and `Phone-Booking`, `Customer-Payment` and `Phone-Payment`, `Customer-Confirmed` and `Phone-Confirmed`, `Customer-Orders` and `Phone-Orders`, `Customer-Home` and `Phone-Home`. The `(customer)` layout wears `theme-forest` with the redesign's fonts and the forest shell; pass 5b (below) finished the remaining customer pages. Pages: step 1 `/services`, step 2 `/pesan`, step 3 `/orders?booked=<id>` (payment, then the confirmation), an order's page `/orders?order=<id>`, the list `/orders`, the home `/home`. Backend used: `slot_windows` with `is_full` and the `serviceId` option (B11, B12), the form field `note` (B7), `order_code` (B1), `payment_type` as `paymentMethod` (B8), `resendOrderEmail` (B9), `assigned_at`, `checked_in_at`, `completed_at` (B3), the cleaner's name and photo.
 
 ### Shell (all customer pages)
 
@@ -205,7 +205,7 @@ Pass 5a built in D5 (2026-11-15): the booking flow, the home and the orders. Moc
 | "Dibayar, Senin, 2 Nov, 13.20" | "Dibayar" without a time: the payment time is not stored | `orders.paid_at` set from the notification |
 | Steps Dipesan, Dibayar, Check-in, Sedang berlangsung, Selesai | The same plus "Petugas ditugaskan" (B3); each step's state is also written for screen readers | None |
 | Hero for every order | Only for a paid order; one waiting for payment shows the steps and "Bayar sekarang" in its details | None |
-| Not in the mock | The live view (T23), the recording (T15) and the review (T30) on the same page, in white frames (restyled in 5b) | None |
+| Not in the mock | The live view (T23), the recording (T15) and the review (T30) on the same page, in white frames; the live view and the recordings also have pages of their own (5b) | None |
 
 ### Home and orders (`Customer-Home`, `Phone-Home`), pages `/home` and `/orders`
 
@@ -213,3 +213,63 @@ Pass 5a built in D5 (2026-11-15): the booking flow, the home and the orders. Moc
 |---|---|---|
 | "Putar ulang rekaman" button on a past order | Each order is one link to its page, where the player is; the card says until when the recording is kept | None |
 | `/home` shows only "Pesanan Anda" | For a signed-in customer `/home` is "Pesanan Anda" with the latest 3 orders and "Lihat semua pesanan"; for a visitor (and staff) it is where to start: the area, which opens step 1, and the services. The sample job of T7 is gone | None |
+
+Pass 5b built in D5 (2026-11-15): live, recordings, help and the guest chat, the order-link page, the emails, the landing page, and the account page. Mocks: `Customer-Live` and `Phone-Live`, `Customer-Replay` and `Phone-Replay`, `Customer-Support` and `Phone-Support`, `Customer-Chat` and `Phone-Chat`, `Customer-Email-Order` and `Phone-Email-Order`, `Customer-Email-Replay` and `Phone-Email-Replay`, `Landing` and `Phone-Landing`. New pages: `/orders/recording?order=<id>` (recordings) and `/o/<token>` (order link). Backend used: `watchStream` (unchanged), `recordingLink` (unchanged), the guest chat actions and `getGuestTicket` (B13), the read times `customer_read_at` and `admin_read_at`, `getOrderByLink` (B14a), the B9 senders.
+
+### Live view (`Customer-Live`, `Phone-Live`), page `/orders/live?order=<id>`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| "LIVE" badge with a red dot | The existing live pill, in words ("Siaran langsung", the stream's state Aktif, Sinyal lemah or Terputus), never a red REC dot (markdown/design.md) | None |
+| "Hanya Anda dan tim HomeKlin yang dapat menonton" | "Hanya Anda dan tim pemantau HomeKlin" (the decision in Progress.md), also on the order page and step 1 | None |
+| Status steps "Dipesan dan dibayar, Petugas check-in, Sedang berlangsung, Selesai" | The order page's six steps (Dipesan, Dibayar, Petugas ditugaskan, Check-in, Sedang berlangsung, Selesai) | None |
+
+### Recordings (`Customer-Replay`, `Phone-Replay`), page `/orders/recording?order=<id>`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| A custom player (big lime play button, a timeline 0:00 to 1:58:00) | The browser's own player in the frame (keyboard and captions settings come with it), with until when it is kept and the countdown below | None |
+| "Tersedia 7 hari" and "Dihapus otomatis Kamis, 12 Nov 2026" chips | "Tersedia sampai ..." and the countdown of T15 | None |
+| Title line "09.04 sampai 11.02" | Check-in to check-out times, when both are known | None |
+| Not in the mock | Reached from the order page ("Buka halaman rekaman"), "Pesanan Anda" ("Lihat semua rekaman") and the live page after the job | None |
+
+### Help and chat (`Customer-Support`, `Phone-Support`, `Customer-Chat`, `Phone-Chat`), page `/support`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| "Chat dengan admin" goes straight to a chat | For a visitor: a short form (name, email optional, the question carried over from the search), then the chat; a browser with an open guest chat gets "Lanjutkan chat Anda". A signed-in customer keeps the T20 form (urgency, related order) and their own ticket list | None |
+| Header "Admin HomeKlin" | "Tim HomeKlin" (the name the chat already used); the region is still "Percakapan dengan Tim HomeKlin" | None |
+| "Admin membalas setiap hari, 08.00 sampai 20.00" | Left out: no support hours are agreed | Support hours from the client |
+| Paperclip (attachments) | Left out: chats carry text only | Attachments (storage, size limits, scanning) |
+| Double ticks on every own message | "Terkirim" or "Terbaca" in words with one or two ticks, from admin's read time (B13) | None |
+| Live updates | A signed-in customer: Realtime ("Tersambung"). A guest: the page asks again every 10 seconds ("Diperbarui otomatis setiap 10 detik"), because Realtime needs a session | Realtime for guests (a signed token per chat) |
+| "Ibu Nadia" in admin's reply, the email in the chat | Whatever admin writes; the app adds no names | None |
+
+### Order link (B14a), page `/o/<token>`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| Not in the mocks (the emails link "homeklin.id/pesanan/HK-1042") | `/o/<token>`: the order number, service, time, area, status steps, the Petugas HomeKlin and how it was paid; no address, phone or email (`order_by_link` returns none). Watching live, replaying and help need signing in ("Masuk dengan email"). A wrong, revoked or expired link: "Tautan ini tidak berlaku". Not indexed, no Referer | Live view and replay through the link (a link-scoped stream and recording token) |
+
+### Emails (`Customer-Email-Order`, `Customer-Email-Replay`)
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| Sent at payment with the Petugas | Three emails as before: the confirmation at booking, the Petugas when the agency assigns one, the recording when the cleaner checks out; all in the mock's layout (forest wordmark tile, rows, lime button, the link written out, "Tautan ini khusus untuk Anda" on a private link) | None |
+| The home icon in the wordmark tile | A forest tile with an "H" (no image, so mail apps that block images still show it) | None |
+| Inter Tight, Inter | Arial: mail apps do not load web fonts reliably | None |
+| Recording email: Petugas, check-in and check-out rows | Order number and service; the times are not in the email facts | Check-in and check-out times in `order_email_facts` |
+| "Halo, Nadia" | No greeting by name: the email facts hold no customer name | The customer's name in `order_email_facts` |
+| "Kepada", "Dari" header block and "CONTOH" | The mail app's own header | None |
+
+### Landing (`Landing`, `Phone-Landing`), page `/`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| Copy | Now as in the mock: "Rumah bersih yang bisa Anda tonton langsung", "Layanan Kebersihan HomeKlin", "Cara kerja, dalam lima langkah", the price note and the consent line. Kept by decision: "Pesan sekarang", "tim pemantau HomeKlin", one brand | None |
+
+### Account page, `/account`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| No mock | The account card on the forest look (lime-wash avatar, outlined "Keluar"), in the wide column; the code step of the order form and the loading frame (`GateFallback`) on the forest look too. The sign-in page keeps the T3b look (no mock) | None |
