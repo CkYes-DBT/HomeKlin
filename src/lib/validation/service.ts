@@ -212,6 +212,21 @@ export function parseServicePhoto(formData: FormData): ServicePhotoChoice {
   return { ok: true, upload: { file: parsed.data, extension }, remove: false };
 }
 
+const photoFileName = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(?:jpg|png|webp)$/;
+
+/**
+ * A stored service photo's address (review L3): a random file name directly in the service-photos
+ * bucket of this project, `<NEXT_PUBLIC_SUPABASE_URL>/storage/v1/object/public/service-photos/`.
+ * The database already allows only a *.supabase.co bucket address (20261114310000_service_photo_host.sql);
+ * this narrows it to our own project before anything is written.
+ */
+export function servicePhotoUrlSchema(supabaseUrl: string) {
+  const prefix = `${supabaseUrl.replace(/\/+$/, "")}/storage/v1/object/public/service-photos/`;
+  return z
+    .string()
+    .refine((url) => prefix.startsWith("https://") && url.startsWith(prefix) && photoFileName.test(url.slice(prefix.length)));
+}
+
 /** Longest value sent back to refill the form; the real limits are far below it. */
 const maxEcho = 400;
 

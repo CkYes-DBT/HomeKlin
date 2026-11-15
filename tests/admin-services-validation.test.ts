@@ -3,6 +3,7 @@ import {
   parseServiceForm,
   parseServiceId,
   serviceFormValues,
+  servicePhotoUrlSchema,
   serviceToFormValues,
 } from "@/lib/validation/service";
 
@@ -271,5 +272,31 @@ describe("serviceToFormValues", () => {
       sortOrder: "0",
       isActive: true,
     });
+  });
+});
+
+describe("servicePhotoUrlSchema (review L3)", () => {
+  const project = "https://abcdefghijklmnopqrst.supabase.co";
+  const own = `${project}/storage/v1/object/public/service-photos/11111111-2222-4333-8444-555555555555.webp`;
+
+  it("accepts a photo in this project's own service-photos bucket, with or without a trailing slash on the URL", () => {
+    expect(servicePhotoUrlSchema(project).safeParse(own).success).toBe(true);
+    expect(servicePhotoUrlSchema(`${project}/`).safeParse(own).success).toBe(true);
+  });
+
+  it("refuses another project, another bucket, a plain http address, or anything but a random file name", () => {
+    const schema = servicePhotoUrlSchema(project);
+    for (const url of [
+      own.replace("abcdefghijklmnopqrst", "zzzzzzzzzzzzzzzzzzzz"),
+      own.replace("service-photos", "recordings"),
+      own.replace("https://", "http://"),
+      `${own}?x=1`,
+      `${project}/storage/v1/object/public/service-photos/../recordings/a.webp`,
+      `${project}/storage/v1/object/public/service-photos/foto.webp`,
+      `https://evil.example${project.slice(8)}/storage/v1/object/public/service-photos/11111111-2222-4333-8444-555555555555.webp`,
+      `${project}.evil.example/storage/v1/object/public/service-photos/11111111-2222-4333-8444-555555555555.webp`,
+    ]) {
+      expect(schema.safeParse(url).success, url).toBe(false);
+    }
   });
 });

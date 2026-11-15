@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // The Server Actions behind /admin/services (T7b, src/lib/catalog/admin-actions.ts). A Server Action is
 // a public POST endpoint, so each one checks the role itself before anything else, writes through the
@@ -84,6 +84,13 @@ beforeEach(() => {
   uploadResult = { error: null };
   currentPhoto = { data: { photo_url: null }, error: null };
   updateResult = { data: [{ id: "uji-kasur" }], error: null };
+  // The project the uploads belong to: the photo's address must start with its storage path (review L3).
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://test.supabase.co");
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "sb_publishable_test");
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 describe("createService", () => {
@@ -263,6 +270,17 @@ describe("the service photo (B10)", () => {
   it("writes nothing when the upload fails", async () => {
     uploadResult = { error: { message: "new row violates row-level security policy" } };
     expect(await createService(null, withPhoto(fields, image()))).toMatchObject({ formError: "unavailable" });
+    expectNoWrite();
+  });
+
+  it("stores no address outside this project's own bucket, and removes the upload again (review L3)", async () => {
+    getPublicUrlMock.mockImplementationOnce((path: string) => ({
+      data: { publicUrl: `https://other.supabase.co/storage/v1/object/public/service-photos/${path}` },
+    }));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    expect(await createService(null, withPhoto(fields, image()))).toMatchObject({ formError: "unavailable" });
+    const [path] = uploadMock.mock.calls[0];
+    expect(removeMock).toHaveBeenCalledWith([path]);
     expectNoWrite();
   });
 

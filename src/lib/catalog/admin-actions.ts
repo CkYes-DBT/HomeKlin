@@ -6,11 +6,13 @@ import { updateTag } from "next/cache";
 import { redirect } from "@/i18n/navigation";
 import { authorize } from "@/lib/auth/dal";
 import { catalogCacheTag } from "@/lib/catalog/catalog";
+import { requireSupabaseConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   parseServiceForm,
   parseServicePhoto,
   serviceFormValues,
+  servicePhotoUrlSchema,
   type ServiceErrorKey,
   type ServiceField,
   type ServiceFormValues,
@@ -78,10 +80,13 @@ function changedColumns(service: ServiceInput) {
 
 const photoBucket = "service-photos";
 
+/** Whether an address is a photo in this project's own service-photos bucket (review L3). */
+const isOwnPhotoUrl = (photoUrl: string) => servicePhotoUrlSchema(requireSupabaseConfig().url).safeParse(photoUrl).success;
+
 /** The file name of a photo in our bucket, from its public address; null for a site image or none. */
 function bucketFileOf(photoUrl: string | null | undefined): string | null {
-  const match = photoUrl?.match(/\/storage\/v1\/object\/public\/service-photos\/([0-9a-f-]{36}\.(?:jpg|png|webp))$/);
-  return match ? match[1] : null;
+  if (!photoUrl || !isOwnPhotoUrl(photoUrl)) return null;
+  return photoUrl.slice(photoUrl.lastIndexOf("/") + 1);
 }
 
 /** Removes files from the bucket after the fact; a failure leaves an unused file, never a broken page. */
@@ -106,7 +111,14 @@ async function photoStep(supabase: SupabaseClient, choice: PhotoChoice, values: 
     console.error("[admin services] could not upload a service photo:", error.message);
     return { ok: false, state: { formError: "unavailable", values } };
   }
-  return { ok: true, column: { photo_url: storage.getPublicUrl(name).data.publicUrl }, uploaded: name };
+  const publicUrl = storage.getPublicUrl(name).data.publicUrl;
+  // Only an address in this project's own bucket is stored (review L3).
+  if (!isOwnPhotoUrl(publicUrl)) {
+    console.error("[admin services] the uploaded photo's address is not in this project's bucket");
+    await removeFiles(supabase, [name]);
+    return { ok: false, state: { formError: "unavailable", values } };
+  }
+  return { ok: true, column: { photo_url: publicUrl }, uploaded: name };
 }
 
 export async function createService(_previous: ServiceFormState, formData: FormData): Promise<ServiceFormState> {
