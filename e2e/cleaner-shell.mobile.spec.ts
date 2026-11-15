@@ -1,11 +1,12 @@
 import { expect, test } from "@playwright/test";
 import { signedInAs } from "./setup/auth-state";
 
-// Cleaners work one-handed on a phone: a minimal bottom bar with two items.
+// Cleaners work one-handed on a phone: a minimal bottom bar with three items (D4: Beranda, Pekerjaan,
+// Akun; the mock's Riwayat waits for a read of past jobs, docs/redesign-gaps.md).
 test.describe("cleaner bottom navigation", () => {
   test.use(signedInAs.cleaner);
 
-  test("sits at the bottom with two items and marks the current page", async ({ page }) => {
+  test("sits at the bottom with three items and marks the current page", async ({ page }) => {
     await page.goto("/cleaner");
     const nav = page.getByRole("navigation", { name: "Navigasi petugas" });
     await expect(nav).toBeVisible();
@@ -14,23 +15,35 @@ test.describe("cleaner bottom navigation", () => {
     const viewport = page.viewportSize();
     expect(box && viewport && Math.round(box.y + box.height)).toBe(viewport?.height);
 
-    await expect(nav.getByRole("link")).toHaveCount(2);
-    await expect(nav.getByRole("link", { name: "Pekerjaan" })).toHaveAttribute("aria-current", "page");
-    await expect(page.getByRole("heading", { level: 1, name: "Pekerjaan hari ini" })).toBeVisible();
+    await expect(nav.getByRole("link")).toHaveCount(3);
+    await expect(nav.getByRole("link", { name: "Beranda" })).toHaveAttribute("aria-current", "page");
+    await expect(page.getByRole("heading", { level: 1, name: /^Selamat datang, / })).toBeVisible();
   });
 
-  test("navigates between jobs and account", async ({ page }) => {
+  test("navigates between home, jobs and account", async ({ page }) => {
     await page.goto("/cleaner");
     const nav = page.getByRole("navigation", { name: "Navigasi petugas" });
 
+    await nav.getByRole("link", { name: "Pekerjaan" }).click();
+    await expect(page).toHaveURL("/cleaner/jobs");
+    await expect(page.getByRole("heading", { level: 1, name: "Pekerjaan" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "Pekerjaan" })).toHaveAttribute("aria-current", "page");
+    await expect(nav.getByRole("link", { name: "Beranda" })).not.toHaveAttribute("aria-current");
+
     await nav.getByRole("link", { name: "Akun" }).click();
     await expect(page).toHaveURL("/cleaner/account");
-    await expect(page.getByRole("heading", { level: 1, name: "Akun" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Akun saya" })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Akun" })).toHaveAttribute("aria-current", "page");
     await expect(nav.getByRole("link", { name: "Pekerjaan" })).not.toHaveAttribute("aria-current");
 
-    await nav.getByRole("link", { name: "Pekerjaan" }).click();
+    await nav.getByRole("link", { name: "Beranda" }).click();
     await expect(page).toHaveURL("/cleaner");
+    await expect(nav.getByRole("link", { name: "Beranda" })).toHaveAttribute("aria-current", "page");
+  });
+
+  test("keeps Pekerjaan current on a job's own page", async ({ page }) => {
+    await page.goto("/cleaner/jobs/HK-1001");
+    const nav = page.getByRole("navigation", { name: "Navigasi petugas" });
     await expect(nav.getByRole("link", { name: "Pekerjaan" })).toHaveAttribute("aria-current", "page");
   });
 

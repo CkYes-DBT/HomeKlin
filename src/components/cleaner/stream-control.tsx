@@ -36,19 +36,24 @@ const chips: Record<Exclude<CleanerStream, "off">, { Icon: LucideIcon; tone: str
 
 const simulationIcons: Record<Exclude<CleanerStream, "off">, LucideIcon> = { weak: SignalLow, disconnected: WifiOff, active: RotateCw };
 
+// Outlined pills (markdown/design.md, Buttons): a 1.5 px forest edge on white, 44 px tall.
 const secondary =
-  "inline-flex min-h-touch items-center justify-center gap-2 rounded-full border border-border-control bg-surface px-4 text-sm font-semibold text-ink transition-[background-color,border-color,transform] duration-150 ease-out-quart hover:bg-surface-sunken active:scale-[0.98] active:bg-brand-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-60 aria-disabled:active:scale-100";
+  "inline-flex min-h-touch items-center justify-center gap-2 rounded-full bg-card px-4 text-sm font-semibold text-ink inset-ring-[1.5px] inset-ring-outline transition-[background-color,transform] duration-150 ease-out-quart hover:bg-sunken active:scale-[0.98] active:bg-lime-wash motion-reduce:active:scale-100 aria-disabled:cursor-not-allowed aria-disabled:opacity-60 aria-disabled:active:scale-100";
 
-// The live stream of a job in progress, on its card (T22). "Mulai siaran" asks the server to start the
-// stream (startStream checks the cleaner, the check-in and the customer's consent); from then on the
-// card shows LIVE and the state in words: Aktif, Sinyal lemah or Terputus. The phone's camera is not
-// used while the stream source is the clip library (docs/adr/0002), so in place of a preview the card
-// says the stream is running. Two "Simulasi" buttons and "Sambung lagi" report a weak or lost signal
-// to the server (setStreamStatus), so the customer's view can show those states; "Hentikan siaran"
-// ends the stream, and check-out ends it too.
-export function StreamControl({ orderId }: { orderId: string }) {
+const spinner = "shrink-0 animate-spin motion-reduce:animate-none";
+
+// The live stream of a job in progress, on its page (T22; D4, mock Cleaner-Live). "Mulai siaran" asks
+// the server to start the stream (startStream checks the cleaner, the check-in and the customer's
+// consent); from then on the page shows LIVE and the state in words: Aktif, Sinyal lemah or Terputus.
+// It starts from the server's state (my_stream_status, `serverStream`), so a reloaded page, another tab
+// or another phone shows the stream as it is. The phone's camera is not used while the stream source is
+// the clip library (docs/adr/0002), so in place of the mock's camera preview a frame says the stream is
+// running. Two "Simulasi" buttons and "Sambungkan ulang siaran" report a weak or lost signal to the
+// server (setStreamStatus), so the customer's view can show those states; "Hentikan siaran" ends the
+// stream, and check-out ends it too.
+export function StreamControl({ orderId, serverStream }: { orderId: string; serverStream: CleanerStream | null }) {
   const t = useTranslations("CleanerStream");
-  const stream = useRememberedStream(orderId);
+  const stream = useRememberedStream(orderId, serverStream);
   const [asked, setAsked] = useState<StreamIntent | null>(null);
   const focusNext = useRef<"live" | "off" | null>(null);
   const statusRef = useRef<HTMLParagraphElement>(null);
@@ -57,7 +62,7 @@ export function StreamControl({ orderId }: { orderId: string }) {
     const intent = form.get("intent");
     if (!isStreamIntent(intent)) return { note: null, error: "unavailable" };
     const result = intent === "start" ? await startStream(null, form) : await setStreamStatus(null, form);
-    const before = readStream(orderId);
+    const before = readStream(orderId) ?? serverStream ?? "off";
     const outcome = streamAfter(before, intent, result);
     if (outcome.stream !== before) focusNext.current = outcome.stream === "off" ? "off" : "live";
     rememberStream(orderId, outcome.stream);
@@ -87,12 +92,12 @@ export function StreamControl({ orderId }: { orderId: string }) {
   const busy = (intent: StreamIntent) => pending && asked === intent;
 
   return (
-    <section aria-labelledby={titleId} className="flex flex-col gap-3 rounded-md bg-surface-sunken p-4">
+    <section aria-labelledby={titleId} className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h4 id={titleId} className="flex items-center gap-2 font-display text-base font-semibold text-ink">
-          <Video className="size-5 shrink-0 text-brand-700" aria-hidden="true" />
+        <h2 id={titleId} className="flex items-center gap-2 font-display text-lg font-semibold text-ink">
+          <Video className="size-5 shrink-0 text-primary" aria-hidden="true" />
           {t("title")}
-        </h4>
+        </h2>
         {stream !== "off" ? <OnAirBadge label={t("live")} /> : null}
       </div>
 
@@ -102,7 +107,7 @@ export function StreamControl({ orderId }: { orderId: string }) {
           <div role="status" className="empty:hidden">
             {answer?.note === "stopped" && !pending ? (
               <p className="flex items-start gap-2 text-sm font-medium text-ink">
-                <CircleStop className="mt-0.5 size-4 shrink-0 text-brand-700" aria-hidden="true" />
+                <CircleStop className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
                 <span>{t("stopped")}</span>
               </p>
             ) : null}
@@ -110,20 +115,23 @@ export function StreamControl({ orderId }: { orderId: string }) {
         </>
       ) : (
         <>
-          <StatusChip stream={stream} label={t("statusLabel")} word={t(`status.${stream}`)} chipRef={statusRef} />
-          <div className="flex items-start gap-3 rounded-md bg-surface px-4 py-3">
-            <Radio className="mt-0.5 size-5 shrink-0 text-brand-700" aria-hidden="true" />
-            <div className="flex min-w-0 flex-col gap-0.5 text-sm">
-              <p className="font-semibold text-ink">{t("runningTitle")}</p>
-              <p className="text-ink-muted">{t("runningBody")}</p>
-            </div>
+          <div className="flex min-h-44 flex-col items-center justify-center gap-2.5 rounded-md bg-frame px-6 py-6 text-center">
+            <span aria-hidden="true" className="flex size-14 items-center justify-center rounded-full bg-card text-primary">
+              <Radio className="size-6" />
+            </span>
+            <p className="text-sm font-semibold text-ink">{t("runningTitle")}</p>
+            <p className="max-w-prose text-sm text-ink-muted">{t("runningBody")}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+            <StatusChip stream={stream} label={t("statusLabel")} word={t(`status.${stream}`)} chipRef={statusRef} />
+            {stream === "active" ? <span className="text-sm text-ink-muted">{t("watching")}</span> : null}
           </div>
         </>
       )}
 
       <div id={errorId} role="alert" aria-atomic="true" className="empty:hidden">
         {error ? (
-          <p className="flex items-start gap-2.5 rounded-md bg-danger-surface px-3 py-2.5 text-sm font-medium text-danger">
+          <p className="flex items-start gap-2.5 rounded-sm bg-danger-surface px-3 py-2.5 text-sm font-medium text-danger">
             <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
             <span>{t(`errors.${error}`)}</span>
           </p>
@@ -137,12 +145,12 @@ export function StreamControl({ orderId }: { orderId: string }) {
           onClick={() => run("start")}
           aria-disabled={pending || undefined}
           aria-describedby={error ? errorId : undefined}
-          className={`inline-flex min-h-13 w-full items-center justify-center gap-2.5 rounded-full px-6 text-base font-semibold text-on-brand transition-[background-color,transform] duration-150 ease-out-quart ${
-            pending ? "cursor-progress bg-brand-700" : "bg-brand-600 hover:bg-brand-700 active:scale-[0.98] active:bg-brand-800"
+          className={`inline-flex min-h-13 w-full items-center justify-center gap-2.5 rounded-full bg-lime px-6 text-base font-semibold text-on-lime transition-[filter,transform] duration-150 ease-out-quart ${
+            pending ? "cursor-progress brightness-95" : "hover:brightness-95 active:scale-[0.98] active:brightness-90 motion-reduce:active:scale-100"
           }`}
         >
           {busy("start") ? (
-            <LoaderCircle className="size-5 shrink-0 animate-spin" aria-hidden="true" />
+            <LoaderCircle className={`size-5 ${spinner}`} aria-hidden="true" />
           ) : (
             <Video className="size-5 shrink-0" aria-hidden="true" />
           )}
@@ -166,9 +174,9 @@ export function StreamControl({ orderId }: { orderId: string }) {
                     }}
                     aria-pressed={status === "active" ? undefined : current}
                     aria-disabled={pending || current || undefined}
-                    className={`${secondary} ${current ? "border-brand-600 bg-brand-50 aria-disabled:opacity-100" : ""}`}
+                    className={`${secondary} ${current ? "bg-lime-wash aria-disabled:opacity-100" : ""}`}
                   >
-                    <Icon className={`size-4 shrink-0 ${busy(status) ? "animate-spin" : ""}`} aria-hidden="true" />
+                    <Icon className={`size-4 ${busy(status) ? spinner : "shrink-0"}`} aria-hidden="true" />
                     {t(`simulate.${status}`)}
                   </button>
                 );
@@ -183,7 +191,7 @@ export function StreamControl({ orderId }: { orderId: string }) {
             className={`${secondary} w-full`}
           >
             {busy("ended") ? (
-              <LoaderCircle className="size-4 shrink-0 animate-spin" aria-hidden="true" />
+              <LoaderCircle className={`size-4 ${spinner}`} aria-hidden="true" />
             ) : (
               <CircleStop className="size-4 shrink-0 text-danger" aria-hidden="true" />
             )}
@@ -195,11 +203,11 @@ export function StreamControl({ orderId }: { orderId: string }) {
   );
 }
 
-/** "LIVE" with a red dot: the cleaner's own sign that the stream is on. The dot is still under reduced motion. */
+/** "LIVE" with a breathing dot: the cleaner's own sign that the stream is on. The dot is still under reduced motion. */
 function OnAirBadge({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-success-surface px-2.5 py-1 text-xs font-bold tracking-wide text-success">
-      <span aria-hidden="true" className="size-2 animate-breathe rounded-full bg-success motion-reduce:animate-none" />
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-live-surface px-2.5 py-1 text-xs font-bold tracking-wide text-live">
+      <span aria-hidden="true" className="size-2 animate-breathe rounded-full bg-live-dot motion-reduce:animate-none" />
       {label}
     </span>
   );
@@ -222,9 +230,9 @@ function StatusChip({
       ref={chipRef}
       tabIndex={-1}
       role="status"
-      className={`inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold outline-offset-2 ${tone}`}
+      className={`inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold outline-offset-2 ${tone}`}
     >
-      <Icon className="size-4 shrink-0" aria-hidden="true" />
+      <Icon className="size-3.5 shrink-0" aria-hidden="true" />
       <span className="sr-only">{label} </span>
       {word}
     </p>

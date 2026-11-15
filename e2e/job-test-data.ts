@@ -22,7 +22,7 @@ export type JobTimes = { startsAt: string; endsAt: string };
 
 export type JobWorld = {
   /** A paid job at these times, at this agency, optionally assigned, checked in or finished. */
-  job: (options: JobOptions) => Promise<{ id: string } & JobTimes>;
+  job: (options: JobOptions) => Promise<{ id: string; code: string } & JobTimes>;
   /** A cleaner of that agency (a signed-in test user with the cleaner role). */
   cleaner: (agencyId: string, fullName: string) => Promise<TestUser>;
   /** A partner agency of its own, with a signed-in agency user, serving Jakarta Timur. */
@@ -43,6 +43,8 @@ export type JobOptions = {
   address: string;
   checkedInMinutesAgo?: number;
   completedMinutesAgo?: number;
+  /** The customer's note for the cleaner (B7); none by default. */
+  note?: string;
 };
 
 async function must<T>(what: string, request: PromiseLike<{ data: T | null; error: { message: string } | null }>): Promise<T> {
@@ -146,12 +148,13 @@ export async function createJobWorld(label: string): Promise<JobWorld> {
           check_in_lat: checkedInAt ? -6.225 : null,
           check_in_lng: checkedInAt ? 106.9 : null,
           completed_at: ago(options.completedMinutesAgo),
+          ...(options.note ? { customer_note: options.note } : {}),
         })
-        .select("id")
-        .single<{ id: string }>(),
+        .select("id, code")
+        .single<{ id: string; code: string }>(),
     );
     orders.push(order.id);
-    return { id: order.id, startsAt, endsAt };
+    return { id: order.id, code: order.code, startsAt, endsAt };
   }
 
   async function cleanup() {

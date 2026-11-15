@@ -111,13 +111,15 @@ describe("navigation", () => {
     expect(JSON.stringify([id.AppNavigation, en.AppNavigation])).not.toMatch(/agensi|agency|mitra|partner/i);
   });
 
-  it("keeps the cleaner navigation minimal", () => {
+  it("keeps the cleaner navigation minimal: home, jobs and account (D4; Riwayat waits for a history read)", () => {
     expect(items("cleaner", "id")).toEqual([
-      ["Pekerjaan", "/cleaner"],
+      ["Beranda", "/cleaner"],
+      ["Pekerjaan", "/cleaner/jobs"],
       ["Akun", "/cleaner/account"],
     ]);
     expect(items("cleaner", "en")).toEqual([
-      ["Jobs", "/cleaner"],
+      ["Home", "/cleaner"],
+      ["Jobs", "/cleaner/jobs"],
       ["Account", "/cleaner/account"],
     ]);
   });

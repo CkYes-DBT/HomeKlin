@@ -133,7 +133,9 @@ test.describe("signing in", () => {
     await page.goto("/login");
     await fillLogin(page, cleaner);
     await expect(page).toHaveURL("/cleaner");
-    await expect(page.getByRole("heading", { level: 1, name: "Pekerjaan hari ini" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Selamat datang, Uji" })).toBeVisible();
+    await page.getByRole("navigation", { name: "Navigasi petugas" }).getByRole("link", { name: "Pekerjaan" }).click();
+    await expect(page).toHaveURL("/cleaner/jobs");
     await expect(page.getByText("Belum ada pekerjaan", { exact: true })).toBeVisible();
 
     await page.goto("/orders");
@@ -143,7 +145,7 @@ test.describe("signing in", () => {
     // The cleaner's account tab shows who is signed in and the way out.
     await page.getByRole("navigation", { name: "Navigasi petugas" }).getByRole("link", { name: "Akun" }).click();
     await expect(page).toHaveURL("/cleaner/account");
-    await expect(page.getByRole("main").getByText("Uji Petugas", { exact: true })).toBeVisible();
+    await expect(page.getByRole("main").getByRole("heading", { name: "Uji Petugas", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Keluar" })).toBeVisible();
   });
 });

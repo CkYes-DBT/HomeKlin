@@ -556,7 +556,7 @@ test.describe("after the assignment", () => {
     const state = await sessionOf(browser, baseURL, { id: newCleaner.id, email: newCleaner.email, password, client: visitorClient() });
     const context = await browser.newContext({ baseURL, storageState: state });
     const page = await context.newPage();
-    await page.goto("/cleaner");
+    await page.goto("/cleaner/jobs");
     await expect(page.getByRole("article").filter({ hasText: address.open })).toBeVisible();
     await context.close();
   });

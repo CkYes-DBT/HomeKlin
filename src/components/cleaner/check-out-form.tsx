@@ -12,13 +12,14 @@ type CheckOutFormProps = {
   buttonRef: RefObject<HTMLButtonElement | null>;
 };
 
+// The forest pill: once checked in, Check-out is the page's main action (markdown/design.md, Cleaner app).
 const primary =
-  "inline-flex min-h-14 w-full items-center justify-center gap-2.5 rounded-full px-6 text-lg font-semibold transition-[background-color,transform] duration-150 ease-out-quart";
-const primaryIdle = "bg-brand-600 text-on-brand hover:bg-brand-700 active:scale-[0.98] active:bg-brand-800";
+  "inline-flex min-h-13 w-full items-center justify-center gap-2.5 rounded-full px-6 text-base font-semibold text-on-primary transition-[background-color,transform] duration-150 ease-out-quart";
+const primaryIdle = "bg-primary hover:bg-primary-container active:scale-[0.98] active:bg-band motion-reduce:active:scale-100";
 
 // Check-out on a job in progress (T18), with a confirm step, because it cannot be undone: the job is
 // recorded as finished and the server attaches its recording. Batal goes back to the button. The answer
-// is remembered above the list (finished-notes.tsx), since the job then moves to "Baru selesai".
+// is remembered beside the page's actions (finished-notes.tsx), since the page then redraws as finished.
 export function CheckOutForm({ orderId, buttonRef }: CheckOutFormProps) {
   const t = useTranslations("CleanerJobActions");
   const remember = useRememberFinished();
@@ -59,7 +60,7 @@ export function CheckOutForm({ orderId, buttonRef }: CheckOutFormProps) {
       role="group"
       aria-labelledby={`${baseId}-title`}
       aria-describedby={`${baseId}-body`}
-      className="flex flex-col gap-3 rounded-md bg-surface-sunken p-4 outline-offset-2"
+      className="flex flex-col gap-3 rounded-lg bg-card p-4 outline-offset-2"
     >
       <p id={`${baseId}-title`} className="font-display text-base font-semibold text-ink">
         {t("confirmTitle")}
@@ -69,7 +70,7 @@ export function CheckOutForm({ orderId, buttonRef }: CheckOutFormProps) {
       </p>
       <div id={errorId} role="alert" aria-atomic="true">
         {error ? (
-          <p key={presses} className="flex items-start gap-2.5 rounded-md bg-danger-surface px-3 py-2.5 text-sm font-medium text-danger">
+          <p key={presses} className="flex items-start gap-2.5 rounded-sm bg-danger-surface px-3 py-2.5 text-sm font-medium text-danger">
             <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
             <span>{t(`errors.${error}`)}</span>
           </p>
@@ -92,7 +93,7 @@ export function CheckOutForm({ orderId, buttonRef }: CheckOutFormProps) {
             setConfirming(false);
           }}
           aria-disabled={pending || undefined}
-          className="inline-flex min-h-touch items-center justify-center rounded-full border border-border-control bg-surface px-5 text-base font-semibold text-ink transition-colors duration-150 ease-out-quart hover:bg-surface-sunken active:bg-brand-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-60 sm:flex-1"
+          className="inline-flex min-h-13 items-center justify-center rounded-full bg-card px-5 text-base font-semibold text-ink inset-ring-[1.5px] inset-ring-outline transition-colors duration-150 ease-out-quart hover:bg-sunken active:bg-lime-wash aria-disabled:cursor-not-allowed aria-disabled:opacity-60 sm:flex-1"
         >
           {t("cancel")}
         </button>
@@ -100,9 +101,9 @@ export function CheckOutForm({ orderId, buttonRef }: CheckOutFormProps) {
           type="submit"
           aria-disabled={pending || undefined}
           aria-describedby={error ? errorId : undefined}
-          className={`${primary} sm:flex-1 ${pending ? "cursor-progress bg-brand-700 text-on-brand" : primaryIdle}`}
+          className={`${primary} sm:flex-1 ${pending ? "cursor-progress bg-primary-container" : primaryIdle}`}
         >
-          {pending ? <LoaderCircle className="size-5 shrink-0 animate-spin" aria-hidden="true" /> : null}
+          {pending ? <LoaderCircle className="size-5 shrink-0 animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
           {pending ? t("checkingOut") : t("confirm")}
         </button>
       </form>

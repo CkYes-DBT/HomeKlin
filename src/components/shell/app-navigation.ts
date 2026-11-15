@@ -26,7 +26,8 @@ export const appNavigation = {
   cleaner: {
     labelKey: "cleaner.label",
     items: [
-      { href: "/cleaner", exact: true, labelKey: "cleaner.jobs", icon: ClipboardCheck },
+      { href: "/cleaner", exact: true, labelKey: "cleaner.home", icon: House },
+      { href: "/cleaner/jobs", labelKey: "cleaner.jobs", icon: ClipboardCheck },
       { href: "/cleaner/account", labelKey: "cleaner.account", icon: UserRound },
     ],
   },

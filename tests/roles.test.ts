@@ -49,6 +49,7 @@ describe("rolesFor", () => {
     expect(rolesFor("/account")).toEqual(["customer"]);
     expect(rolesFor("/cleaner")).toEqual(["cleaner"]);
     expect(rolesFor("/cleaner/account")).toEqual(["cleaner"]);
+    expect(rolesFor("/cleaner/jobs/HK-1042")).toEqual(["cleaner"]);
     expect(rolesFor("/agency")).toEqual(["agency"]);
     expect(rolesFor("/agency/schedule")).toEqual(["agency"]);
     expect(rolesFor("/admin")).toEqual(["admin"]);

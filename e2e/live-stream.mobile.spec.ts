@@ -5,7 +5,7 @@ import { createJobWorld, jakartaClock, seededAgencyId, sessionOf, type JobWorld 
 import { standInClip } from "./recording-test-data";
 import type { StorageState } from "./setup/auth-state";
 
-// T22 and T23 on a phone. The cleaner starts the stream of a job in progress from its card, sees it
+// T22 and T23 on a phone. The cleaner starts the stream of a job in progress from its page, sees it
 // live with its state in words (Aktif, Sinyal lemah, Terputus), simulates a weak signal and a drop, and
 // stops it. The customer of that job watches it on the order's details and on /orders/live?order=<id>:
 // the video comes from a signed storage link made on the server, and the polled state shows over it.
@@ -27,10 +27,10 @@ const polled = { timeout: 25_000 };
 
 let world: JobWorld;
 let other: TestUser;
-let job: { id: string };
+let job: { id: string; code: string };
 const sessions: { cleaner?: StorageState; customer?: StorageState; other?: StorageState } = {};
-// The cleaner keeps one tab open for the whole job, as on the phone: the card remembers the stream it
-// started in this tab (src/components/cleaner/stream-memory.ts).
+// The cleaner keeps one tab open for the whole job, as on the phone. The job page starts from the
+// stream's state on the server (my_stream_status, D4), so another tab shows it too.
 let cleanerTab: Page;
 
 test.beforeAll(async ({ browser, baseURL }) => {
@@ -67,7 +67,9 @@ async function settle(page: Page) {
   await expect(page.getByText(/^(Memuat…|Loading…)$/)).toHaveCount(0);
 }
 
-const cardOf = (page: Page) => page.getByRole("article").filter({ hasText: address });
+// The job's own page (D4): the stream controls and check-out are in its main region.
+const jobPath = (language: "id" | "en" = "id") => `${language === "en" ? "/en" : ""}/cleaner/jobs/${job.code}`;
+const cardOf = (page: Page) => page.getByRole("main");
 const live = (page: Page, name = "Tonton langsung") => page.getByRole("region", { name });
 
 async function streamStatus(): Promise<string | null> {
@@ -86,9 +88,9 @@ test("before the stream starts, the customer is told the cleaner has not started
   await page.context().close();
 });
 
-test("the cleaner starts the stream and its state shows in words", async () => {
+test("the cleaner starts the stream and its state shows in words", async ({ browser, baseURL }) => {
   const page = cleanerTab;
-  await page.goto("/cleaner");
+  await page.goto(jobPath());
   await settle(page);
   const card = cardOf(page);
   await card.getByRole("button", { name: "Mulai siaran" }).click();
@@ -106,15 +108,23 @@ test("the cleaner starts the stream and its state shows in words", async () => {
   await expect(card.getByRole("status").filter({ hasText: "Terputus" })).toBeVisible({ timeout: 15_000 });
   expect(await streamStatus()).toBe("disconnected");
 
-  await card.getByRole("button", { name: "Sambung lagi" }).click();
+  await card.getByRole("button", { name: "Sambungkan ulang siaran" }).click();
   await expect(card.getByRole("status").filter({ hasText: "Aktif" })).toBeVisible({ timeout: 15_000 });
-  await expect(card.getByRole("button", { name: "Sambung lagi" })).toHaveCount(0);
+  await expect(card.getByRole("button", { name: "Sambungkan ulang siaran" })).toHaveCount(0);
   expect(await streamStatus()).toBe("active");
 
-  // After a reload the card still shows the stream as live.
+  // After a reload the page still shows the stream as live, and so does a new tab that never pressed
+  // anything: the state comes from the server.
   await page.reload();
   await settle(page);
   await expect(cardOf(page).getByText("LIVE", { exact: true })).toBeVisible();
+  const freshPage = await pageAs(browser, baseURL, "cleaner");
+  await freshPage.goto(jobPath());
+  await settle(freshPage);
+  await expect(cardOf(freshPage).getByText("LIVE", { exact: true })).toBeVisible();
+  await expect(cardOf(freshPage).getByRole("status").filter({ hasText: "Aktif" })).toBeVisible();
+  await expect(cardOf(freshPage)).toContainText("Pelanggan dapat menonton.");
+  await freshPage.context().close();
 });
 
 test("the customer watches their own job, and the polled state changes when the cleaner's signal drops", async ({ browser, baseURL }) => {
@@ -137,7 +147,7 @@ test("the customer watches their own job, and the polled state changes when the 
   await expect(section.getByRole("status").filter({ hasText: "Aktif" })).toBeVisible();
 
   const cleaner = cleanerTab;
-  await cleaner.goto("/cleaner");
+  await cleaner.goto(jobPath());
   await settle(cleaner);
   await cardOf(cleaner).getByRole("button", { name: "Sinyal lemah" }).click();
   await expect(cardOf(cleaner).getByRole("status").filter({ hasText: "Sinyal lemah" })).toBeVisible({ timeout: 15_000 });
@@ -147,7 +157,7 @@ test("the customer watches their own job, and the polled state changes when the 
   await cardOf(cleaner).getByRole("button", { name: "Terputus" }).click();
   await expect(section.getByText("Siaran terputus, menyambung kembali…")).toBeVisible(polled);
 
-  await cardOf(cleaner).getByRole("button", { name: "Sambung lagi" }).click();
+  await cardOf(cleaner).getByRole("button", { name: "Sambungkan ulang siaran" }).click();
   await expect(section.getByRole("status").filter({ hasText: "Aktif" })).toBeVisible(polled);
   await expect(section.getByText("Siaran terputus, menyambung kembali…")).toHaveCount(0);
 
@@ -202,7 +212,7 @@ test("stopping the stream shows it ended, to the cleaner and to the customer", a
   await expect(live(customer).locator("video")).toHaveCount(1);
 
   const cleaner = cleanerTab;
-  await cleaner.goto("/cleaner");
+  await cleaner.goto(jobPath());
   await settle(cleaner);
   const card = cardOf(cleaner);
   await card.getByRole("button", { name: "Hentikan siaran" }).click();
@@ -223,7 +233,7 @@ test.describe("at 360 px in English", () => {
   test("the cleaner and the customer read it in English, with no sideways scroll and no agency wording", async ({ browser, baseURL }) => {
     const cleaner = await browser.newContext({ baseURL, storageState: sessions.cleaner, viewport: { width: 360, height: 740 } });
     const cleanerPage = await cleaner.newPage();
-    await cleanerPage.goto("/en/cleaner");
+    await cleanerPage.goto(jobPath("en"));
     await settle(cleanerPage);
     const card = cardOf(cleanerPage);
     await card.getByRole("button", { name: "Start stream" }).click();
@@ -255,14 +265,13 @@ test.describe("at 360 px in English", () => {
 
 test("check-out ends the stream, and the customer is pointed to the recording", async ({ browser, baseURL }) => {
   const cleaner = await pageAs(browser, baseURL, "cleaner");
-  await cleaner.goto("/cleaner");
+  await cleaner.goto(jobPath());
   await settle(cleaner);
   const card = cardOf(cleaner);
-  await card.getByRole("button", { name: "Check-out" }).click();
+  await card.getByRole("button", { name: "Check-out", exact: true }).click();
   await card.getByRole("button", { name: "Ya, check-out" }).click();
-  await expect(
-    cleaner.getByRole("region", { name: "Baru selesai" }).getByRole("article").filter({ hasText: address }),
-  ).toContainText(/Selesai pukul/, { timeout: 20_000 });
+  await expect(card).toContainText(/Selesai pukul/, { timeout: 20_000 });
+  await expect(card.getByRole("heading", { name: "Siaran langsung" })).toHaveCount(0);
   expect(await streamStatus()).toBe("ended");
   await cleaner.context().close();
 

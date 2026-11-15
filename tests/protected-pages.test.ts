@@ -143,6 +143,8 @@ describe("the page finder (the test's own helpers)", () => {
         "/orders",
         "/account",
         "/cleaner",
+        "/cleaner/jobs",
+        "/cleaner/jobs/[code]",
         "/cleaner/account",
         "/agency",
         "/agency/schedule",

@@ -98,3 +98,51 @@ Built in D3 (2026-11-14). Mocks: `Owner-Overview`, `Owner-Partners`, `Owner-Part
 ### Menu and shell
 
 The owner layout uses the forest shell as in the mocks: the role card "Dasbor pemilik" over "Pemilik HomeKlin", the three sections, the language switch and the signed-in owner at the bottom. The menu item "Angka bisnis" is now "Ringkasan". No gap.
+
+## Cleaner
+
+Built in D4 (2026-11-15). Mocks: `Cleaner-Home`, `Cleaner-Jobs`, `Cleaner-Job`, `Cleaner-Live`, `Cleaner-Account` (`Cleaner-Chat` is out of scope: the user excluded cleaner chat, B13). The cleaner app keeps its phone layout on every width, now in the forest look (`theme-forest` on the `(cleaner)` layout). Pages: `/cleaner` (home, where signing in lands), `/cleaner/jobs` (list), `/cleaner/jobs/HK-xxxx` (one job, with check-in, the stream and check-out), `/cleaner/account`. Backend used: `my_job_stats` (B6), `my_cleaner_profile` (B11), `my_jobs` with `order_code` and `customer_note` (B1, B7), `my_stream_status`.
+
+### Home (`Cleaner-Home`), page `/cleaner`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| Phone "0812 3456 7890, Jakarta Selatan" | The phone and work area the agency set (B11); until it does, "Nomor telepon dan area kerja Anda diisi oleh agensi Anda." | None |
+| Round initials "WA" | The cleaner's photo when the agency added one, else the initials | None |
+| Not in the mock | When the numbers cannot be read, a calm note in place of the tiles; the welcome and the profile still show | None |
+
+### Jobs (`Cleaner-Jobs`), page `/cleaner/jobs`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| "Belum mulai" on every job of today | The state the job really has: Belum dibuka, Siap check-in, Sedang dikerjakan, Waktu check-in lewat, Selesai (follows the clock); the next one also wears "Berikutnya" and the forest edge | None |
+| "09.00 - 11.00" | "09.00-11.00 WIB", as everywhere else in the app (no spaced dash; the time zone written) | None |
+| "Mendatang" | "Akan datang" (the label the app already used) | None |
+| Not in the mock | "Baru selesai": jobs finished in the last day, so a cleaner sees that check-out went through | None |
+
+### One job (`Cleaner-Job`, `Cleaner-Live`), page `/cleaner/jobs/HK-xxxx`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| Back link "Pekerjaan hari ini" | "Pekerjaan", the list's own name (it also holds later days) | None |
+| "Check-in memberi tahu pelanggan ..., lalu siaran dari kamera ponsel Anda dimulai" | Check-in and the stream stay two steps (T18, T22): after check-in the page offers "Mulai siaran"; the line under the button says the location is recorded once | None |
+| Camera preview "Pratinjau kamera ponsel Anda" | A frame that says the stream is running: the stream comes from the clip library, not the phone's camera (docs/adr/0002) | A camera stream source (out of scope, ADR 0002) |
+| "Sambungkan ulang siaran" as a fixed button | Shown when the signal is weak or lost (it reports the stream as active again), beside the two "Simulasi" buttons and "Hentikan siaran", which the demo needs | None |
+| "Pelanggan: Dewi" only | The customer's name with a phone link ("Telepon"), and the order number | None |
+| Not in the mock | A job that is not the cleaner's, or finished more than a day ago, says "Pekerjaan tidak ditemukan" (`my_jobs` returns only those) | A cleaner read of older jobs, if they should open |
+
+### Account (`Cleaner-Account`), page `/cleaner/account`
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| "Notifikasi pekerjaan: Aktif" | Left out: the app sends cleaners no notifications | Job notifications for cleaners (push or email) and a setting to turn them off |
+| "Izin kamera dan lokasi: Diizinkan" | "Izin lokasi", read from the browser (Diizinkan, Ditanya saat check-in, Ditolak with how to allow it); the camera is not used (ADR 0002) | None |
+| "Bahasa: Indonesia" | The page's language as text; it is changed with the ID / EN switch in the bar | None |
+| "Hubungi admin HomeKlin" | Left out: support chat is for customers only (B13 approved customers only) and there is no help page for cleaners | Cleaner tickets (B13 for cleaners, not approved) |
+
+### Menu and shell
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| Bottom navigation Beranda, Pekerjaan, Riwayat, Akun | Beranda, Pekerjaan, Akun. "Riwayat" is left out: `my_jobs` returns only today's and later jobs and those finished in the last day, so there is no history to show | A cleaner read of finished jobs (for example `my_past_jobs(p_days)`) |
+| App bar with the wordmark and the language switch only | The wordmark, the "Petugas" badge (T5: says which mode the user is in) and the switch; from 768 px the sections and the account chip join the bar | None |

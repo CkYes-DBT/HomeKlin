@@ -26,6 +26,7 @@
     },
     "cleaner": {
       "label": "Navigasi petugas",
+      "home": "Beranda",
       "jobs": "Pekerjaan",
       "account": "Akun"
     }
@@ -666,7 +667,7 @@
     "simulate": {
       "weak": "Sinyal lemah",
       "disconnected": "Terputus",
-      "active": "Sambung lagi"
+      "active": "Sambungkan ulang siaran"
     },
     "stop": "Hentikan siaran",
     "saving": "Menyimpan…",
@@ -679,7 +680,8 @@
       "consentMissing": "Pelanggan tidak menyetujui siaran untuk pekerjaan ini, jadi siaran tidak dimulai.",
       "unavailable": "Belum bisa terhubung. Periksa koneksi Anda, lalu coba lagi.",
       "streamGone": "Siaran ini sudah berakhir. Ketuk Mulai siaran untuk memulainya lagi."
-    }
+    },
+    "watching": "Pelanggan dapat menonton."
   },
   "Payment": {
     "secureNote": "Pembayaran dibuka di halaman pembayaran aman Midtrans.",
@@ -700,27 +702,66 @@
     "cleanerPhotoAlt": "Foto {name}",
     "jobScheduled": "Hari ini, 09.00"
   },
+  "CleanerHomePage": {
+    "title": "Beranda",
+    "welcome": "Selamat datang, <accent>{name}</accent>",
+    "summary": "Ringkasan",
+    "hours": "{hours, number} jam",
+    "hoursLabel": "Jam aktif minggu ini",
+    "todayLabel": "Pekerjaan hari ini",
+    "monthLabel": "Selesai bulan ini",
+    "statsErrorTitle": "Ringkasan belum bisa dimuat",
+    "statsErrorBody": "Angka minggu dan bulan ini tidak dapat dimuat saat ini. Pekerjaan Anda tetap ada di halaman Pekerjaan.",
+    "errorTitle": "Beranda belum bisa dimuat",
+    "errorBody": "Data akun Anda tidak dapat dimuat saat ini. Periksa koneksi Anda, lalu coba lagi.",
+    "retry": "Muat ulang"
+  },
+  "CleanerProfile": {
+    "role": "Petugas HomeKlin",
+    "noName": "Petugas HomeKlin",
+    "photoAlt": "Foto {name}",
+    "noDetails": "Nomor telepon dan area kerja Anda diisi oleh agensi Anda."
+  },
   "CleanerJobsPage": {
-    "title": "Pekerjaan hari ini",
+    "title": "Pekerjaan",
+    "description": "Pekerjaan hari ini dan yang akan datang.",
     "emptyTitle": "Belum ada pekerjaan",
-    "emptyBody": "Pekerjaan yang ditugaskan agensi Anda muncul di sini, lengkap dengan alamat dan jam kerja. Saat tiba di lokasi, Anda check-in dari halaman ini.",
+    "emptyBody": "Pekerjaan yang ditugaskan agensi Anda muncul di sini, lengkap dengan alamat dan jam kerja. Saat tiba di lokasi, buka pekerjaannya lalu check-in.",
     "sections": {
-      "today": "Hari ini",
+      "today": "Hari ini, {date}",
       "upcoming": "Akan datang",
       "finished": "Baru selesai"
     },
     "todayNone": "Tidak ada pekerjaan lagi hari ini. Pekerjaan berikutnya ada di bawah.",
-    "fields": {
-      "window": "Jam kedatangan",
-      "address": "Alamat",
-      "customer": "Pelanggan"
-    },
-    "windowValue": "{day}, {window} WIB",
+    "next": "Berikutnya",
+    "customerLine": "Pelanggan: {name}",
     "serviceFallback": "Layanan HomeKlin",
     "customerFallback": "Pelanggan HomeKlin",
-    "call": "Telepon",
     "errorTitle": "Pekerjaan belum bisa dimuat",
     "errorBody": "Daftar pekerjaan tidak dapat dimuat saat ini. Periksa koneksi Anda, lalu coba lagi.",
+    "retry": "Muat ulang"
+  },
+  "CleanerJobPage": {
+    "title": "Pekerjaan",
+    "back": "Pekerjaan",
+    "when": "{day}, {window} WIB",
+    "detailsLabel": "Rincian pekerjaan",
+    "fields": {
+      "address": "Alamat",
+      "customer": "Pelanggan",
+      "note": "Catatan pelanggan",
+      "stream": "Siaran",
+      "order": "Nomor pesanan"
+    },
+    "consentYes": "Pelanggan sudah setuju pekerjaan ini disiarkan.",
+    "consentNo": "Pelanggan tidak menyetujui siaran, jadi pekerjaan ini tidak disiarkan.",
+    "call": "Telepon",
+    "serviceFallback": "Layanan HomeKlin",
+    "customerFallback": "Pelanggan HomeKlin",
+    "notFoundTitle": "Pekerjaan tidak ditemukan",
+    "notFoundBody": "Pekerjaan ini tidak ada di daftar Anda. Pekerjaan yang selesai lebih dari sehari lalu juga tidak tampil lagi.",
+    "errorTitle": "Pekerjaan belum bisa dimuat",
+    "errorBody": "Pekerjaan ini tidak dapat dimuat saat ini. Periksa koneksi Anda, lalu coba lagi.",
     "retry": "Muat ulang"
   },
   "CleanerJobActions": {
@@ -764,7 +805,8 @@
       "cleanerNotFound": "Petugas tidak ditemukan. Muat ulang halaman.",
       "started": "Pekerjaan ini sudah dimulai. Muat ulang halaman.",
       "unavailable": "Belum bisa terhubung. Periksa koneksi Anda, lalu coba lagi."
-    }
+    },
+    "checkOutLocked": "Check-out, aktif setelah check-in"
   },
   "BackOfficeJobs": {
     "table": {
@@ -786,7 +828,20 @@
     "serviceFallback": "Layanan tidak aktif"
   },
   "CleanerAccountPage": {
-    "title": "Akun"
+    "title": "Akun saya",
+    "settings": "Pengaturan",
+    "language": "Bahasa",
+    "languageValue": "Bahasa Indonesia",
+    "location": "Izin lokasi",
+    "errorTitle": "Akun belum bisa dimuat",
+    "errorBody": "Data akun Anda tidak dapat dimuat saat ini. Periksa koneksi Anda, lalu coba lagi.",
+    "retry": "Muat ulang"
+  },
+  "CleanerPermission": {
+    "granted": "Diizinkan",
+    "prompt": "Ditanya saat check-in",
+    "denied": "Ditolak",
+    "deniedHint": "Izinkan lokasi untuk situs ini di pengaturan browser sebelum check-in."
   },
   "AgencySummaryPage": {
     "title": "Ringkasan",

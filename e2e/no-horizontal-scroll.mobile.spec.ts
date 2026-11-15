@@ -10,7 +10,7 @@ test.use({ viewport: { width: 360, height: 740 } });
 const pageGroups = [
   { who: "a visitor", session: signedOut, paths: ["/", "/home", "/services", "/support", "/login", "/pesan"] },
   { who: "a customer", session: signedInAs.customer, paths: ["/orders", "/orders/live", "/account", "/pesan"] },
-  { who: "a cleaner", session: signedInAs.cleaner, paths: ["/cleaner", "/cleaner/account"] },
+  { who: "a cleaner", session: signedInAs.cleaner, paths: ["/cleaner", "/cleaner/jobs", "/cleaner/jobs/HK-1001", "/cleaner/account"] },
   {
     who: "an agency",
     session: signedInAs.agency,

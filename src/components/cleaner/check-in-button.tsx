@@ -20,7 +20,8 @@ const locationOptions: PositionOptions = { enableHighAccuracy: true, timeout: 15
 // then sends it with the job's id to checkIn, which checks the cleaner, the job and the time window on
 // the server (supabase/migrations/20261104090000_jobs.sql) and records the time and place. A refused or
 // missing location says how to fix it and keeps the button; so does every refusal from the server.
-// Busy while it locates and while the server records, without losing the focus.
+// Busy while it locates and while the server records, without losing the focus. The lime pill: the one
+// action on the job page until check-in (markdown/design.md, Cleaner app).
 // Sources: https://developer.mozilla.org/docs/Web/API/Geolocation/getCurrentPosition and
 // https://react.dev/reference/react/useActionState (calling the action from a transition)
 export function CheckInButton({ orderId, onCheckedIn }: CheckInButtonProps) {
@@ -71,7 +72,7 @@ export function CheckInButton({ orderId, onCheckedIn }: CheckInButtonProps) {
     <div className="flex flex-col gap-3">
       <div id={errorId} role="alert" aria-atomic="true">
         {message ? (
-          <p className="flex items-start gap-2.5 rounded-md bg-danger-surface px-3 py-2.5 text-sm font-medium text-danger">
+          <p className="flex items-start gap-2.5 rounded-sm bg-danger-surface px-3 py-2.5 text-sm font-medium text-danger">
             <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
             <span>{message}</span>
           </p>
@@ -82,14 +83,12 @@ export function CheckInButton({ orderId, onCheckedIn }: CheckInButtonProps) {
         onClick={start}
         aria-disabled={busy || undefined}
         aria-describedby={message ? errorId : undefined}
-        className={`inline-flex min-h-14 w-full items-center justify-center gap-2.5 rounded-full px-6 text-lg font-semibold transition-[background-color,transform] duration-150 ease-out-quart ${
-          busy
-            ? "cursor-progress bg-brand-700 text-on-brand"
-            : "bg-brand-600 text-on-brand hover:bg-brand-700 active:scale-[0.98] active:bg-brand-800"
+        className={`inline-flex min-h-13 w-full items-center justify-center gap-2.5 rounded-full bg-lime px-6 text-base font-semibold text-on-lime transition-[filter,transform] duration-150 ease-out-quart ${
+          busy ? "cursor-progress brightness-95" : "hover:brightness-95 active:scale-[0.98] active:brightness-90 motion-reduce:active:scale-100"
         }`}
       >
         {busy ? (
-          <LoaderCircle className="size-5 shrink-0 animate-spin" aria-hidden="true" />
+          <LoaderCircle className="size-5 shrink-0 animate-spin motion-reduce:animate-none" aria-hidden="true" />
         ) : (
           <MapPin className="size-5 shrink-0" aria-hidden="true" />
         )}

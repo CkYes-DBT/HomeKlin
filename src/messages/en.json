@@ -26,6 +26,7 @@
     },
     "cleaner": {
       "label": "Cleaner navigation",
+      "home": "Home",
       "jobs": "Jobs",
       "account": "Account"
     }
@@ -666,7 +667,7 @@
     "simulate": {
       "weak": "Weak signal",
       "disconnected": "Disconnected",
-      "active": "Reconnect"
+      "active": "Reconnect the stream"
     },
     "stop": "Stop stream",
     "saving": "Saving…",
@@ -679,7 +680,8 @@
       "consentMissing": "The customer did not agree to streaming for this job, so the stream did not start.",
       "unavailable": "Could not connect. Check your connection, then try again.",
       "streamGone": "This stream has already ended. Tap Start stream to start it again."
-    }
+    },
+    "watching": "The customer can watch."
   },
   "Payment": {
     "secureNote": "Payment opens on Midtrans’ secure payment page.",
@@ -700,27 +702,66 @@
     "cleanerPhotoAlt": "Photo of {name}",
     "jobScheduled": "Today, 09.00"
   },
+  "CleanerHomePage": {
+    "title": "Home",
+    "welcome": "Welcome, <accent>{name}</accent>",
+    "summary": "Summary",
+    "hours": "{hours, plural, one {# hour} other {# hours}}",
+    "hoursLabel": "Active hours this week",
+    "todayLabel": "Jobs today",
+    "monthLabel": "Finished this month",
+    "statsErrorTitle": "The summary could not be loaded",
+    "statsErrorBody": "This week’s and this month’s numbers cannot be loaded right now. Your jobs are still on the Jobs page.",
+    "errorTitle": "Home could not be loaded",
+    "errorBody": "Your account details cannot be loaded right now. Check your connection, then try again.",
+    "retry": "Reload"
+  },
+  "CleanerProfile": {
+    "role": "HomeKlin cleaner",
+    "noName": "HomeKlin cleaner",
+    "photoAlt": "Photo of {name}",
+    "noDetails": "Your agency adds your phone number and work area."
+  },
   "CleanerJobsPage": {
-    "title": "Today’s jobs",
+    "title": "Jobs",
+    "description": "Today’s jobs and the ones coming up.",
     "emptyTitle": "No jobs yet",
-    "emptyBody": "Jobs your agency assigns to you appear here, with the address and working hours. When you arrive, you check in from this page.",
+    "emptyBody": "Jobs your agency assigns to you appear here, with the address and working hours. When you arrive, open the job and check in.",
     "sections": {
-      "today": "Today",
+      "today": "Today, {date}",
       "upcoming": "Upcoming",
       "finished": "Just finished"
     },
     "todayNone": "No more jobs today. Your next jobs are below.",
-    "fields": {
-      "window": "Arrival time",
-      "address": "Address",
-      "customer": "Customer"
-    },
-    "windowValue": "{day}, {window} WIB",
+    "next": "Next",
+    "customerLine": "Customer: {name}",
     "serviceFallback": "HomeKlin service",
     "customerFallback": "HomeKlin customer",
-    "call": "Call",
     "errorTitle": "Your jobs could not be loaded",
     "errorBody": "The job list cannot be loaded right now. Check your connection, then try again.",
+    "retry": "Reload"
+  },
+  "CleanerJobPage": {
+    "title": "Job",
+    "back": "Jobs",
+    "when": "{day}, {window} WIB",
+    "detailsLabel": "Job details",
+    "fields": {
+      "address": "Address",
+      "customer": "Customer",
+      "note": "Customer’s note",
+      "stream": "Streaming",
+      "order": "Order number"
+    },
+    "consentYes": "The customer agreed to have this job streamed.",
+    "consentNo": "The customer did not agree to streaming, so this job is not streamed.",
+    "call": "Call",
+    "serviceFallback": "HomeKlin service",
+    "customerFallback": "HomeKlin customer",
+    "notFoundTitle": "Job not found",
+    "notFoundBody": "This job is not on your list. Jobs finished more than a day ago are no longer shown either.",
+    "errorTitle": "This job could not be loaded",
+    "errorBody": "This job cannot be loaded right now. Check your connection, then try again.",
     "retry": "Reload"
   },
   "CleanerJobActions": {
@@ -764,7 +805,8 @@
       "cleanerNotFound": "The cleaner was not found. Reload the page.",
       "started": "This job has already started. Reload the page.",
       "unavailable": "Could not connect. Check your connection, then try again."
-    }
+    },
+    "checkOutLocked": "Check-out, available after check-in"
   },
   "BackOfficeJobs": {
     "table": {
@@ -786,7 +828,20 @@
     "serviceFallback": "Service switched off"
   },
   "CleanerAccountPage": {
-    "title": "Account"
+    "title": "My account",
+    "settings": "Settings",
+    "language": "Language",
+    "languageValue": "English",
+    "location": "Location permission",
+    "errorTitle": "Your account could not be loaded",
+    "errorBody": "Your account details cannot be loaded right now. Check your connection, then try again.",
+    "retry": "Reload"
+  },
+  "CleanerPermission": {
+    "granted": "Allowed",
+    "prompt": "Asked at check-in",
+    "denied": "Refused",
+    "deniedHint": "Allow location for this site in your browser settings before you check in."
   },
   "AgencySummaryPage": {
     "title": "Summary",

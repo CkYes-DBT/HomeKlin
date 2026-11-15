@@ -1,27 +1,30 @@
-import { CircleAlert, ClipboardCheck, Phone } from "lucide-react";
+import { CalendarDays, ChevronRight, ClipboardCheck, Clock, MapPin, UserRound } from "lucide-react";
 import { unstable_rethrow } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { jakartaDayOf } from "@/components/customer/booking-query";
-import { getSlotLabels } from "@/components/customer/slot-labels";
+import { getSlotLabels, type SlotLabels } from "@/components/customer/slot-labels";
 import { groupCleanerJobs } from "@/components/jobs/job-days";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ClientMessages } from "@/i18n/client-messages";
+import { Link } from "@/i18n/navigation";
 import { getCatalogServices } from "@/lib/catalog/cached";
 import type { Service } from "@/lib/catalog/catalog";
-import { checkInOpensAt } from "@/lib/jobs/check-in";
+import { formatJakartaDay } from "@/lib/catalog/slots-days";
 import { listMyJobs, type CleanerJob } from "@/lib/jobs/jobs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { FinishedNotesProvider } from "./finished-notes";
-import { JobCard } from "./job-card";
+import { nextJobId, pillBase } from "./cleaner-views";
+import { JobStatePill } from "./job-state";
+import { ReadFailed } from "./read-failed";
 
-// The content of /cleaner for a signed-in cleaner, inside the page's role check (T17, T18). It reads
-// the cleaner's own jobs with their own session through listMyJobs (my_jobs() returns only the jobs
-// assigned to this cleaner, never another cleaner's and never the agency), then lists them in three
-// groups: today (earliest first, an unfinished one from before included), upcoming, and just finished.
-// Each card shows the service, the arrival window in WIB, the address and the customer with a phone
-// link; check-in and check-out are the card's client part.
+// The cleaner's job list /cleaner/jobs (D4, mock Cleaner-Jobs), inside the page's role check (T17). It
+// reads the cleaner's own jobs with their own session through listMyJobs (my_jobs() returns only the
+// jobs assigned to this cleaner, never another cleaner's and never the agency), then lists them in
+// three groups: today (earliest first, an unfinished one from before included), upcoming, and just
+// finished. Each job is one white card that opens its page (/cleaner/jobs/HK-1042), where check-in,
+// the stream and check-out are; the next job to do today wears a forest edge and "Berikutnya".
 export async function CleanerJobsContent() {
   const locale = await getLocale();
+  const t = await getTranslations("CleanerJobsPage");
   let jobs: CleanerJob[];
   let services: Service[];
   try {
@@ -30,13 +33,12 @@ export async function CleanerJobsContent() {
   } catch (error) {
     unstable_rethrow(error);
     console.error(error);
-    return <JobsUnavailable />;
+    return <ReadFailed title={t("errorTitle")} body={t("errorBody")} retry={t("retry")} />;
   }
 
-  const t = await getTranslations("CleanerJobsPage");
   if (jobs.length === 0) {
     return (
-      <EmptyState icon={ClipboardCheck} title={t("emptyTitle")}>
+      <EmptyState tone="forest" icon={ClipboardCheck} title={t("emptyTitle")}>
         {t("emptyBody")}
       </EmptyState>
     );
@@ -45,77 +47,114 @@ export async function CleanerJobsContent() {
   const now = new Date();
   const groups = groupCleanerJobs(jobs, now);
   const labels = await getSlotLabels(locale);
+  const next = nextJobId(groups.today, now);
+  const today = formatJakartaDay(jakartaDayOf(now.toISOString(), now).date, locale);
   const serviceName = (job: CleanerJob) =>
     services.find((service) => service.id === job.serviceId)?.name[locale] ?? t("serviceFallback");
 
-  const card = (job: CleanerJob) => (
-    <li key={job.id} className="flex flex-col">
-      <JobCard
+  const card = (job: CleanerJob, kind: "today" | "upcoming" | "finished") => (
+    <li key={job.id}>
+      <JobLinkCard
         job={job}
+        serviceName={serviceName(job)}
+        labels={labels}
         renderedAt={now.toISOString()}
-        times={{
-          opensAt: labels.time(checkInOpensAt(job.startsAt)),
-          endsAt: labels.time(job.endsAt),
-          checkedInAt: job.checkedInAt ? labels.time(job.checkedInAt) : null,
-          completedAt: job.completedAt ? labels.time(job.completedAt) : null,
-        }}
-      >
-        <h3 id={`job-${job.id}-title`} className="font-display text-xl font-semibold text-ink">
-          {serviceName(job)}
-        </h3>
-        <dl className="flex flex-col gap-3 text-base">
-          <Fact term={t("fields.window")}>
-            <span className="font-semibold">
-              {t("windowValue", { day: labels.day(jakartaDayOf(job.startsAt, now)), window: labels.window(job) })}
-            </span>
-          </Fact>
-          <Fact term={t("fields.address")}>{job.address}</Fact>
-          <Fact term={t("fields.customer")}>
-            <span className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-              <span>{job.customerName || t("customerFallback")}</span>
-              {job.contactPhone ? (
-                <a
-                  href={`tel:${job.contactPhone}`}
-                  className="inline-flex min-h-touch items-center gap-2 rounded-full border border-border-control bg-surface px-4 text-sm font-semibold whitespace-nowrap text-ink tabular-nums transition-colors duration-150 ease-out-quart hover:bg-surface-sunken active:bg-brand-50"
-                >
-                  <Phone className="size-4 shrink-0 text-brand-700" aria-hidden="true" />
-                  <span className="sr-only">{t("call")} </span>
-                  {job.contactPhone}
-                </a>
-              ) : null}
-            </span>
-          </Fact>
-        </dl>
-      </JobCard>
+        upcomingDay={kind === "upcoming" ? labels.day(jakartaDayOf(job.startsAt, now)) : null}
+        isNext={job.id === next}
+        nextLabel={t("next")}
+        customerLine={t("customerLine", { name: job.customerName || t("customerFallback") })}
+      />
     </li>
   );
 
   return (
-    <ClientMessages namespaces={["CleanerJobActions", "CleanerStream"]}>
-      <FinishedNotesProvider>
-        <div className="flex flex-col gap-8">
-          <JobSection id="today" title={t("sections.today")}>
-            {groups.today.length > 0 ? (
-              <JobList>{groups.today.map(card)}</JobList>
-            ) : (
-              <p className="rounded-xl border border-dashed border-border bg-surface px-4 py-5 text-sm text-ink-muted">
-                {t("todayNone")}
-              </p>
-            )}
+    <ClientMessages namespaces={["CleanerJobActions"]}>
+      <div className="flex flex-col gap-6">
+        <JobSection id="today" title={t("sections.today", { date: `${today.weekday} ${today.date}` })}>
+          {groups.today.length > 0 ? (
+            <JobList>{groups.today.map((job) => card(job, "today"))}</JobList>
+          ) : (
+            <p className="rounded-lg border border-dashed border-border bg-card px-4 py-5 text-sm text-ink-muted">
+              {t("todayNone")}
+            </p>
+          )}
+        </JobSection>
+        {groups.upcoming.length > 0 ? (
+          <JobSection id="upcoming" title={t("sections.upcoming")}>
+            <JobList>{groups.upcoming.map((job) => card(job, "upcoming"))}</JobList>
           </JobSection>
-          {groups.upcoming.length > 0 ? (
-            <JobSection id="upcoming" title={t("sections.upcoming")}>
-              <JobList>{groups.upcoming.map(card)}</JobList>
-            </JobSection>
-          ) : null}
-          {groups.finished.length > 0 ? (
-            <JobSection id="finished" title={t("sections.finished")}>
-              <JobList>{groups.finished.map(card)}</JobList>
-            </JobSection>
-          ) : null}
-        </div>
-      </FinishedNotesProvider>
+        ) : null}
+        {groups.finished.length > 0 ? (
+          <JobSection id="finished" title={t("sections.finished")}>
+            <JobList>{groups.finished.map((job) => card(job, "finished"))}</JobList>
+          </JobSection>
+        ) : null}
+      </div>
     </ClientMessages>
+  );
+}
+
+type JobLinkCardProps = {
+  job: CleanerJob;
+  serviceName: string;
+  labels: SlotLabels;
+  renderedAt: string;
+  /** For a later day: the day in place of the state, which is always "not open yet" there. */
+  upcomingDay: string | null;
+  isNext: boolean;
+  nextLabel: string;
+  customerLine: string;
+};
+
+// One job: its state (or its day), the window in the title face, the service, the address and the
+// customer, and a chevron. The whole card is the link; the focus ring follows its rounded edge.
+function JobLinkCard({ job, serviceName, labels, renderedAt, upcomingDay, isNext, nextLabel, customerLine }: JobLinkCardProps) {
+  return (
+    <article aria-labelledby={`job-${job.id}-title`} className="h-full">
+      <Link
+        href={`/cleaner/jobs/${job.orderCode}`}
+        className={`group flex h-full flex-col gap-2.5 rounded-lg bg-card p-4 transition-[box-shadow,transform] duration-150 ease-out-quart hover:shadow-card-hover active:scale-[0.99] motion-reduce:active:scale-100 ${
+          isNext ? "inset-ring-2 inset-ring-primary" : ""
+        }`}
+      >
+        <span className="flex flex-wrap items-center gap-2">
+          {isNext ? (
+            <span className={`${pillBase} bg-primary text-on-primary`}>
+              <Clock className="size-3.5 shrink-0" aria-hidden="true" />
+              {nextLabel}
+            </span>
+          ) : null}
+          {upcomingDay ? (
+            <span className={`${pillBase} bg-sunken text-ink`}>
+              <CalendarDays className="size-3.5 shrink-0" aria-hidden="true" />
+              {upcomingDay}
+            </span>
+          ) : (
+            <JobStatePill job={job} renderedAt={renderedAt} />
+          )}
+        </span>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="font-display text-title font-semibold text-ink tabular-nums">{labels.window(job)} WIB</span>
+            <h3 id={`job-${job.id}-title`} className="text-body font-semibold text-ink">
+              {serviceName}
+            </h3>
+          </div>
+          <ChevronRight
+            className="mt-1.5 size-5.5 shrink-0 text-ink transition-transform duration-150 ease-out-quart group-hover:translate-x-0.5 motion-reduce:transition-none"
+            aria-hidden="true"
+          />
+        </div>
+        <span className="flex items-start gap-2 text-sm text-ink-muted">
+          <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <span className="min-w-0 break-words">{job.address}</span>
+        </span>
+        <span className="flex items-start gap-2 text-sm text-ink-muted">
+          <UserRound className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <span className="min-w-0 break-words">{customerLine}</span>
+        </span>
+      </Link>
+    </article>
   );
 }
 
@@ -132,31 +171,4 @@ function JobSection({ id, title, children }: { id: string; title: string; childr
 
 function JobList({ children }: { children: React.ReactNode }) {
   return <ul className="grid gap-3 lg:grid-cols-2">{children}</ul>;
-}
-
-function Fact({ term, children }: { term: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-0.5">
-      <dt className="text-sm text-ink-muted">{term}</dt>
-      <dd className="text-ink">{children}</dd>
-    </div>
-  );
-}
-
-async function JobsUnavailable() {
-  const t = await getTranslations("CleanerJobsPage");
-  return (
-    <EmptyState icon={CircleAlert} title={t("errorTitle")}>
-      {t("errorBody")}
-      <span className="mt-4 flex justify-center">
-        {/* A plain link on purpose: a full page load reads the jobs again. */}
-        <a
-          href=""
-          className="inline-flex min-h-touch items-center justify-center rounded-full border border-border-control bg-surface px-5 text-sm font-semibold text-ink transition-colors duration-150 ease-out-quart hover:bg-surface-sunken active:bg-brand-50"
-        >
-          {t("retry")}
-        </a>
-      </span>
-    </EmptyState>
-  );
 }

@@ -4,10 +4,10 @@ import { CircleCheck, Info } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
-// What check-out said, kept above the job list (T18). A finished job moves from "Hari ini" to
-// "Baru selesai", so its card is a new component after the page refreshes and would forget the answer;
-// this provider stays put and hands the answer to the finished card: done, or done without a recording.
-// The note is for this visit only: after a reload the card simply shows the time it finished.
+// What check-out said (T18). After check-out the job page refreshes and its actions redraw as finished,
+// so the check-out form is gone and would forget the answer; this provider stays put around the actions
+// (job-actions.tsx) and hands the answer to the finished state: done, or done without a recording.
+// The note is for this visit only: after a reload the page simply shows the time it finished.
 
 export type FinishedNote = "done" | "recordingMissing";
 
@@ -33,8 +33,8 @@ export function useRememberFinished(): FinishedNotes["remember"] {
   return context.remember;
 }
 
-// On the finished card: the answer of a check-out made on this visit. It takes the focus once, so the
-// cleaner (and a screen reader) lands on the job that just moved down the page.
+// On the finished job: the answer of a check-out made on this visit. It takes the focus once, so the
+// cleaner (and a screen reader) lands on it in place of the Check-out button that is gone.
 export function FinishedNoteLine({ orderId }: { orderId: string }) {
   const t = useTranslations("CleanerJobActions");
   const note = useContext(FinishedNotesContext)?.notes.get(orderId);
@@ -53,7 +53,7 @@ export function FinishedNoteLine({ orderId }: { orderId: string }) {
     <p
       ref={ref}
       tabIndex={-1}
-      className={`flex items-start gap-2.5 rounded-md px-3 py-2.5 text-sm font-medium outline-offset-2 ${
+      className={`flex items-start gap-2.5 rounded-sm px-3 py-2.5 text-sm font-medium outline-offset-2 ${
         missing ? "bg-info-surface text-info" : "bg-success-surface text-success"
       }`}
     >

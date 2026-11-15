@@ -1,32 +1,32 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import type { CleanerStream } from "./stream-control-state";
 
-// Which stream this browser tab has running, per job (T22), so a reloaded job card still shows the
-// stream as live. The server holds the truth (stream_sessions) but has no read for the cleaner yet, so
-// the card remembers what the server last accepted from this tab. Session storage: it ends with the
-// tab, and a blocked or missing storage just means the card starts as "off" (pressing Mulai siaran
-// again resumes the same stream on the server). The server renders "off"; the browser then shows the
-// remembered state.
+// Which state this browser tab last saw for a job's stream (T22). The server holds the truth
+// (stream_sessions) and the job page reads it with my_stream_status (D4) on every render, so a reloaded
+// page, another tab or another phone starts from the server's state; this memory carries the answer of
+// the cleaner's last press until the page redraws, and covers a page whose server read failed. Session
+// storage: it ends with the tab, and a blocked or missing storage just means the page shows the
+// server's state (or "off" when that is unknown; pressing Mulai siaran again resumes the same stream).
 
 const listeners = new Set<() => void>();
 const keyOf = (orderId: string) => `homeklin.stream.${orderId}`;
-const remembered: readonly string[] = ["active", "weak", "disconnected"];
+const remembered: readonly string[] = ["off", "active", "weak", "disconnected"];
 
-export function readStream(orderId: string): CleanerStream {
+/** The state this tab remembers for the job, or null when it remembers none. */
+export function readStream(orderId: string): CleanerStream | null {
   try {
     const value = window.sessionStorage.getItem(keyOf(orderId));
-    return value && remembered.includes(value) ? (value as CleanerStream) : "off";
+    return value && remembered.includes(value) ? (value as CleanerStream) : null;
   } catch {
-    return "off";
+    return null;
   }
 }
 
 export function rememberStream(orderId: string, stream: CleanerStream) {
   try {
-    if (stream === "off") window.sessionStorage.removeItem(keyOf(orderId));
-    else window.sessionStorage.setItem(keyOf(orderId), stream);
+    window.sessionStorage.setItem(keyOf(orderId), stream);
   } catch (error) {
     console.warn("[stream] could not remember the stream in this tab:", error);
   }
@@ -40,10 +40,17 @@ function subscribe(listener: () => void) {
   };
 }
 
-export function useRememberedStream(orderId: string): CleanerStream {
+/**
+ * The stream state to show: what this tab remembers, else the server's (serverStream, null when the
+ * server's read failed), else off. Each new server state replaces the memory, since it is newer.
+ */
+export function useRememberedStream(orderId: string, serverStream: CleanerStream | null): CleanerStream {
+  useEffect(() => {
+    if (serverStream !== null) rememberStream(orderId, serverStream);
+  }, [orderId, serverStream]);
   return useSyncExternalStore(
     subscribe,
-    () => readStream(orderId),
-    () => "off",
+    () => readStream(orderId) ?? serverStream ?? "off",
+    () => serverStream ?? "off",
   );
 }
