@@ -34,14 +34,19 @@ async function librarySizeFor(orderId: string): Promise<number> {
   const { data: list } = await adminClient().storage.from(recordingsBucket).list(clipFolder, { limit: 100 });
   const clips = (list ?? []).filter((file) => /\.(mp4|webm)$/.test(file.name));
   const clip = pickClip(clips.map((file) => file.name), orderId);
-  return Number(clips.find((file) => file.name === clip)?.metadata?.size ?? -1);
+  const size = Number(clips.find((file) => file.name === clip)?.metadata?.size);
+  if (!(size > 0)) throw new Error(`No library clip with a size for order ${orderId}.`);
+  return size;
 }
 
 /** The size of a job's copy, from the bucket listing. */
 async function jobFileSize(filePath: string): Promise<number> {
+  const folder = filePath.slice(0, filePath.lastIndexOf("/"));
   const name = filePath.slice(filePath.lastIndexOf("/") + 1);
-  const { data } = await adminClient().storage.from(recordingsBucket).list("jobs", { search: name, limit: 10 });
-  return Number(data?.find((file) => file.name === name)?.metadata?.size ?? -1);
+  const { data } = await adminClient().storage.from(recordingsBucket).list(folder, { search: name, limit: 10 });
+  const size = Number(data?.find((file) => file.name === name)?.metadata?.size);
+  if (!(size > 0)) throw new Error(`The job's copy ${filePath} is not in the bucket.`);
+  return size;
 }
 
 function user(u: TestUser | undefined): TestUser {
@@ -206,6 +211,7 @@ describe("recordings stay private", { timeout: 30_000 }, () => {
     expect(response.ok).toBe(true);
     await response.arrayBuffer();
     const total = Number((response.headers.get("content-range") ?? "").split("/")[1] ?? response.headers.get("content-length"));
+    expect(total).toBeGreaterThan(0);
     expect(total).toBe(await librarySizeFor(orderId));
   });
 
