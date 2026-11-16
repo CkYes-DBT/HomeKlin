@@ -60,7 +60,7 @@ test("the landing header offers Masuk, which opens the sign-in page", async ({ p
   await expect(signIn).toBeVisible();
   await signIn.click();
   await expect(page).toHaveURL("/login");
-  await expect(page.getByRole("heading", { level: 1, name: "Masuk ke HomeKlin" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Masuk", exact: true })).toBeVisible();
 });
 
 test("an agency user lands on /agency, sees who is signed in, and is refused the admin console", async ({ page }) => {

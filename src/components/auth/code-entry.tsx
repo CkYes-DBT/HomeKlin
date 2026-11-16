@@ -3,6 +3,7 @@
 import { ArrowRight, CircleAlert, LoaderCircle, MailCheck, PencilLine, RotateCw } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { ForestSubmitContent, forestSubmitClass } from "./form-controls";
 
 /** Seconds before another code may be asked for (Supabase refuses a new one sooner anyway). */
 export const resendSeconds = 60;
@@ -30,8 +31,11 @@ type CodeEntryProps = {
   resent: boolean;
   onResend: () => void;
   onChangeEmail: () => void;
-  /** forest: inside the redesign's `theme-forest` (the order form, D5); the sign-in page keeps the default. */
-  tone?: "default" | "forest";
+  /**
+   * Both inside the redesign's `theme-forest`. signin (default): the sign-in card, its 48 px field look
+   * and the dark pill with the lime arrow circle (the SignIn mocks). forest: the order form (D5).
+   */
+  tone?: "signin" | "forest";
   /** Shown under the buttons (the order's recap). */
   children?: ReactNode;
 };
@@ -45,23 +49,16 @@ const linkButton =
 // code from the email, and spaces are allowed (the server ignores them). "Kirim ulang kode" waits 60
 // seconds after each code, with the seconds left in its label; "Ganti email" goes back to the first
 // step with everything kept. The code itself is only ever checked on the server.
-// The two looks: the T3b sign-in page, and the redesign's forest inside the order form.
-const looks = {
-  default: {
-    well: "bg-brand-50 text-brand-700",
-    input: "rounded-md border border-border-control bg-surface caret-brand-700 hover:border-brand-600 aria-invalid:border-danger",
-    button: "bg-brand-600 text-on-brand hover:bg-brand-700 active:bg-brand-800 disabled:bg-brand-700",
-  },
-  forest: {
-    well: "bg-lime-wash text-on-lime-wash",
-    input: "rounded-sm bg-field caret-primary inset-ring-1 inset-ring-border-control hover:inset-ring-primary aria-invalid:inset-ring-2 aria-invalid:inset-ring-danger",
-    button: "bg-primary text-on-primary hover:bg-primary-container active:bg-band disabled:bg-primary-container",
-  },
-} as const;
+// Both tones share the forest well and field; they differ in the button: the sign-in card's dark pill
+// with the lime arrow circle, and the order form's centred pill.
+const fieldLook =
+  "rounded-sm bg-field caret-primary inset-ring-1 inset-ring-border-control hover:inset-ring-primary aria-invalid:inset-ring-2 aria-invalid:inset-ring-danger";
+const orderButton =
+  "mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-base font-semibold text-on-primary transition-[background-color,transform] duration-150 ease-out-quart hover:bg-primary-container active:scale-[0.98] active:bg-band disabled:cursor-progress disabled:bg-primary-container disabled:active:scale-100 motion-reduce:active:scale-100";
 
 export function CodeEntry(props: CodeEntryProps) {
   const { id, titleId, title, sentTo, error, submitLabel, pendingLabel, pending, resending, sentCount, answerKey, resent } = props;
-  const look = looks[props.tone ?? "default"];
+  const tone = props.tone ?? "signin";
   const t = useTranslations("CodeEntry");
   const input = useRef<HTMLInputElement>(null);
   const errorId = `${id}-error`;
@@ -77,7 +74,7 @@ export function CodeEntry(props: CodeEntryProps) {
   return (
     <div className="flex flex-col">
       <div className="flex items-start gap-3">
-        <span className={`flex size-10 shrink-0 items-center justify-center rounded-full ${look.well}`}>
+        <span className={`flex size-10 shrink-0 items-center justify-center rounded-full bg-lime-wash text-on-lime-wash`}>
           <MailCheck className="size-5" aria-hidden="true" />
         </span>
         <div className="flex min-w-0 flex-col gap-1">
@@ -105,7 +102,7 @@ export function CodeEntry(props: CodeEntryProps) {
           required
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${hintId} ${errorId}` : hintId}
-          className={`h-14 w-full max-w-60 px-4 font-display text-2xl font-semibold tracking-widest text-ink tabular-nums transition-colors duration-150 ease-out-quart aria-invalid:bg-danger-surface ${look.input}`}
+          className={`h-14 w-full max-w-60 px-4 font-display text-2xl font-semibold tracking-widest text-ink tabular-nums transition-colors duration-150 ease-out-quart aria-invalid:bg-danger-surface ${fieldLook}`}
         />
         <p id={hintId} className="px-1 text-sm text-ink-muted">
           {t("codeHint")}
@@ -126,15 +123,17 @@ export function CodeEntry(props: CodeEntryProps) {
         ) : null}
       </div>
 
-      <button
-        type="submit"
-        disabled={pending}
-        className={`mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full px-6 text-base font-semibold transition-[background-color,transform] duration-150 ease-out-quart active:scale-[0.98] disabled:cursor-progress disabled:active:scale-100 motion-reduce:active:scale-100 ${look.button}`}
-      >
-        {pending && !resending ? <LoaderCircle className="size-5 shrink-0 animate-spin" aria-hidden="true" /> : null}
-        {pending && !resending ? pendingLabel : submitLabel}
-        {pending ? null : <ArrowRight className="size-5 shrink-0" aria-hidden="true" />}
-      </button>
+      {tone === "signin" ? (
+        <button type="submit" disabled={pending} className={`mt-6 ${forestSubmitClass}`}>
+          <ForestSubmitContent pending={pending && !resending} label={submitLabel} pendingLabel={pendingLabel} />
+        </button>
+      ) : (
+        <button type="submit" disabled={pending} className={orderButton}>
+          {pending && !resending ? <LoaderCircle className="size-5 shrink-0 animate-spin" aria-hidden="true" /> : null}
+          {pending && !resending ? pendingLabel : submitLabel}
+          {pending ? null : <ArrowRight className="size-5 shrink-0" aria-hidden="true" />}
+        </button>
+      )}
 
       <div className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
         <ResendButton key={sentCount} pending={pending} resending={resending} onResend={props.onResend} />

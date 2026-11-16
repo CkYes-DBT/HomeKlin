@@ -1833,10 +1833,24 @@
       "cleaner": "Petugas {name}"
     }
   },
+  "AuthShell": {
+    "homeLink": "HomeKlin, halaman depan",
+    "back": "Kembali ke beranda",
+    "panelLabel": "Tentang HomeKlin",
+    "tagline": "Satu pintu untuk <accent>semua</accent> akun HomeKlin",
+    "lead": "Pelanggan, petugas, dan tim HomeKlin masuk dari sini. Setelah masuk, Anda langsung sampai di halaman Anda.",
+    "featureLive": "Pantau pembersihan secara langsung",
+    "featureRecordings": "Rekaman tersedia selama 7 hari",
+    "featureHelp": "Bantuan dari tim HomeKlin"
+  },
   "LoginPage": {
     "metaTitle": "Masuk",
-    "title": "Masuk ke HomeKlin",
-    "lead": "Pelanggan masuk dengan kode dari email, tanpa kata sandi."
+    "title": "Masuk",
+    "leadCode": "Masukkan email Anda, lalu kami kirim kode 6 angka. Pelanggan masuk tanpa kata sandi.",
+    "leadPassword": "Gunakan email dan kata sandi akun Anda. Untuk akun petugas dan staf HomeKlin, serta akun demo.",
+    "linkExpired": "Tautan di email ini sudah tidak berlaku. Masuk dengan kode yang kami kirim ke email Anda untuk melihat pesanan.",
+    "helpPrompt": "Butuh bantuan untuk masuk?",
+    "helpLink": "Hubungi tim HomeKlin"
   },
   "Auth": {
     "fields": {
@@ -1874,9 +1888,7 @@
     "codeTitle": "Masukkan kode dari email",
     "codeSentTo": "Jika <strong>{email}</strong> terdaftar di HomeKlin, kami sudah mengirim kode 6 angka ke email itu.",
     "withPassword": "Masuk dengan kata sandi",
-    "withCode": "Masuk dengan kode email",
-    "passwordTitle": "Masuk dengan kata sandi",
-    "passwordNote": "Untuk akun petugas dan staf HomeKlin, serta akun demo.",
+    "forgotPassword": "Lupa kata sandi? Masuk dengan kode email",
     "firstTimePrompt": "Belum pernah memesan?",
     "firstTimeLink": "Pesan layanan"
   },
