@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { fillWindow, freeWindows } from "./booking-test-data";
+import { fillWindow, freeWindows, windowText } from "./booking-test-data";
 import { jakartaDate, stepOneChip } from "./order-test-data";
 
 // T8, the customer catalog on a phone (markdown/tasks/todo.md), step 1 of ordering since D5: find a
@@ -113,9 +113,10 @@ test.describe("free slots", () => {
 
     const days = panel.getByLabel("Tanggal").getByRole("option");
     expect(await days.count()).toBeGreaterThanOrEqual(5);
-    await expect(days.first()).toHaveText(/^(Hari ini|Besok|Senin|Selasa|Rabu|Kamis|Jumat|Sabtu)\b/);
+    // Short day names, so the select fits a 360 px phone ("Besok, Sen 16 Nov", "Sel, 17 Nov").
+    await expect(days.first()).toHaveText(/^(Hari ini|Besok|Sen|Sel|Rab|Kam|Jum|Sab)\b/);
     // Monday to Saturday only: no Sunday in the seed.
-    await expect(days.filter({ hasText: /Minggu/ })).toHaveCount(0);
+    await expect(days.filter({ hasText: /\bMin\b/ })).toHaveCount(0);
     await expect(panel.getByText(/Waktu dalam WIB/)).toBeVisible();
   });
 
@@ -128,7 +129,8 @@ test.describe("free slots", () => {
       await panel.getByLabel("Tanggal").selectOption(jakartaDate(window.startsAt));
       const full = panel.getByRole("radio", { name: `${stepOneChip(window)}, penuh` });
       await expect(full).toBeDisabled();
-      await expect(panel.getByText(/, penuh$/)).toBeVisible();
+      // "penuh" is written on the chip, so the state does not rest on the grey fill alone.
+      await expect(panel.getByText("penuh", { exact: true }).first()).toBeVisible();
     } finally {
       await restore();
     }
@@ -145,7 +147,8 @@ test.describe("free slots", () => {
     const panel = page.getByRole("region", { name: "Jam kosong di Jakarta Barat" });
     await panel.getByLabel("Tanggal").selectOption(jakartaDate(window.startsAt));
     await panel.getByRole("radio", { name: stepOneChip(window) }).check();
-    await expect(summary).toContainText(stepOneChip(window));
+    // The summary writes the time as the chips do ("15.00-17.00 WIB").
+    await expect(summary).toContainText(`${windowText(window)} WIB`);
     await summary.getByRole("button", { name: "Pesan sekarang" }).click();
     await expect(page).toHaveURL(/\/pesan\?/);
     const params = Object.fromEntries(new URL(page.url()).searchParams);

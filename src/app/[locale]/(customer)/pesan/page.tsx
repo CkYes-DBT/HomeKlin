@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { PageContainer } from "@/components/ui/page-container";
 import { GateFallback } from "@/components/auth/gate-fallback";
 import { BookingStepper } from "@/components/customer/booking-stepper";
+import { BookingTrust } from "@/components/customer/booking-trust";
 import { flowPageTitle } from "@/components/customer/flow-styles";
 import { OrderContent } from "@/components/customer/order-content";
 
@@ -30,6 +31,7 @@ export default function OrderPage({ searchParams }: PageProps<"/[locale]/pesan">
       <header className="flex flex-col gap-2">
         <h1 className={flowPageTitle}>{t("title")}</h1>
         <p className="max-w-prose text-ink-muted md:text-body-lg">{t("description")}</p>
+        <BookingTrust />
       </header>
       <Suspense fallback={<GateFallback />}>
         <OrderContent searchParams={searchParams} />

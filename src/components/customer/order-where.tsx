@@ -5,19 +5,24 @@ import { useTranslations } from "next-intl";
 import type { RefObject } from "react";
 import { FieldError, orderInputClass } from "./booking-controls";
 import { flowCard, flowCardTitle, flowTextLink } from "./flow-styles";
-import { WindowPicker, type BookingDay } from "./booking-window-picker";
+import { dayHasFree, type BookingDay } from "./booking-days";
+import { WindowPicker } from "./booking-window-picker";
 import type { OrderArea } from "./order-form";
 
 type OrderWhereProps = {
   areas: OrderArea[];
   area: OrderArea;
-  /** The area's free windows, without any taken while the page was open. */
-  freeDays: BookingDay[];
+  /** The area's windows, the full ones and any taken while the page was open marked "penuh". */
+  days: BookingDay[];
   selected: { dayLabel: string; windowLabel: string } | null;
   startsAt: string | null;
   onChooseArea: (areaId: string) => void;
   onChooseWindow: (startsAt: string) => void;
   disabled: boolean;
+  /** The times are being read again for a new service. */
+  loading: boolean;
+  /** The day to open when no window is chosen (the day of one just taken). */
+  openDate: string | null;
   areaError?: string;
   windowError?: string;
   /** The chosen window was just taken by someone else. */
@@ -39,12 +44,14 @@ const sectionTitle = flowCardTitle;
 export function OrderWhere({
   areas,
   area,
-  freeDays,
+  days,
   selected,
   startsAt,
   onChooseArea,
   onChooseWindow,
   disabled,
+  loading,
+  openDate,
   areaError,
   windowError,
   justTaken,
@@ -60,7 +67,7 @@ export function OrderWhere({
   if (!area.served) state = { icon: MapPinOff, title: tOrder("unservedTitle", { area: area.name }), body: tOrder("unservedBody") };
   else if (area.days === null)
     state = { icon: CircleAlert, title: tOrder("slotsErrorTitle", { area: area.name }), body: tOrder("slotsErrorBody"), retry: true };
-  else if (freeDays.length === 0 && !justTaken)
+  else if (!days.some(dayHasFree) && !justTaken)
     state = {
       icon: CalendarX2,
       title: tOrder("fullTitle", { area: area.name }),
@@ -143,11 +150,13 @@ export function OrderWhere({
         ) : (
           <WindowPicker
             areaName={area.name}
-            days={freeDays}
+            days={days}
             selected={selected}
             startsAt={startsAt}
             onChoose={onChooseWindow}
             disabled={disabled}
+            loading={loading}
+            openDate={openDate}
             error={windowError}
           />
         )}

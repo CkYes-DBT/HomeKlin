@@ -416,7 +416,7 @@
   },
   "OrderPage": {
     "title": "Detail pemesanan",
-    "description": "Isi alamat dan kontak Anda. Tidak perlu membuat akun. Semua informasi pesanan dikirim ke email Anda."
+    "description": "Isi alamat dan kontak Anda. Semua informasi pesanan dikirim ke email Anda."
   },
   "Booking": {
     "formLabel": "Pesan layanan",
@@ -447,7 +447,7 @@
     "totalNote": "Harga penuh, tanpa biaya tambahan. Anda membayar di langkah berikutnya.",
     "submit": "Lanjut ke pembayaran",
     "pending": "Membuat pesanan…",
-    "submitHint": "Nyalakan persetujuan siaran di atas untuk melanjutkan.",
+    "submitHint": "Nyalakan <link>persetujuan siaran</link> untuk melanjutkan.",
     "errorSummary": "{count, plural, other {Periksa # isian yang ditandai.}}",
     "errors": {
       "serviceInvalid": "Layanan ini tidak dapat dipesan. Pilih layanan dari daftar layanan.",
@@ -491,7 +491,7 @@
     "phoneLabel": "Nomor HP",
     "phoneHint": "Petugas HomeKlin menghubungi nomor ini pada hari kedatangan.",
     "emailLabel": "Email",
-    "emailHint": "Kami kirim kode ke email ini. Kode itu membuat pesanan Anda, tanpa perlu kata sandi.",
+    "emailHint": "Kami kirim kode ke email ini. Kode itu membuat pesanan Anda; tidak perlu membuat akun atau kata sandi.",
     "signedInTitle": "Anda memesan sebagai",
     "signedInNote": "Konfirmasi pesanan dikirim ke email akun ini.",
     "submitSend": "Kirim kode",
@@ -512,7 +512,11 @@
     "noteLabel": "Catatan untuk Petugas (opsional)",
     "noteHint": "Misalnya letak kunci atau pintu yang dipakai. Paling banyak 300 karakter.",
     "emailNoteTitle": "Setelah membayar, cek email Anda.",
-    "emailNoteBody": "Detail pesanan dan profil Petugas HomeKlin dikirim ke email Anda."
+    "emailNoteBody": "Detail pesanan dan profil Petugas HomeKlin dikirim ke email Anda.",
+    "choiceTitle": "Layanan dan jadwal",
+    "recapPrice": "Harga",
+    "recapDay": "Tanggal",
+    "windowsLoading": "Memuat jadwal untuk layanan ini…"
   },
   "BookingUnavailable": {
     "serviceTitle": "Layanan ini tidak dapat dipesan",
@@ -2085,26 +2089,26 @@
     "windowsError": "Jam kosong tidak dapat dimuat saat ini. Muat ulang halaman untuk mencoba lagi.",
     "windowsEmpty": "Semua jam di {area} untuk {days, plural, other {# hari}} ke depan sudah terisi. Coba lagi nanti, atau pilih area lain.",
     "chipsLegend": "Jam datang, {day}",
-    "chipLabel": "{start} sampai {end} WIB",
-    "chipFullLabel": "{start} sampai {end} WIB, penuh",
-    "chipFull": "{start}, penuh",
     "timeNote": "Waktu dalam WIB (waktu Jakarta). Jam yang penuh tidak dapat dipilih.",
     "summaryTitle": "Ringkasan",
     "summaryService": "Layanan",
     "summaryNoService": "Belum dipilih",
     "summaryArea": "Area",
     "summarySchedule": "Jadwal",
-    "summaryWindow": "{start} sampai {end} WIB",
+    "summaryWindow": "{start}-{end} WIB",
     "summaryNoWindow": "Belum dipilih",
     "total": "Total",
     "totalNote": "Harga penuh, tanpa biaya tambahan.",
     "submit": "Pesan sekarang",
     "chooseServiceFirst": "Pilih layanan dulu untuk melanjutkan.",
     "nextNote": "Alamat dan email Anda diisi di langkah berikutnya. Tidak perlu membuat akun.",
-    "dayShort": "{weekday}, {date}",
     "asideLabel": "Ringkasan pesanan",
-    "liveNoteTitle": "Petugas HomeKlin check-in di alamat Anda.",
-    "liveNoteBody": "Anda dapat menonton siaran langsung pekerjaannya. Hanya Anda dan tim pemantau HomeKlin yang dapat melihatnya."
+    "servicesLegend": "Pilih satu layanan",
+    "serviceMissing": "Pilih salah satu layanan untuk melanjutkan.",
+    "nextNoteSignedIn": "Alamat dan nomor HP Anda diisi di langkah berikutnya.",
+    "barNoService": "Belum ada layanan",
+    "barNoTime": "Jam belum dipilih",
+    "barWindow": "{start}-{end} WIB"
   },
   "PaymentMethod": {
     "qris": "QRIS",
@@ -2186,15 +2190,7 @@
     },
     "closedBody": "Pesanan ini tidak dapat dibayar lagi. Pilih jadwal baru untuk memesan.",
     "bookAgain": "Pesan lagi",
-    "sandboxBody": "Halaman Midtrans yang terbuka adalah mode ujinya (Sandbox).",
     "methodsTitle": "Cara membayar",
-    "methodsLead": "Anda memilih salah satu di halaman Midtrans setelah menekan Bayar sekarang.",
-    "methods": {
-      "qris": "Pindai kode QR dari aplikasi bank atau dompet digital apa pun.",
-      "bankTransfer": "Transfer ke nomor virtual account dari bank pilihan Anda.",
-      "card": "Visa dan Mastercard.",
-      "ewallet": "GoPay atau ShopeePay."
-    },
     "orderLabel": "Pesanan Anda",
     "orderTitle": "Pesanan Anda",
     "fields": {
@@ -2206,8 +2202,11 @@
     },
     "total": "Total",
     "seeOrder": "Lihat detail pesanan",
-    "emailNoteTitle": "Setelah pembayaran, kami mengirim email.",
-    "emailNoteBody": "Isinya detail pesanan dan tautan ke halaman pesanan Anda. Profil Petugas HomeKlin menyusul setelah ditugaskan."
+    "methodsLine": "QRIS, virtual account, kartu kredit atau debit, GoPay, atau ShopeePay. Anda memilih caranya di halaman Midtrans.",
+    "holdToday": "Jadwal ini kami simpan sampai pukul {time} WIB.",
+    "holdDay": "Jadwal ini kami simpan sampai {day}, pukul {time} WIB.",
+    "holdBody": "Pesanan yang belum dibayar 2 jam setelah dibuat dibatalkan, dan jadwalnya dibuka lagi untuk pelanggan lain. Halaman pembayaran Midtrans berlaku 60 menit setelah dibuka.",
+    "afterTitle": "Setelah membayar"
   },
   "PaymentConfirmed": {
     "title": "Pembayaran berhasil",
@@ -2320,5 +2319,17 @@
     "errorBody": "Ada gangguan saat membaca pesanan Anda. Muat ulang halaman untuk mencoba lagi.",
     "retry": "Muat ulang",
     "open": "Buka halaman rekaman"
+  },
+  "TimeChip": {
+    "label": "{start} sampai {end} WIB",
+    "fullLabel": "{start} sampai {end} WIB, penuh",
+    "range": "{start}-{end}",
+    "full": "penuh"
+  },
+  "BookingTrust": {
+    "line": "Petugas HomeKlin check-in di alamat Anda, dan hanya Anda serta tim pemantau HomeKlin yang dapat menonton siarannya."
+  },
+  "BookingBar": {
+    "label": "Pilihan Anda"
   }
 }

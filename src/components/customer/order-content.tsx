@@ -15,8 +15,8 @@ import { formatRupiah } from "@/lib/format";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { findFreeWindow, jakartaDayOf } from "./booking-query";
 import { BookingUnavailable } from "./booking-unavailable";
-import type { BookingDay } from "./booking-window-picker";
-import { freeWindowDays, loadFreeSlots } from "./free-slots";
+import type { BookingDay } from "./booking-days";
+import { freeWindowDays, loadSlotWindows } from "./free-slots";
 import { OrderForm, type OrderArea } from "./order-form";
 import { parseOrderQuery } from "./order-query";
 import { ServiceDuration } from "./service-duration";
@@ -56,18 +56,21 @@ export async function OrderContent({ searchParams }: { searchParams: Promise<Sea
   const area = resolveArea(areas, query.areaId);
   if (!area || services.length === 0) return <BookingUnavailable kind="error" backHref="/services" />;
 
-  // The windows of the service in the address only (B12: agencies offering it); booking checks again.
+  // The windows of the service in the address only (B12: agencies offering it), the full ones too so
+  // they show as "penuh" as on step 1 (slot_windows, B11); booking checks again. A new service on the
+  // form reloads this content with that service in the address (OrderForm), so its own times follow.
   const wanted = services.find((candidate) => candidate.id === query.serviceId);
   const slotsByArea = new Map(
     await Promise.all(
       areas
         .filter((candidate) => candidate.isServed)
-        .map(async (candidate) => [candidate.id, await loadFreeSlots(candidate.id, wanted?.id)] as const),
+        .map(async (candidate) => [candidate.id, await loadSlotWindows(candidate.id, wanted?.id)] as const),
     ),
   );
   const now = new Date();
   const orderAreas: OrderArea[] = areas.map((candidate) => {
     const slots = slotsByArea.get(candidate.id);
+    const full = new Set((slots ?? []).filter((slot) => slot.isFull).map((slot) => slot.startsAt));
     const days: BookingDay[] | null =
       slots === undefined
         ? []
@@ -76,13 +79,20 @@ export async function OrderContent({ searchParams }: { searchParams: Promise<Sea
           : groupSlotsByJakartaDay(slots, now).map((day) => ({
               date: day.date,
               label: labels.day(day),
-              windows: day.windows.map((slot) => ({ startsAt: slot.startsAt, label: labels.window(slot) })),
+              short: labels.dayShort(day),
+              windows: day.windows.map((slot) => ({
+                startsAt: slot.startsAt,
+                label: labels.window(slot),
+                start: labels.time(slot.startsAt),
+                end: labels.time(slot.endsAt),
+                isFull: full.has(slot.startsAt),
+              })),
             }));
     return { id: candidate.id, name: candidate.name[locale], served: candidate.isServed, days };
   });
 
   const service = wanted;
-  const selected = findFreeWindow(slotsByArea.get(area.id) ?? [], query.startsAt);
+  const selected = findFreeWindow((slotsByArea.get(area.id) ?? []).filter((slot) => !slot.isFull), query.startsAt);
   // The window in the address is gone (booked, or it never existed): say which one, plainly.
   const takenNotice =
     !selected && query.startsAt && area.isServed
@@ -90,7 +100,7 @@ export async function OrderContent({ searchParams }: { searchParams: Promise<Sea
       : null;
 
   return (
-    <ClientMessages namespaces={["Booking", "Order", "CodeEntry"]}>
+    <ClientMessages namespaces={["Booking", "Order", "CodeEntry", "TimeChip", "BookingBar"]}>
       <OrderForm
         services={services.map((candidate) => ({
           id: candidate.id,
@@ -104,6 +114,8 @@ export async function OrderContent({ searchParams }: { searchParams: Promise<Sea
         serviceUnknown={Boolean(query.serviceId && !service)}
         initialAreaId={area.id}
         initialStartsAt={selected?.startsAt ?? null}
+        // Everything chosen on step 1 is valid and free: show it read-only, with "Ubah" back to step 1.
+        fixedChoice={Boolean(service && area.isServed && selected)}
         takenNotice={takenNotice}
         lookAheadDays={freeWindowDays}
         customer={user ? { name: user.fullName.trim() || (await signedInEmail()) } : null}
@@ -120,9 +132,10 @@ async function signedInEmail(): Promise<string> {
   return typeof email === "string" ? email : "";
 }
 
-/** The chosen service at a glance: its picture, name and how long it takes. */
+/** The chosen service at a glance: its picture, name, how long it takes and its one full price. */
 async function ServiceSummary({ service }: { service: Service }) {
   const locale = await getLocale();
+  const t = await getTranslations("Order");
   return (
     <div className="flex items-start gap-4">
       <ServiceVisual service={service} sizes="64px" className="size-16 shrink-0 rounded-md" iconClassName="size-6" tone="forest" />
@@ -132,6 +145,10 @@ async function ServiceSummary({ service }: { service: Service }) {
         <p className="flex items-center gap-1.5 text-sm text-ink-muted">
           <Clock className="size-4 shrink-0 text-ink-muted" aria-hidden="true" />
           <ServiceDuration minutes={service.durationMinutes} />
+        </p>
+        <p className="text-sm text-ink">
+          <span className="sr-only">{t("recapPrice")}: </span>
+          <span className="font-semibold whitespace-nowrap tabular-nums">{formatRupiah(service.priceIdr, locale)}</span>
         </p>
       </div>
     </div>

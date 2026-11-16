@@ -1,4 +1,4 @@
-import { CircleAlert, MapPinOff, SearchX, Video } from "lucide-react";
+import { CircleAlert, MapPinOff, SearchX } from "lucide-react";
 import { unstable_rethrow } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Suspense } from "react";
@@ -6,21 +6,29 @@ import { ServiceRating } from "@/components/reviews/service-rating";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ClientMessages } from "@/i18n/client-messages";
 import { getPathname, Link } from "@/i18n/navigation";
+import { getCurrentUser } from "@/lib/auth/dal";
 import { getCatalogServices, getServiceAreas } from "@/lib/catalog/cached";
 import type { CatalogFilters, Service, ServiceArea } from "@/lib/catalog/catalog";
 import { splitDuration } from "@/lib/catalog/customer-duration";
 import { catalogQuery, defaultAreaId, resolveArea } from "@/lib/catalog/customer-filters";
-import { formatJakartaDay } from "@/lib/catalog/slots-days";
 import { formatRupiah } from "@/lib/format";
 import { parseCatalogFilters } from "@/lib/validation/catalog";
 import { AreaPicker } from "./area-picker";
 import { CatalogForm } from "./catalog-form";
 import { CatalogSearch, CatalogTypeFilter } from "./catalog-filters";
-import { flowCard, flowCardTitle, flowNote, flowTextLink } from "./flow-styles";
+import { flowCard, flowCardTitle, flowTextLink } from "./flow-styles";
 import { freeWindowDays, loadSlotWindows } from "./free-slots";
 import { parseOrderQuery } from "./order-query";
 import { ServiceDuration } from "./service-duration";
-import { ServiceRadio, ServiceStepProvider, StepSummary, WindowChooser, type StepDay, type StepService } from "./service-step";
+import {
+  ServiceRadio,
+  ServiceRadioGroup,
+  ServiceStepProvider,
+  StepSummary,
+  WindowChooser,
+  type StepDay,
+  type StepService,
+} from "./service-step";
 import { windowDays } from "./service-step-data";
 import { ServiceTypeIcon } from "./service-visual";
 import { getSlotLabels } from "./slot-labels";
@@ -45,7 +53,7 @@ const stepFormId = "pilih-layanan-jam";
 export async function ServiceCatalog({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
   const filters = parseCatalogFilters(params);
-  const wanted = parseOrderQuery(params).serviceId;
+  const { serviceId: wanted, startsAt: wantedStart } = parseOrderQuery(params);
   const [locale, t, tFilters, tStep, tDuration] = await Promise.all([
     getLocale(),
     getTranslations("CatalogResults"),
@@ -143,8 +151,9 @@ export async function ServiceCatalog({ searchParams }: { searchParams: Promise<S
   const initial = everyService.find((service) => service.id === wanted);
   const shown = initial && !services.some((service) => service.id === initial.id) ? [...services, initial] : services;
   // The windows are read at request time (connection() inside loadSlotWindows), so the clock is read after.
-  const [labels, ...found] = await Promise.all([
+  const [labels, user, ...found] = await Promise.all([
     getSlotLabels(locale),
+    getCurrentUser(),
     loadSlotWindows(area.id),
     ...shown.map((service) => loadSlotWindows(area.id, service.id)),
   ]);
@@ -153,11 +162,10 @@ export async function ServiceCatalog({ searchParams }: { searchParams: Promise<S
     windows === null
       ? null
       : windowDays(windows, now).map((day) => {
-          const parts = formatJakartaDay(day.date, locale);
           return {
             date: day.date,
             label: labels.day(day),
-            short: tStep("dayShort", parts),
+            short: labels.dayShort(day),
             hasFree: day.hasFree,
             windows: day.windows.map((window) => ({
               startsAt: window.startsAt,
@@ -184,8 +192,8 @@ export async function ServiceCatalog({ searchParams }: { searchParams: Promise<S
   }));
 
   return (
-    <ClientMessages namespaces={["ServiceStep"]}>
-      <ServiceStepProvider formId={stepFormId} initialServiceId={initial?.id ?? ""} windows={windows}>
+    <ClientMessages namespaces={["ServiceStep", "TimeChip", "BookingBar"]}>
+      <ServiceStepProvider formId={stepFormId} initialServiceId={initial?.id ?? ""} initialStartsAt={wantedStart} windows={windows}>
         <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-6">
           <CatalogForm
             action={action}
@@ -223,21 +231,23 @@ export async function ServiceCatalog({ searchParams }: { searchParams: Promise<S
                   </p>
                 </div>
                 {services.length > 0 ? (
-                  <ul aria-labelledby="daftar-layanan" className="mt-3 grid gap-3 md:grid-cols-2 md:gap-4">
-                    {services.map((service) => (
-                      <li key={service.id} className="flex">
-                        <ServiceChoiceCard
-                          service={service}
-                          rating={
-                            // Each card's rating streams in on its own; a card without reviews shows none.
-                            <Suspense fallback={null}>
-                              <ServiceRating serviceId={service.id} serviceName={service.name[locale]} />
-                            </Suspense>
-                          }
-                        />
-                      </li>
-                    ))}
-                  </ul>
+                  <ServiceRadioGroup labelledBy="daftar-layanan">
+                    <ul aria-labelledby="daftar-layanan" className="grid gap-3 md:grid-cols-2 md:gap-4">
+                      {services.map((service) => (
+                        <li key={service.id} className="flex">
+                          <ServiceChoiceCard
+                            service={service}
+                            rating={
+                              // Each card's rating streams in on its own; a card without reviews shows none.
+                              <Suspense fallback={null}>
+                                <ServiceRating serviceId={service.id} serviceName={service.name[locale]} />
+                              </Suspense>
+                            }
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </ServiceRadioGroup>
                 ) : (
                   <div className="mt-3">
                     <EmptyState tone="forest" icon={SearchX} title={t("noMatchTitle")}>
@@ -262,15 +272,8 @@ export async function ServiceCatalog({ searchParams }: { searchParams: Promise<S
               areaName={areaName}
               services={stepServices}
               windows={windows}
+              signedIn={user !== null}
             />
-            <p className={flowNote}>
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card text-primary" aria-hidden="true">
-                <Video className="size-4.5" />
-              </span>
-              <span>
-                <strong className="font-semibold">{tStep("liveNoteTitle")}</strong> {tStep("liveNoteBody")}
-              </span>
-            </p>
           </aside>
         </div>
       </ServiceStepProvider>
@@ -300,7 +303,7 @@ async function ServiceChoiceCard({ service, rating }: { service: Service; rating
         />
         <span
           aria-hidden="true"
-          className="col-start-1 row-span-4 row-start-1 mt-0.5 flex size-6 items-center justify-center rounded-full bg-card inset-ring-[1.5px] inset-ring-border-control group-has-checked/card:bg-transparent group-has-checked/card:inset-ring-2 group-has-checked/card:inset-ring-lime md:col-start-2 md:row-span-1 md:mt-2.5"
+          className="col-start-1 row-span-4 row-start-1 mt-0.5 flex size-6 items-center justify-center rounded-full bg-card inset-ring-[1.5px] inset-ring-border-control group-has-checked/card:bg-transparent group-has-checked/card:inset-ring-2 group-has-checked/card:inset-ring-lime md:col-start-2 md:row-span-1 md:mt-2.5 md:justify-self-end"
         >
           <span className="hidden size-3 rounded-full bg-lime group-has-checked/card:block" />
         </span>

@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { PageContainer } from "@/components/ui/page-container";
 import { BookingStepper } from "@/components/customer/booking-stepper";
+import { BookingTrust } from "@/components/customer/booking-trust";
 import { CatalogSkeleton } from "@/components/customer/catalog-skeleton";
 import { flowPageTitle } from "@/components/customer/flow-styles";
 import { ServiceCatalog } from "@/components/customer/service-catalog";
@@ -26,6 +27,7 @@ export default function ServicesPage({ searchParams }: PageProps<"/[locale]/serv
       <header className="flex flex-col gap-2">
         <h1 className={flowPageTitle}>{t("title")}</h1>
         <p className="max-w-prose text-ink-muted md:text-body-lg">{t("description")}</p>
+        <BookingTrust />
       </header>
       <Suspense fallback={<CatalogSkeleton />}>
         <ServiceCatalog searchParams={searchParams} />

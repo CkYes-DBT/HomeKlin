@@ -416,7 +416,7 @@
   },
   "OrderPage": {
     "title": "Booking details",
-    "description": "Add your address and contact details. No account needed. Everything about your order is sent to your email."
+    "description": "Add your address and contact details. Everything about your order is sent to your email."
   },
   "Booking": {
     "formLabel": "Book a cleaning",
@@ -447,7 +447,7 @@
     "totalNote": "Full price, no extra fees. You pay in the next step.",
     "submit": "Continue to payment",
     "pending": "Placing your order…",
-    "submitHint": "Turn on the streaming consent above to carry on.",
+    "submitHint": "Turn on the <link>streaming consent</link> to carry on.",
     "errorSummary": "{count, plural, one {Check the field that is marked.} other {Check the # fields that are marked.}}",
     "errors": {
       "serviceInvalid": "This service cannot be booked. Choose a service from the services list.",
@@ -491,7 +491,7 @@
     "phoneLabel": "Mobile number",
     "phoneHint": "Your HomeKlin cleaner calls this number on the day.",
     "emailLabel": "Email",
-    "emailHint": "We send a code to this email. The code places your order, with no password needed.",
+    "emailHint": "We send a code to this email. The code places your order; no account or password needed.",
     "signedInTitle": "You are booking as",
     "signedInNote": "The order confirmation goes to this account's email.",
     "submitSend": "Send code",
@@ -512,7 +512,11 @@
     "noteLabel": "Note for your cleaner (optional)",
     "noteHint": "For example where the key is or which door to use. Up to 300 characters.",
     "emailNoteTitle": "After paying, check your email.",
-    "emailNoteBody": "Your order details and your HomeKlin cleaner’s profile are sent to your email."
+    "emailNoteBody": "Your order details and your HomeKlin cleaner’s profile are sent to your email.",
+    "choiceTitle": "Service and time",
+    "recapPrice": "Price",
+    "recapDay": "Date",
+    "windowsLoading": "Loading the times for this service…"
   },
   "BookingUnavailable": {
     "serviceTitle": "This service cannot be booked",
@@ -2085,26 +2089,26 @@
     "windowsError": "The free times could not be loaded right now. Reload the page to try again.",
     "windowsEmpty": "Every time in {area} for the next {days, plural, one {# day} other {# days}} is taken. Try again later, or choose another area.",
     "chipsLegend": "Arrival time, {day}",
-    "chipLabel": "{start} to {end} WIB",
-    "chipFullLabel": "{start} to {end} WIB, full",
-    "chipFull": "{start}, full",
     "timeNote": "Times are in Jakarta time (WIB). Full times cannot be chosen.",
     "summaryTitle": "Summary",
     "summaryService": "Service",
     "summaryNoService": "Not chosen yet",
     "summaryArea": "Area",
     "summarySchedule": "Time",
-    "summaryWindow": "{start} to {end} WIB",
+    "summaryWindow": "{start}-{end} WIB",
     "summaryNoWindow": "Not chosen yet",
     "total": "Total",
     "totalNote": "Full price, no extra fees.",
     "submit": "Book now",
     "chooseServiceFirst": "Choose a service first to carry on.",
     "nextNote": "You add your address and email in the next step. No account needed.",
-    "dayShort": "{weekday}, {date}",
     "asideLabel": "Order summary",
-    "liveNoteTitle": "Your HomeKlin cleaner checks in at your address.",
-    "liveNoteBody": "You can watch the work live. Only you and the HomeKlin monitoring team can see it."
+    "servicesLegend": "Choose one service",
+    "serviceMissing": "Choose one of the services to carry on.",
+    "nextNoteSignedIn": "You add your address and phone number in the next step.",
+    "barNoService": "No service yet",
+    "barNoTime": "No time chosen yet",
+    "barWindow": "{start}-{end} WIB"
   },
   "PaymentMethod": {
     "qris": "QRIS",
@@ -2186,15 +2190,7 @@
     },
     "closedBody": "This order can no longer be paid. Choose a new time to book.",
     "bookAgain": "Book again",
-    "sandboxBody": "The Midtrans page that opens is its test mode (Sandbox).",
     "methodsTitle": "Ways to pay",
-    "methodsLead": "You choose one on Midtrans’ page after pressing Pay now.",
-    "methods": {
-      "qris": "Scan the QR code from any bank or e-wallet app.",
-      "bankTransfer": "Transfer to a virtual account number from your bank.",
-      "card": "Visa and Mastercard.",
-      "ewallet": "GoPay or ShopeePay."
-    },
     "orderLabel": "Your order",
     "orderTitle": "Your order",
     "fields": {
@@ -2206,8 +2202,11 @@
     },
     "total": "Total",
     "seeOrder": "See the order details",
-    "emailNoteTitle": "After payment, we send you an email.",
-    "emailNoteBody": "It has your order details and a link to your order page. Your cleaner’s profile follows once assigned."
+    "methodsLine": "QRIS, virtual account, credit or debit card, GoPay or ShopeePay. You choose how on the Midtrans page.",
+    "holdToday": "We hold this time for you until {time} WIB.",
+    "holdDay": "We hold this time for you until {day}, {time} WIB.",
+    "holdBody": "An order that is not paid within 2 hours of being made is cancelled, and its time opens to other customers again. The Midtrans payment page stays valid for 60 minutes once opened.",
+    "afterTitle": "After you pay"
   },
   "PaymentConfirmed": {
     "title": "Payment successful",
@@ -2320,5 +2319,17 @@
     "errorBody": "Something went wrong while reading your orders. Reload the page to try again.",
     "retry": "Reload",
     "open": "Open the recording page"
+  },
+  "TimeChip": {
+    "label": "{start} to {end} WIB",
+    "fullLabel": "{start} to {end} WIB, full",
+    "range": "{start}-{end}",
+    "full": "full"
+  },
+  "BookingTrust": {
+    "line": "Your HomeKlin cleaner checks in at your address, and only you and the HomeKlin monitoring team can watch the stream."
+  },
+  "BookingBar": {
+    "label": "Your choice"
   }
 }

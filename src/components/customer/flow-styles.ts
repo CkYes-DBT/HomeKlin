@@ -13,8 +13,15 @@ export const flowCardTitle = "font-display text-lg font-semibold text-ink";
 /** The page title of a step ("Pilih layanan dan jam"): 30 px on phones, 36 px from tablets. */
 export const flowPageTitle = "font-display text-headline-sm font-semibold text-ink md:text-4xl md:tracking-display";
 
-/** The quiet note panel beside or under the summary (an icon in a white circle on sunken). */
-export const flowNote = "flex items-start gap-3 rounded-lg bg-sunken p-4 text-sm text-ink md:p-5";
+/**
+ * The note panel beside or under the summary: white with a hairline, ink text (14:1), the icon in a
+ * lime-wash circle. Until the booking-flow fixes (2026-11-16) it was sunken grey on the cream page,
+ * which read as a faint footnote.
+ */
+export const flowNote = "flex items-start gap-3 rounded-lg bg-card p-4 text-sm text-ink inset-ring-1 inset-ring-border md:p-5";
+
+/** The icon circle of a note panel. */
+export const flowNoteIcon = "flex size-9 shrink-0 items-center justify-center rounded-full bg-lime-wash text-on-lime-wash";
 
 /** Text fields, the textarea and selects of the order form. */
 export const flowInput =

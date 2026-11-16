@@ -225,7 +225,7 @@ Pass 5a built in D5 (2026-11-15): the booking flow, the home and the orders. Moc
 | Mock element | Built instead | Backend needed |
 |---|---|---|
 | Four services | Every active service, with the search and the type filter of T8 kept above the cards (the mock has neither; dropping them would drop a tested feature); each card keeps its rating and latest reviews (T30) | None |
-| "Pesan sekarang" always on | Disabled until a service is chosen, with "Pilih layanan dulu untuk melanjutkan." under it; without a time, step 2 asks for one | None |
+| "Pesan sekarang" always on | Always on again since the booking-flow fixes (2026-11-16): pressed without a service, "Pilih salah satu layanan untuk melanjutkan." shows by the services and the cursor goes to the first one; without a time, step 2 asks for one | None |
 | Times for the chosen service | Yes (B12); before a service is chosen, the area's times over every service | None |
 | Without JavaScript | The step is one GET form to `/pesan`; switching the day needs JavaScript (the first day's times show) | None |
 
@@ -235,21 +235,41 @@ Pass 5a built in D5 (2026-11-15): the booking flow, the home and the orders. Moc
 |---|---|---|
 | "Sekali / Berulang" (recurring bookings) | Left out: not needed (user, 2026-11-16) | None |
 | "Nama lengkap" field | Left out: `book_slot` takes no name; a guest's account gets its name later on the account page | A name argument on `book_slot` or on the code sign-in |
-| Service shown only in the summary with "Ubah" | The "Layanan" card with its select stays (the landing's links and the old `/book` address open step 2 directly), and "Ubah" in the summary leads back to step 1 with the choice | None |
+| Service shown only in the summary with "Ubah" | Since 2026-11-16: a valid choice from step 1 shows once, as the read-only card "Layanan dan jadwal" (see below); the "Layanan" select and the "Area dan jadwal" pickers show only when the address lacks a valid choice (the landing's links, a time that is gone) | None |
 | Date as a calendar input | A select of the days that have free times, then that day's chips; the area select stays in the same card ("Area dan jadwal") | None |
 | Consent as a checkbox | The switch of T9 (the same field `consent`) | None |
 | "Lanjut ke pembayaran" for everyone | A signed-in customer: "Lanjut ke pembayaran". A guest: "Kirim kode" first, then "Lanjut ke pembayaran" on the code step (the emailed code places the order and makes the account) | None |
 | "... dikirim ke nadia.putri@email.id" | The note without the address (a guest types it below; a signed-in customer sees it on the form) | None |
-| Times for the chosen service | The service in the address decides the windows (B12); changing the service on step 2 keeps them, and booking checks the agency again | None |
+| Times for the chosen service | The service in the address decides the windows (B12); since 2026-11-16 a new service on step 2's select reads the page again with it, so its own times follow; booking checks the agency again | None |
 
 ### Step 3, payment (`Customer-Payment`, `Phone-Payment`), page `/orders?booked=<id>`
 
 | Mock element | Built instead | Backend needed |
 |---|---|---|
-| Choosing QRIS, virtual account or card on the page | The ways to pay as information ("Cara membayar"); the choice is made on Midtrans' Snap page | `enabled_payments` passed to Snap (B8, optional, not built) |
+| Choosing QRIS, virtual account or card on the page | Since 2026-11-16 one plain line in the order card ("Cara membayar: QRIS, virtual account, ...; Anda memilih caranya di halaman Midtrans"), so nothing looks like a choice; the choice is made on Midtrans' Snap page | `enabled_payments` passed to Snap (B8, optional, not built) |
 | "Kembali ke detail pemesanan" | "Lihat detail pesanan" (the order is made already; step 2 cannot edit it), and "Kembali ke daftar pesanan" above the steps | Editing an unpaid order |
 | "Email" in the summary | Order number, service, time, area and address | None |
 | Not in the mock | A failed or cancelled order shows its status here with "Pesan lagi" instead of the button; back from Midtrans, "Pembayaran sedang dikonfirmasi" until the signed notification arrives | None |
+
+### Booking-flow fixes after the Impeccable critique (2026-11-16), steps 1 to 3
+
+The user chose to fix the critique's five priority issues and allowed departures from the mocks. Each departure:
+
+| Mock element | Built instead | Backend needed |
+|---|---|---|
+| Step 2 "Layanan" card with the service, and the area and date pickers, also when step 1 chose them | One read-only card "Layanan dan jadwal" (picture, name, duration, price, area, day and time range) with "Ubah" back to step 1, which opens with the same choice; the pickers stay for an address without a valid choice | None |
+| Nothing kept when going back a step | "Ubah" keeps the typed address, note, phone and guest email in the tab's sessionStorage and fills them in again when step 2 opens (read once, then removed; never the consent, never in the address or on the server) | None |
+| Step 1 chips with the start time only ("10.00", "15.00, penuh"); step 2 chips as ranges, full times left out | One chip on both steps: the range "10.00-12.00"; a full time shown disabled with "penuh" written under it, also a time taken while step 2 was open | None |
+| Service select options "Pembersihan Rutin · Rp 85.000" | Names only (the price was cut off by the arrow at 360 px); the price shows under the select with the service's picture | None |
+| Day select "Besok, Senin 16 November" | Short day names ("Besok, Sen 16 Nov", "Tomorrow, Mon 16 Nov") and a wider select, so nothing is cut off at 360 px or in English | None |
+| Step 2 button disabled until the consent is on, hint "... di atas" | The button always works; without the consent the switch shows "Nyalakan persetujuan siaran untuk memesan." and gets the cursor (the server's check, as before). The hint under the button says "Nyalakan persetujuan siaran untuk melanjutkan." with a link to the switch | None |
+| Order of step 2's cards: service, area and time, address, contact, live stream | Choice, address, live stream (with the consent), contact: the consent sits next to the home it is about | None |
+| Not in the mocks | On phones (below 768 px) steps 1 and 2 have a bar above the bottom menu with the service, the time, the price and the step's button; it steps aside while the step's own button is on screen | None |
+| "Petugas HomeKlin check-in di alamat Anda" note under the summary (step 1) | One fact line under the title of steps 1 and 2: "Petugas HomeKlin check-in di alamat Anda, dan hanya Anda serta tim pemantau HomeKlin yang dapat menonton siarannya." The critique's wording ("hanya Anda yang menonton") was not used: the monitoring team can watch too | None |
+| Grey note panels (sunken) | White panels with a hairline and a lime-wash icon, ink text | None |
+| "Tidak perlu membuat akun" on steps 1 and 2 for everyone | Only for a guest: the step 1 note for a signed-in customer reads "Alamat dan nomor HP Anda diisi di langkah berikutnya."; step 2's title text no longer says it (the guest's email hint does) | None |
+| Step 3: four method cards, a sandbox banner above, "Bayar sekarang" forest | The order card holds until when the time is held ("Jadwal ini kami simpan sampai pukul 14.20 WIB", 2 hours after ordering, and that the Midtrans page lasts 60 minutes), the simulation note, the lime "Bayar sekarang" and the methods line; the main column says "Setelah membayar" in the confirmation's three steps; the email note beside it is gone (it is step 1 of that list) | None. The hold is enforced lazily: `release_unpaid_orders()` runs when someone books and in the daily cron, so an unpaid order can stay "Menunggu pembayaran" past the time shown until then |
+| Steps on two lines at 360 px ("Bayar" alone) | One line down to 360 px, "Langkah 2 dari 3" under it | None |
 
 ### Confirmation (`Customer-Confirmed`, `Phone-Confirmed`), the same page once paid
 

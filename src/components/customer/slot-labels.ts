@@ -9,6 +9,8 @@ import { formatJakartaDay, formatJakartaTime, type SlotDay } from "@/lib/catalog
 
 export type SlotLabels = {
   day: (day: Pick<SlotDay, "date" | "relative">) => string;
+  /** The same day short ("Besok, Sen 16 Nov"), for the day selects of steps 1 and 2. */
+  dayShort: (day: Pick<SlotDay, "date" | "relative">) => string;
   window: (slot: FreeSlot) => string;
   time: (iso: string) => string;
 };
@@ -16,13 +18,15 @@ export type SlotLabels = {
 export async function getSlotLabels(locale: Locale): Promise<SlotLabels> {
   const t = await getTranslations({ locale, namespace: "FreeWindows" });
   const time = (iso: string) => formatJakartaTime(iso, locale);
+  const dayWith = (style: "long" | "short") => (day: Pick<SlotDay, "date" | "relative">) => {
+    const parts = formatJakartaDay(day.date, locale, style);
+    if (day.relative === "today") return t("today", parts);
+    if (day.relative === "tomorrow") return t("tomorrow", parts);
+    return t("day", parts);
+  };
   return {
-    day: (day) => {
-      const parts = formatJakartaDay(day.date, locale);
-      if (day.relative === "today") return t("today", parts);
-      if (day.relative === "tomorrow") return t("tomorrow", parts);
-      return t("day", parts);
-    },
+    day: dayWith("long"),
+    dayShort: dayWith("short"),
     window: (slot) => t("window", { start: time(slot.startsAt), end: time(slot.endsAt) }),
     time,
   };

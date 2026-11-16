@@ -4,7 +4,7 @@ import { CircleAlert, LoaderCircle, Lock, ShieldCheck } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useActionState, useState } from "react";
 import { startPayment } from "@/lib/payment/actions";
-import { flowPrimaryButton } from "./flow-styles";
+import { flowAccentButton, flowPrimaryButton } from "./flow-styles";
 
 // "Bayar sekarang" on the order confirmation (T10). The form sends only the order's id and the page's
 // language; startPayment checks the signed-in customer and reads the price from their own order on the
@@ -14,8 +14,9 @@ import { flowPrimaryButton } from "./flow-styles";
 // Sources: node_modules/next/dist/docs/01-app/02-guides/forms.md ("Validation errors", "Pending
 // states"), node_modules/next/dist/docs/01-app/03-api-reference/04-functions/redirect.md (absolute
 // URLs) and https://react.dev/reference/react/useActionState
-// The payment step (D5) says it is a simulation in its own banner, so it leaves that line out here.
-export function PaymentForm({ orderId, sandboxNote = true }: { orderId: string; sandboxNote?: boolean }) {
+// On the payment step (step 3) the button is the lime pill, the strongest in the flow: paying is the
+// one thing left to do there (the booking-flow fixes, 2026-11-16). Elsewhere it stays forest.
+export function PaymentForm({ orderId, sandboxNote = true, accent = false }: { orderId: string; sandboxNote?: boolean; accent?: boolean }) {
   const t = useTranslations("Payment");
   const locale = useLocale();
   const [state, action, pending] = useActionState(startPayment, null);
@@ -48,7 +49,11 @@ export function PaymentForm({ orderId, sandboxNote = true }: { orderId: string; 
       <button
         type="submit"
         disabled={pending}
-        className={`${flowPrimaryButton} ${pending ? "cursor-progress disabled:bg-primary-container disabled:text-on-primary" : ""}`}
+        className={
+          accent
+            ? `${flowAccentButton} w-full ${pending ? "cursor-progress disabled:bg-lime disabled:text-on-lime disabled:brightness-95" : ""}`
+            : `${flowPrimaryButton} ${pending ? "cursor-progress disabled:bg-primary-container disabled:text-on-primary" : ""}`
+        }
       >
         {pending ? (
           <LoaderCircle className="size-5 shrink-0 animate-spin motion-reduce:animate-none" aria-hidden="true" />

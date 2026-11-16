@@ -6,19 +6,21 @@ import { bookingSteps } from "./booking-steps";
 // Customer-Confirmed): Layanan, Pesan, Bayar, then "Langkah 2 dari 3" (or "Semua langkah selesai").
 // The current step is the forest circle with its number and aria-current="step"; a finished one shows a
 // check on lime-wash and says "selesai" to screen readers, so the state never rests on colour alone.
+// The three steps stay on one line down to 360 px (shorter connectors on phones); "Langkah 2 dari 3"
+// moves under them when there is no room beside.
 export function BookingStepper({ current }: { current: 1 | 2 | 3 | "done" }) {
   const t = useTranslations("BookingSteps");
   const steps = bookingSteps(current);
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-      <ol aria-label={t("label")} className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <ol aria-label={t("label")} className="flex items-center gap-x-2 sm:gap-x-3">
         {steps.map((step, index) => (
           <li
             key={step.key}
             aria-current={step.state === "current" ? "step" : undefined}
-            className="flex items-center gap-3"
+            className="flex shrink-0 items-center gap-2 sm:gap-3"
           >
-            {index > 0 ? <span aria-hidden="true" className="h-0.5 w-5 rounded-full bg-border-control/50 sm:w-7" /> : null}
+            {index > 0 ? <span aria-hidden="true" className="h-0.5 w-3 rounded-full bg-border-control/50 sm:w-7" /> : null}
             <span className="flex items-center gap-2">
               <span
                 aria-hidden="true"
@@ -32,7 +34,7 @@ export function BookingStepper({ current }: { current: 1 | 2 | 3 | "done" }) {
               >
                 {step.state === "done" ? <Check className="size-3.5" strokeWidth={3} /> : step.number}
               </span>
-              <span className={`text-sm ${step.state === "current" ? "font-semibold text-ink" : step.state === "done" ? "text-ink" : "text-ink-muted"}`}>
+              <span className={`text-sm whitespace-nowrap ${step.state === "current" ? "font-semibold text-ink" : step.state === "done" ? "text-ink" : "text-ink-muted"}`}>
                 {t(`steps.${step.key}`)}
                 {step.state === "done" ? <span className="sr-only">{t("doneSuffix")}</span> : null}
               </span>
