@@ -341,6 +341,28 @@
   padding-bottom: calc(var(--spacing-bottom-nav) + env(safe-area-inset-bottom) + var(--spacing-gutter));
 }
 
+/* Keeps page content clear of the bottom bar and of the floating language switch above it. */
+@utility pb-clear-float {
+  padding-bottom: calc(
+    var(--spacing-bottom-nav) + env(safe-area-inset-bottom) + var(--spacing-gutter) + var(--spacing-touch) +
+      0.75rem
+  );
+}
+
+/*
+ * The floating language switch's place: fixed to the bottom-left, above the phone's bottom bar (the
+ * bar's height and the home indicator inset, plus 12 px); from 768 px, where the bar is gone, 16 px above
+ * the bottom edge (plus the inset). Its left edge keeps the side gutter or a landscape notch inset.
+ */
+@utility float-corner {
+  position: fixed;
+  left: max(var(--spacing-gutter), env(safe-area-inset-left));
+  bottom: calc(var(--spacing-bottom-nav) + env(safe-area-inset-bottom) + 0.75rem);
+  @media (width >= 48rem) {
+    bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,

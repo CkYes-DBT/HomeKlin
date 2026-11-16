@@ -12,12 +12,18 @@ type AccountSlotProps = {
    * Narrower, the avatar stands alone (44 px, narrower than "Masuk", so a bar that fits "Masuk" fits it).
    */
   showName?: boolean;
+  /**
+   * chip: a signed-in user gets their chip. hidden: nothing for them, because the page's navigation
+   * already has their account menu (the customer app bar); "Masuk" still shows for a visitor.
+   */
+  signedIn?: "chip" | "hidden";
 };
 
-// Where the chip leads: the account page for the roles that have one (it holds the name and the
-// sign-out button), the dashboard for staff (their sidebar holds both).
+// Where the chip leads: the cleaner's account page (it holds the name and the sign-out button), the
+// customer's home (their account is a menu in the app navigation, not a page), the dashboard for staff
+// (their sidebar holds the name and the sign-out button).
 const destinations = {
-  customer: { href: "/account", label: "account" },
+  customer: { href: "/home", label: "dashboard" },
   cleaner: { href: "/cleaner/account", label: "account" },
   agency: { href: "/agency", label: "dashboard" },
   admin: { href: "/admin/monitor", label: "dashboard" },
@@ -39,7 +45,7 @@ const tones = {
 // for a signed-in user a chip with their initials (and first name where it fits) that opens their
 // account. It reads the session, so it always sits inside <Suspense>: the bar around it stays in the
 // prerendered shell and this part streams in.
-export async function AccountSlot({ palette = "evergreen", showName = false }: AccountSlotProps) {
+export async function AccountSlot({ palette = "evergreen", showName = false, signedIn = "chip" }: AccountSlotProps) {
   const [user, t] = await Promise.all([getCurrentUser(), getTranslations("AccountChip")]);
   const tone = tones[palette];
 
@@ -54,6 +60,7 @@ export async function AccountSlot({ palette = "evergreen", showName = false }: A
     );
   }
 
+  if (signedIn === "hidden") return null;
   const { href, label } = destinations[user.role];
   const name = user.fullName.trim();
   const firstName = firstNameOf(name);

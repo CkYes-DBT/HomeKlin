@@ -88,16 +88,17 @@ test.describe("switching the language on the landing page", () => {
 });
 
 test.describe("the customer app in English", () => {
-  test("switches from the app bar and stays in English while navigating", async ({ page }) => {
+  test("switches from the floating switch and stays in English while navigating", async ({ page }) => {
     await page.goto("/home");
     await switchTo(page, "en").click();
 
     await expect(page).toHaveURL("/en/home");
     await expect(page.getByRole("heading", { level: 1, name: "Book a home cleaning" })).toBeVisible();
     const nav = page.getByRole("navigation", { name: "Main navigation" });
-    for (const label of ["Home", "Services", "Orders", "Help", "Account"]) {
+    for (const label of ["Home", "Services", "Orders", "Help"]) {
       await expect(nav.getByRole("link", { name: label, exact: true })).toBeVisible();
     }
+    await expect(nav.getByRole("button", { name: "Account", exact: true })).toBeVisible();
 
     await nav.getByRole("link", { name: "Services", exact: true }).click();
     await expect(page).toHaveURL("/en/services");

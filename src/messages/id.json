@@ -202,8 +202,7 @@
       "home": "Beranda",
       "services": "Layanan",
       "orders": "Pesanan",
-      "helpCenter": "Pusat bantuan",
-      "account": "Akun"
+      "helpCenter": "Pusat bantuan"
     },
     "preview": "Situs pratinjau proyek universitas. Pembayaran hanya simulasi, dan pesanan contoh di situs ini bukan data nyata.",
     "copyright": "© 2026 HomeKlin"
@@ -406,10 +405,6 @@
     "read": "Terbaca",
     "sent": "Terkirim",
     "guestPolling": "Diperbarui otomatis setiap 10 detik"
-  },
-  "AccountPage": {
-    "title": "Akun",
-    "signInNote": "Anda masuk dengan kode yang kami kirim ke email Anda. Tidak perlu kata sandi."
   },
   "AreaPicker": {
     "label": "Area layanan"

@@ -108,7 +108,10 @@ test.describe("signing in", () => {
     await page.goto("/login");
     await fillLogin(page, customer);
     await expect(page).toHaveURL("/home");
-    await expect(page.getByRole("banner").getByRole("link", { name: "Uji Pelanggan, akun Anda" })).toBeVisible();
+    // The account menu (not a chip in the bar) names the customer.
+    await page.getByRole("navigation", { name: "Navigasi utama" }).getByRole("button", { name: "Akun" }).click();
+    await expect(page.getByRole("menu").getByText("Uji Pelanggan", { exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
 
     // A sub-page of the admin section: the customer ends up on their own home, and the page they asked
     // for never reaches the browser, not even in the HTML that comes before the redirect.
@@ -156,13 +159,9 @@ test.describe("signing out", () => {
     await fillLogin(page, customer);
     await expect(page).toHaveURL("/home");
 
-    await page.getByRole("banner").getByRole("link", { name: "Uji Pelanggan, akun Anda" }).click();
-    await expect(page).toHaveURL("/account");
-    await expect(page.getByRole("heading", { level: 1, name: "Akun" })).toBeVisible();
-    // The home just left stays in the page, hidden (Next.js keeps visited pages), and it names the
-    // customer too since D5; the account page's own name is the visible one.
-    await expect(page.getByRole("main").getByText("Uji Pelanggan", { exact: true }).filter({ visible: true })).toBeVisible();
-    await page.getByRole("button", { name: "Keluar" }).click();
+    // Signing out is in the account menu of the navigation, with no page of its own (e2e/account-menu.spec.ts).
+    await page.getByRole("navigation", { name: "Navigasi utama" }).getByRole("button", { name: "Akun" }).click();
+    await page.getByRole("menuitem", { name: "Keluar" }).click();
 
     await expect(page).toHaveURL("/");
     await expect(
@@ -195,9 +194,8 @@ test.describe("in English", () => {
     await page.getByRole("button", { name: "Log in", exact: true }).click();
     await expect(page).toHaveURL("/en/home");
     await expect(page.getByRole("heading", { level: 1, name: "Your orders" })).toBeVisible();
-    await expect(page.getByRole("banner").getByRole("link", { name: "Uji Pelanggan, your account" })).toHaveAttribute(
-      "href",
-      "/en/account",
-    );
+    await page.getByRole("navigation", { name: "Main navigation" }).getByRole("button", { name: "Account" }).click();
+    await expect(page.getByRole("menu").getByText("Uji Pelanggan", { exact: true })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Log out" })).toBeVisible();
   });
 });

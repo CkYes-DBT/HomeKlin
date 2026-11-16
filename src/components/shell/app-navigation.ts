@@ -6,11 +6,13 @@ import {
   House,
   UserRound,
 } from "lucide-react";
-import type { AppNavKey, MessageKeyIn, Navigation } from "./navigation";
+import type { AppNavigationEntry, AppNavKey, MessageKeyIn } from "./navigation";
 
 // Customer and cleaner menus. Kept apart from the back-office menus so the pages customers
 // download never carry agency menu labels or routes (markdown/PRODUCT.md principle 6).
-// The first item of each list is its home: the wordmark links there.
+// The first item of each list is its home: the wordmark links there. The customer's "Akun" is not a
+// page: `account` is the menu that opens the signed-in name and "Keluar" (account-menu.tsx), shown
+// after the section links. The cleaner's "Akun" stays a page, so it is a plain item.
 // Labels: the AppNavigation namespace of src/messages/*.json, which the app shells send to the browser.
 export const appNavigation = {
   customer: {
@@ -20,8 +22,8 @@ export const appNavigation = {
       { href: "/services", labelKey: "customer.services", icon: BrushCleaning },
       { href: "/orders", labelKey: "customer.orders", icon: ClipboardList },
       { href: "/support", labelKey: "customer.support", icon: CircleQuestionMark },
-      { href: "/account", labelKey: "customer.account", icon: UserRound },
     ],
+    account: { labelKey: "customer.account", icon: UserRound },
   },
   cleaner: {
     labelKey: "cleaner.label",
@@ -31,4 +33,4 @@ export const appNavigation = {
       { href: "/cleaner/account", labelKey: "cleaner.account", icon: UserRound },
     ],
   },
-} satisfies Record<AppNavKey, Navigation<MessageKeyIn<"AppNavigation">>>;
+} satisfies Record<AppNavKey, AppNavigationEntry<MessageKeyIn<"AppNavigation">>>;

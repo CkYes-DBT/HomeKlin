@@ -140,15 +140,12 @@ for (const device of ["phone", "desktop"] as const) {
     const { context, page } = await newPage(browser, device);
     await signIn(page, customer);
     await expect(page).toHaveURL("/home");
-    // The account chip streams in just after the rest of the page.
-    await expect(page.getByRole("banner").getByRole("link", { name: "Uji Pelanggan, akun Anda" })).toBeVisible();
+    // The account menu streams in just after the rest of the page.
+    await expect(page.getByRole("button", { name: "Akun" }).filter({ visible: true })).toBeEnabled();
     for (const width of widths[device]) await shoot(page, "home-signed-in", width, mobile);
-    await page.goto("/account");
-    await expect(page.getByRole("button", { name: "Keluar" })).toBeVisible();
-    for (const width of widths[device]) await shoot(page, "account-signed-in", width, mobile);
     if (!mobile) {
       await page.goto("/");
-      await expect(page.getByRole("banner").getByRole("link", { name: "Uji Pelanggan, akun Anda" })).toBeVisible();
+      await expect(page.getByRole("banner").getByRole("link", { name: "Uji Pelanggan, dasbor Anda" })).toBeVisible();
       for (const width of widths[device]) await shoot(page, "landing-signed-in", width, mobile);
     }
     await context.close();

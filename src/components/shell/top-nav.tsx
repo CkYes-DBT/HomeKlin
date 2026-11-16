@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { appNavigation } from "./app-navigation";
 import { isActivePath } from "./is-active-path";
@@ -10,6 +11,8 @@ import type { AppNavKey } from "./navigation";
 type TopNavProps = {
   nav: AppNavKey;
   tone?: AppTone;
+  /** The customer's account menu, after the section links (it needs the session, so the app bar sends it). */
+  account?: ReactNode;
 };
 
 const tones: Record<AppTone, string> = {
@@ -22,7 +25,7 @@ const tones: Record<AppTone, string> = {
 // From tablet width up, the bottom bar's sections move into the app bar (app-header.tsx). Between
 // 768 and 1023 px the icons step aside so the labels and the language switch share one row; from
 // 1024 px they come back. The labels carry the meaning either way (the icons are decorative).
-export function TopNav({ nav, tone = "default" }: TopNavProps) {
+export function TopNav({ nav, tone = "default", account }: TopNavProps) {
   const t = useTranslations("AppNavigation");
   const pathname = usePathname();
   const { labelKey, items } = appNavigation[nav];
@@ -45,6 +48,7 @@ export function TopNav({ nav, tone = "default" }: TopNavProps) {
             </li>
           );
         })}
+        {account ? <li>{account}</li> : null}
       </ul>
     </nav>
   );

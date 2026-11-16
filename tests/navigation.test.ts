@@ -73,24 +73,33 @@ describe("isActivePath", () => {
 });
 
 describe("navigation", () => {
-  it("gives the customer the five agreed sections, in order, in Indonesian", () => {
+  it("gives the customer four section links, in order, in Indonesian", () => {
     expect(items("customer", "id")).toEqual([
       ["Beranda", "/home"],
       ["Layanan", "/services"],
       ["Pesanan", "/orders"],
       ["Bantuan", "/support"],
-      ["Akun", "/account"],
     ]);
   });
 
-  it("gives the customer the same five sections in English", () => {
+  it("gives the customer the same four section links in English", () => {
     expect(items("customer", "en")).toEqual([
       ["Home", "/home"],
       ["Services", "/services"],
       ["Orders", "/orders"],
       ["Help", "/support"],
-      ["Account", "/account"],
     ]);
+  });
+
+  // The fifth customer item is not a page: "Akun" opens a menu with the name and the way out, so the
+  // customer has no account page to link to (src/components/shell/account-menu.tsx).
+  it("gives the customer an account menu as the fifth item, with no address of its own", () => {
+    const account = appNavigation.customer.account;
+    expect(message("id", "AppNavigation", account.labelKey)).toBe("Akun");
+    expect(message("en", "AppNavigation", account.labelKey)).toBe("Account");
+    expect(account).not.toHaveProperty("href");
+    const hrefs = appNavigation.customer.items.map((item) => item.href);
+    expect(hrefs).not.toContain("/account");
   });
 
   it("never names or links a partner agency in the customer navigation, in either language", () => {

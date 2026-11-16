@@ -44,9 +44,14 @@ describe("rolesFor", () => {
     }
   });
 
+  // The customer's account page is gone (the nav's account menu replaced it); next.config.ts redirects
+  // the old address, so it must not send a visitor to sign in first.
+  it("leaves the retired /account address public, because it only redirects", () => {
+    expect(rolesFor("/account")).toBeNull();
+  });
+
   it("gives each protected section to one role, including its sub-pages", () => {
     expect(rolesFor("/orders")).toEqual(["customer"]);
-    expect(rolesFor("/account")).toEqual(["customer"]);
     expect(rolesFor("/cleaner")).toEqual(["cleaner"]);
     expect(rolesFor("/cleaner/account")).toEqual(["cleaner"]);
     expect(rolesFor("/cleaner/jobs/HK-1042")).toEqual(["cleaner"]);

@@ -1,9 +1,10 @@
 import { expect, test, type Locator } from "@playwright/test";
-import { signedInAs, signedOut } from "./setup/auth-state";
+import { signedInAs } from "./setup/auth-state";
 
 // T4 on a 360 px phone: the language switch fits the existing bars without a second row
 // (markdown/design.md, Layout). The landing header keeps one 64 px row with the wordmark, a compact
-// link to the other language and "Pesan sekarang"; the app bars carry the full ID | EN toggle; the
+// link to the other language and "Pesan sekarang"; the cleaner app bar carries the full ID | EN toggle (the
+// customer pages have a floating one, e2e/language-floating.spec.ts); the
 // back office puts it in its menu, under the sections.
 // Public pages are checked signed out; the cleaner app and the back office by a signed-in user with
 // their role (T5).
@@ -54,8 +55,6 @@ for (const { path, cta, other, group } of [
 }
 
 for (const { path, group, role, session } of [
-  { path: "/home", group: "Bahasa", role: null, session: signedOut },
-  { path: "/en/home", group: "Language", role: null, session: signedOut },
   { path: "/cleaner", group: "Bahasa", role: "Petugas", session: signedInAs.cleaner },
   { path: "/en/cleaner", group: "Language", role: "Cleaner", session: signedInAs.cleaner },
 ]) {

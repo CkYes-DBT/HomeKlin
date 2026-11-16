@@ -11,12 +11,13 @@ type SignOutButtonProps = {
   /**
    * button: the outlined pill (every shell so far). linkOnDark: an underlined text button on the
    * redesign's dark band (the admin sidebar, Phase 13), still a 44 px target. outline: the redesign's
-   * 52 px outlined pill on cream (the cleaner's account page, D4).
+   * 52 px outlined pill on cream (the cleaner's account page, D4). menu: a row of the customer's
+   * account menu (shell/account-menu.tsx), a 44 px menu item.
    */
   look?: Look;
 };
 
-type Look = "button" | "linkOnDark" | "outline";
+type Look = "button" | "linkOnDark" | "outline" | "menu";
 
 const looks: Record<Look, string> = {
   button:
@@ -28,6 +29,8 @@ const looks: Record<Look, string> = {
     "relative -mx-1 inline-flex min-w-touch items-center before:absolute before:inset-x-0 before:-top-2 before:-bottom-4 before:content-[''] gap-1.5 rounded-sm px-1 text-sm font-medium whitespace-nowrap text-on-band-muted underline decoration-1 underline-offset-4 transition-colors duration-150 ease-out-quart hover:text-on-band active:text-lime disabled:cursor-progress disabled:no-underline",
   outline:
     "inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full bg-card px-6 text-base font-semibold whitespace-nowrap text-ink inset-ring-[1.5px] inset-ring-outline transition-[background-color,transform] duration-150 ease-out-quart hover:bg-sunken active:scale-[0.98] active:bg-lime-wash motion-reduce:active:scale-100 disabled:cursor-progress disabled:bg-sunken disabled:text-ink-muted disabled:active:scale-100",
+  menu:
+    "flex min-h-touch w-full items-center gap-3 rounded-md px-3 text-sm font-semibold whitespace-nowrap text-ink transition-colors duration-150 ease-out-quart hover:bg-sunken active:bg-lime-wash disabled:cursor-progress disabled:text-ink-muted",
 };
 
 // Signing out (T5): a form that posts to the signOut Server Action, which ends the session in this
@@ -37,7 +40,8 @@ const looks: Record<Look, string> = {
 export function SignOutButton({ className = "", look = "button" }: SignOutButtonProps) {
   const locale = useLocale();
   return (
-    <form action={signOut} className={className}>
+    // In a menu the form must not sit between the menu and its item, so it is hidden from the roles.
+    <form action={signOut} className={className} role={look === "menu" ? "none" : undefined}>
       <input type="hidden" name="locale" value={locale} />
       <SignOutSubmit look={look} />
     </form>
@@ -54,7 +58,12 @@ function SignOutSubmit({ look }: { look: Look }) {
     <LogOut className="size-4.5 shrink-0" aria-hidden="true" />
   ) : null;
   return (
-    <button type="submit" disabled={pending} className={looks[look]}>
+    <button
+      type="submit"
+      role={look === "menu" ? "menuitem" : undefined}
+      disabled={pending}
+      className={looks[look]}
+    >
       {icon}
       {pending ? t("pending") : t("submit")}
     </button>

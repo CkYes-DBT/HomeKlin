@@ -14,9 +14,11 @@ test.describe("customer navigation on desktop", () => {
     const box = await nav.boundingBox();
     expect(box?.y).toBeLessThan(80);
 
-    for (const label of ["Beranda", "Layanan", "Pesanan", "Bantuan", "Akun"]) {
+    for (const label of ["Beranda", "Layanan", "Pesanan", "Bantuan"]) {
       await expect(nav.getByRole("link", { name: label, exact: true })).toBeVisible();
     }
+    // Akun is a menu button, not a page (e2e/account-menu.spec.ts).
+    await expect(nav.getByRole("button", { name: "Akun", exact: true })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Beranda" })).toHaveAttribute("aria-current", "page");
   });
 

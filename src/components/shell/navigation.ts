@@ -16,6 +16,12 @@ export type Navigation<LabelKey extends string = string> = {
   labelKey: LabelKey;
   items: readonly NavItem<LabelKey>[];
 };
+/** A navigation entry that is not a page but a menu: the customer's "Akun", which opens the name and the log-out action. */
+export type AccountMenuItem<LabelKey extends string = string> = { labelKey: LabelKey; icon: LucideIcon };
+/** The customer and cleaner menus: the section links, and (customer only) the account menu after them. */
+export type AppNavigationEntry<LabelKey extends string = string> = Navigation<LabelKey> & {
+  account?: AccountMenuItem<LabelKey>;
+};
 export type AppNavKey = "customer" | "cleaner";
 export type BackOfficeNavKey = "agency" | "admin" | "owner";
 export type NavKey = AppNavKey | BackOfficeNavKey;

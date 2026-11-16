@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 import { Suspense } from "react";
+import { AccountMenuSlot } from "@/components/auth/account-menu-slot";
 import { AccountSlot } from "@/components/auth/account-slot";
 import { Wordmark } from "@/components/brand/wordmark";
 import { Link } from "@/i18n/navigation";
@@ -37,7 +38,9 @@ const barWidth: Record<AppNavKey, string> = {
 // The customer and cleaner app bar. On phones a slim 56 px bar: the wordmark (home link) on the left,
 // the language switch and the account corner on the right, and the sections stay in the bottom bar; it
 // scrolls away so the small screen keeps its height. From 768 px it becomes the 64 px sticky top bar
-// with the sections between the brand and the switch. The forest tone (the cleaner app, D4, after the
+// with the sections between the brand and the switch. The customer bar has no language switch: it is a
+// floating control fixed to the bottom-left of every customer page (floating-language-switch.tsx), and
+// the customer's "Akun" is a menu in the sections (account-menu.tsx), so a signed-in customer has no chip. The forest tone (the cleaner app, D4, after the
 // Cleaner-* mocks) draws the bar straight on the cream page with no edge, the forest wordmark tile and
 // the redesign's switch, chip and section pills. The account corner reads the session, so it
 // streams in behind <Suspense> while the rest of the bar stays prerendered.
@@ -59,11 +62,15 @@ export function AppHeader({ nav, roleLabel, tone = "default" }: AppHeaderProps) 
           {roleLabel ? <RoleBadge label={roleLabel} /> : null}
         </span>
         <div className="flex items-center gap-2 md:gap-4">
-          <TopNav nav={nav} tone={tone} />
-          <LanguageSwitch palette={palette} />
+          <TopNav
+            nav={nav}
+            tone={tone}
+            account={nav === "customer" ? <AccountMenuSlot variant="top" tone={tone} /> : undefined}
+          />
+          {nav === "customer" ? null : <LanguageSwitch palette={palette} />}
           <div className={accountSlotPlacement[nav]}>
             <Suspense fallback={null}>
-              <AccountSlot palette={palette} />
+              <AccountSlot palette={palette} signedIn={nav === "customer" ? "hidden" : "chip"} />
             </Suspense>
           </div>
         </div>

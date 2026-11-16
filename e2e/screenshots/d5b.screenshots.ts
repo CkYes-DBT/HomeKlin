@@ -138,11 +138,10 @@ test("live, recordings, help and chat", async ({ browser }) => {
   await shootAll(browser, "chat-guest", `/support?ticket=${ticketId}`, guestChat);
 });
 
-test("the order link, the account, the landing page and the emails", async ({ browser }) => {
+test("the order link, the landing page and the emails", async ({ browser }) => {
   test.setTimeout(420_000);
   await shootAll(browser, "order-link", `/o/${linkToken}`, guest);
   await shootAll(browser, "order-link-invalid", "/o/tautan-tidak-berlaku", guest);
-  await shootAll(browser, "account", "/account", customer);
   await shootAll(browser, "landing", "/", guest);
 
   const site = "https://home-klin.vercel.app";

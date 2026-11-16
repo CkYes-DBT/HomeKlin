@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { appNavigation } from "./app-navigation";
 import { isActivePath } from "./is-active-path";
@@ -10,11 +11,15 @@ import type { AppNavKey } from "./navigation";
 type BottomNavProps = {
   nav: AppNavKey;
   tone?: AppTone;
+  /** The customer's account menu, after the section links (it needs the session, so the shell sends it). */
+  account?: ReactNode;
 };
 
 // default: the T3b bar, the current item's icon in a brand-100 pill. forest: the redesign (the cleaner
 // app, D4, markdown/design.md "Bottom navigation"): a white bar, the current item's icon and label
-// together in a lime-wash pill with a dark-green label. The whole column stays the touch target.
+// together in a lime-wash pill with a dark-green label. The whole column stays the touch target. The
+// columns may be narrower than their pill (min-w-0): five of them are 66 px each at 360 px, and the pill
+// (68 px) then overhangs its column by 1 px a side instead of pushing the last column off the screen.
 const tones = {
   default: {
     bar: "border-t border-border bg-surface",
@@ -31,7 +36,7 @@ const tones = {
 // Phone navigation: fixed to the bottom, labels always visible, 44 px+ targets, clears the home indicator.
 // usePathname comes without the language prefix ("/home" on /en/home), so the current item matches
 // in both languages.
-export function BottomNav({ nav, tone = "default" }: BottomNavProps) {
+export function BottomNav({ nav, tone = "default", account }: BottomNavProps) {
   const t = useTranslations("AppNavigation");
   const pathname = usePathname();
   const { labelKey, items } = appNavigation[nav];
@@ -48,7 +53,7 @@ export function BottomNav({ nav, tone = "default" }: BottomNavProps) {
           const active = isActivePath(pathname, item);
           const Icon = item.icon;
           return (
-            <li key={item.href} className="flex-1">
+            <li key={item.href} className="min-w-0 flex-1">
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
@@ -65,6 +70,7 @@ export function BottomNav({ nav, tone = "default" }: BottomNavProps) {
             </li>
           );
         })}
+        {account ? <li className="min-w-0 flex-1">{account}</li> : null}
       </ul>
     </nav>
   );

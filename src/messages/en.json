@@ -202,8 +202,7 @@
       "home": "Home",
       "services": "Services",
       "orders": "Orders",
-      "helpCenter": "Help center",
-      "account": "Account"
+      "helpCenter": "Help center"
     },
     "preview": "A university project preview site. Payments are simulated, and the sample order on this site is not real data.",
     "copyright": "© 2026 HomeKlin"
@@ -406,10 +405,6 @@
     "read": "Read",
     "sent": "Sent",
     "guestPolling": "Updates by itself every 10 seconds"
-  },
-  "AccountPage": {
-    "title": "Account",
-    "signInNote": "You log in with a code we send to your email. No password needed."
   },
   "AreaPicker": {
     "label": "Service area"

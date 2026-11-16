@@ -2,19 +2,19 @@ import { expect, test } from "@playwright/test";
 import { signedInAs } from "./setup/auth-state";
 
 // Customer pages are mobile-first: on a phone the main navigation is a bottom bar.
-// A signed-in customer, because Pesanan (/orders) and Akun (/account) are theirs only (T5).
+// A signed-in customer, because Pesanan (/orders) is theirs only (T5). The fifth item, Akun, is not a
+// page but a menu (e2e/account-menu.spec.ts), so the bar has four links and one button.
 const sections = [
   { label: "Beranda", path: "/home", heading: "Pesanan Anda" },
   { label: "Layanan", path: "/services", heading: "Layanan" },
   { label: "Pesanan", path: "/orders", heading: "Pesanan" },
   { label: "Bantuan", path: "/support", heading: "Bantuan" },
-  { label: "Akun", path: "/account", heading: "Akun" },
 ];
 
 test.describe("customer bottom navigation", () => {
   test.use(signedInAs.customer);
 
-  test("sits at the bottom of the screen with five labelled items", async ({ page }) => {
+  test("sits at the bottom of the screen with four labelled links and the account menu button", async ({ page }) => {
     await page.goto("/home");
     const nav = page.getByRole("navigation", { name: "Navigasi utama" });
     await expect(nav).toBeVisible();
@@ -26,6 +26,7 @@ test.describe("customer bottom navigation", () => {
     for (const { label } of sections) {
       await expect(nav.getByRole("link", { name: label, exact: true })).toBeVisible();
     }
+    await expect(nav.getByRole("button", { name: "Akun", exact: true })).toBeVisible();
   });
 
   test("marks only the current page", async ({ page }) => {
@@ -53,8 +54,8 @@ test.describe("customer bottom navigation", () => {
 
   test("gives every item a touch target of at least 44 px", async ({ page }) => {
     await page.goto("/home");
-    const links = page.getByRole("navigation", { name: "Navigasi utama" }).getByRole("link");
-    await expect(links).toHaveCount(sections.length);
+    const links = page.getByRole("navigation", { name: "Navigasi utama" }).locator("a, button");
+    await expect(links).toHaveCount(sections.length + 1);
     for (const link of await links.all()) {
       const box = await link.boundingBox();
       expect(box?.width).toBeGreaterThanOrEqual(44);

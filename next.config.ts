@@ -22,8 +22,20 @@ export const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(self), microphone=(self), geolocation=(self)" },
 ];
 
+// The customer's account page is retired: "Akun" in the navigation opens a menu with the name and the
+// log-out action. The old address, and the bookmarks and links that point to it, go to the customer home
+// in the same language (temporary, so the address can be used again later).
+// Source: node_modules/next/dist/docs/01-app/03-api-reference/05-config/01-next-config-js/redirects.md
+export const retiredRedirects = [
+  { source: "/account", destination: "/home", permanent: false },
+  { source: "/en/account", destination: "/en/home", permanent: false },
+];
+
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  async redirects() {
+    return retiredRedirects;
+  },
   async headers() {
     // The private order link (/o/<token>, /en/o/<token>) carries its token in the address, so it never
     // sends a Referer; a later rule overrides the same header of an earlier one.

@@ -96,9 +96,9 @@ test.describe("as a guest", () => {
     await expect(confirmation.getByText("Menunggu pembayaran")).toBeVisible();
     await expect(confirmation.getByText(service.name)).toBeVisible();
     await expect(confirmation.getByText(address)).toBeVisible();
-    // Signed in now: the header has the account chip instead of "Masuk".
+    // Signed in now: no "Masuk" in the header, and the account menu in the navigation is ready.
     await expect(page.getByRole("banner").getByRole("link", { name: "Masuk", exact: true })).toHaveCount(0);
-    await expect(page.getByRole("banner").getByRole("link", { name: /akun Anda/i })).toHaveAttribute("href", "/account");
+    await expect(page.getByRole("navigation", { name: "Navigasi utama" }).getByRole("button", { name: "Akun" })).toBeEnabled();
 
     // One brand: no agency wording, name or id in the page or in the HTML the server sends.
     const marks = await agencyMarks();
@@ -232,10 +232,9 @@ test.describe("as a guest", () => {
     const orderId = await bookedId(page);
     const orderPage = `/orders?booked=${orderId}`;
 
-    // Sign out from the account page, which explains there is no password.
-    await page.goto("/account");
-    await expect(page.getByText("Anda masuk dengan kode yang kami kirim ke email Anda.")).toBeVisible();
-    await page.getByRole("button", { name: "Keluar" }).click();
+    // Sign out from the account menu of the navigation.
+    await page.getByRole("navigation", { name: "Navigasi utama" }).getByRole("button", { name: "Akun" }).click();
+    await page.getByRole("menuitem", { name: "Keluar" }).click();
     await expect(page).toHaveURL("/");
 
     await page.goto(orderPage);

@@ -142,7 +142,6 @@ describe("the page finder (the test's own helpers)", () => {
     expect(paths).toEqual(
       expect.arrayContaining([
         "/orders",
-        "/account",
         "/cleaner",
         "/cleaner/jobs",
         "/cleaner/jobs/[code]",

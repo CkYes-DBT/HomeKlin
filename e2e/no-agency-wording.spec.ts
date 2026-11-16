@@ -31,7 +31,7 @@ const pageGroups = [
   {
     who: "a signed-in customer",
     session: signedInAs.customer,
-    paths: ["/orders", "/orders/live", "/account", "/pesan", "/en/orders", "/en/orders/live", "/en/account", "/en/pesan"],
+    paths: ["/orders", "/orders/live", "/pesan", "/en/orders", "/en/orders/live", "/en/pesan"],
   },
 ];
 const agencyWording = /agensi|agency|mitra|partner/i;

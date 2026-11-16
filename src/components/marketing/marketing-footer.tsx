@@ -18,7 +18,6 @@ const columns = [
     key: "help",
     links: [
       { href: "/support", key: "helpCenter" },
-      { href: "/account", key: "account" },
     ],
   },
 ] as const;
