@@ -336,6 +336,11 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* Sits a fixed bar right above the bottom navigation and the home indicator (the booking bar). */
+@utility bottom-clear-nav {
+  bottom: calc(var(--spacing-bottom-nav) + env(safe-area-inset-bottom));
+}
+
 /* Keeps page content clear of the fixed bottom navigation. */
 @utility pb-clear-nav {
   padding-bottom: calc(var(--spacing-bottom-nav) + env(safe-area-inset-bottom) + var(--spacing-gutter));

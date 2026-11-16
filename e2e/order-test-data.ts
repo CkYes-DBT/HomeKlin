@@ -52,7 +52,7 @@ export async function removeGuests(emails: string[]): Promise<void> {
 export const jakartaDate = (iso: string) =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(iso));
 
-/** A time chip's name on step 1 (/services, D5): "15.00 sampai 17.00 WIB". */
+/** A time chip's name on steps 1 and 2 (the same chip since the booking-flow fixes): "15.00 sampai 17.00 WIB". */
 export const stepOneChip = (window: Window, language: "id" | "en" = "id") =>
   `${jakartaTime(window.startsAt)} ${language === "id" ? "sampai" : "to"} ${jakartaTime(window.endsAt)} WIB`;
 
@@ -61,7 +61,7 @@ export async function chooseWindow(page: Page, window: Window, language: "id" | 
   await page.getByLabel(language === "id" ? "Tanggal" : "Date", { exact: true }).selectOption(jakartaDate(window.startsAt));
   await page
     .getByRole("group", { name: dayText(window.startsAt, language) })
-    .getByRole("radio", { name: windowText(window) })
+    .getByRole("radio", { name: stepOneChip(window, language), exact: true })
     .check();
   await expect(page.getByRole("group", { name: language === "id" ? "Jadwal kedatangan" : "Arrival time" })).toContainText(
     windowText(window),
@@ -77,7 +77,7 @@ export async function bookSignedIn(page: Page, serviceId: string, areaId: string
   await page.getByLabel("Alamat lengkap").fill("Jl. Contoh Raya No. 12, RT 03/RW 05, Kembangan, Jakarta Barat");
   await page.getByLabel("Nomor HP").fill("0812 3456 7890");
   await page.getByRole("switch", { name: /Saya setuju/ }).check();
-  await page.getByRole("button", { name: "Lanjut ke pembayaran" }).click();
+  await page.getByRole("form", { name: "Pesan layanan" }).getByRole("button", { name: "Lanjut ke pembayaran" }).click();
   // Booking and the redirect run on the server; under a full parallel run that can take over 5 s.
   await expect(page).toHaveURL(/\/orders\?booked=[0-9a-f-]{36}$/, { timeout: 15_000 });
   return new URL(page.url()).searchParams.get("booked") ?? "";

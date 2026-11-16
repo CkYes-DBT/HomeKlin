@@ -29,8 +29,10 @@ test.afterAll(async () => {
 });
 
 const consentSwitch = (page: Page) => page.getByRole("switch", { name: /Saya setuju/ });
-const sendCode = (page: Page) => page.getByRole("button", { name: "Kirim kode" });
-const placeButton = (page: Page) => page.getByRole("button", { name: "Lanjut ke pembayaran" });
+// The form's own buttons; the phone bar repeats the main one outside the form (BookingBar).
+const orderForm = (page: Page) => page.getByRole("form", { name: /^(Pesan layanan|Book a cleaning)$/ });
+const sendCode = (page: Page) => orderForm(page).getByRole("button", { name: "Kirim kode" });
+const placeButton = (page: Page) => orderForm(page).getByRole("button", { name: "Lanjut ke pembayaran" });
 const codeField = (page: Page) => page.getByLabel("Kode 6 angka");
 
 /** Fills in the order form after the service and area are chosen. */
@@ -166,7 +168,7 @@ test.describe("as a guest", () => {
     await expect(page.getByLabel("Alamat lengkap")).toHaveValue(address);
     await expect(page.getByLabel("Nomor HP")).toHaveValue(phone);
     await expect(consentSwitch(page)).toBeChecked();
-    await expect(page.getByRole("group", { name: "Jadwal kedatangan" })).toContainText(windowText(target));
+    await expect(page.getByRole("region", { name: "Layanan dan jadwal" })).toContainText(windowText(target));
   });
 
   test("shows each problem next to its field, before any code is sent", async ({ page }) => {
@@ -281,10 +283,10 @@ test.describe("as a guest", () => {
     await page.getByLabel("Mobile number").fill(phone);
     await page.getByLabel("Email", { exact: true }).fill(email);
     await page.getByRole("switch", { name: /I agree/ }).check();
-    await page.getByRole("button", { name: "Send code" }).click();
+    await orderForm(page).getByRole("button", { name: "Send code" }).click();
     await expect(page.getByText(`We sent a 6-digit code to ${email}.`)).toBeVisible({ timeout: emailWait });
     await page.getByLabel("6-digit code").fill(await codeFor(email));
-    await page.getByRole("button", { name: "Continue to payment" }).click();
+    await orderForm(page).getByRole("button", { name: "Continue to payment" }).click();
     await expect(page).toHaveURL(/\/en\/orders\?booked=[0-9a-f-]{36}$/, { timeout: 15_000 });
     await expect(page.getByText("Awaiting payment")).toBeVisible();
     await cancelOrder(new URL(page.url()).searchParams.get("booked") ?? "");
@@ -364,7 +366,7 @@ test.describe("as a signed-in customer", () => {
     const params = new URLSearchParams({ service: service.id, area, starts: target.startsAt });
     await page.goto(`/book?${params.toString()}`);
     await expect(page).toHaveURL(orderPath(service.id, area, target.startsAt));
-    await expect(page.getByRole("group", { name: "Jadwal kedatangan" })).toContainText(windowText(target));
+    await expect(page.getByRole("region", { name: "Layanan dan jadwal" })).toContainText(windowText(target));
   });
 });
 

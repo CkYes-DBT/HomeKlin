@@ -1,9 +1,11 @@
 "use client";
 
-import { ArrowRight, Check, CircleAlert, CalendarX2, ChevronDown } from "lucide-react";
+import { ArrowRight, CircleAlert, CalendarX2, ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { createContext, use, useState, type ReactNode } from "react";
+import { createContext, use, useState, type FormEvent, type ReactNode } from "react";
+import { BookingBar } from "./booking-bar";
 import { flowAccentButton, flowCard, flowCardTitle, flowInput } from "./flow-styles";
+import { TimeChip } from "./time-chip";
 
 // Step 1 of ordering (D5, mocks Main and Phone-Services): choose a service, then a free time in the
 // area, with the summary beside them. The choice is one GET form to the order page (/pesan?layanan=
@@ -11,11 +13,22 @@ import { flowAccentButton, flowCard, flowCardTitle, flowInput } from "./flow-sty
 // summary by the `form` attribute, so the page's filter form (area, search, type) stays its own form.
 // The address is only a suggestion: /pesan checks every value again, and so does booking.
 // The windows of each service came with the page (B12: only agencies offering that service), so a new
-// service shows its own times at once; a full window stays visible as "15.00, penuh" and cannot be
-// chosen. Times are Jakarta time, written by the server.
+// service shows its own times at once; a full window stays visible as "15.00-17.00, penuh" and cannot
+// be chosen (the same chip as step 2, ./time-chip.tsx). Times are Jakarta time, written by the server.
+// Since the booking-flow fixes (2026-11-16) "Pesan sekarang" is never disabled: pressed without a
+// service, it says so next to the services and puts the cursor on the first one. "Ubah" on step 2
+// comes back here with the service, area and time in the address (?layanan=&area=&starts=).
 
 export type StepWindow = { startsAt: string; start: string; end: string; isFull: boolean };
-export type StepDay = { date: string; label: string; short: string; windows: StepWindow[]; hasFree: boolean };
+export type StepDay = {
+  date: string;
+  /** "Besok, Senin 16 November": the chips' group and the summary. */
+  label: string;
+  /** "Besok, Sen 16 Nov": the day select and the phone bar. */
+  short: string;
+  windows: StepWindow[];
+  hasFree: boolean;
+};
 export type StepService = { id: string; name: string; price: string; duration: string };
 
 type StepState = {
@@ -24,6 +37,9 @@ type StepState = {
   setServiceId: (id: string) => void;
   startsAt: string | null;
   setStartsAt: (startsAt: string | null) => void;
+  /** Counts the presses of "Pesan sekarang" without a service, so the message is announced each time. */
+  missing: number;
+  setMissing: (count: number) => void;
 };
 
 const StepContext = createContext<StepState | null>(null);
@@ -37,24 +53,58 @@ function useStep(): StepState {
 type ProviderProps = {
   formId: string;
   initialServiceId: string;
+  /** The time in the address (back from step 2 with "Ubah"); kept only when it is free for the service. */
+  initialStartsAt?: string;
   /** Each service's windows (key ""), or null when they could not be read. */
   windows: Record<string, StepDay[] | null>;
   children: ReactNode;
 };
 
-export function ServiceStepProvider({ formId, initialServiceId, windows, children }: ProviderProps) {
+const isFreeFor = (days: StepDay[] | null | undefined, startsAt: string | null | undefined) =>
+  Boolean(startsAt) && (days ?? []).some((day) => day.windows.some((window) => window.startsAt === startsAt && !window.isFull));
+
+export function ServiceStepProvider({ formId, initialServiceId, initialStartsAt, windows, children }: ProviderProps) {
   const [serviceId, setServiceIdState] = useState(initialServiceId);
-  const [startsAt, setStartsAt] = useState<string | null>(null);
+  const [startsAt, setStartsAt] = useState<string | null>(() =>
+    initialServiceId && isFreeFor(windows[initialServiceId], initialStartsAt) ? (initialStartsAt ?? null) : null,
+  );
+  const [missing, setMissing] = useState(0);
 
   // A new service keeps the chosen time only when that service has it free too.
   function setServiceId(id: string) {
     setServiceIdState(id);
-    const days = windows[id] ?? [];
-    const stillFree = days.some((day) => day.windows.some((window) => window.startsAt === startsAt && !window.isFull));
-    if (!stillFree) setStartsAt(null);
+    if (!isFreeFor(windows[id], startsAt)) setStartsAt(null);
   }
 
-  return <StepContext value={{ formId, serviceId, setServiceId, startsAt, setStartsAt }}>{children}</StepContext>;
+  return (
+    <StepContext value={{ formId, serviceId, setServiceId, startsAt, setStartsAt, missing, setMissing }}>{children}</StepContext>
+  );
+}
+
+/** The id of the message beside the services when "Pesan sekarang" was pressed without one. */
+const missingId = "layanan-belum-dipilih";
+
+/**
+ * The service cards as one radio group, named by the list's heading. Pressed "Pesan sekarang" without
+ * a service, the group says so under the heading and is described by that message.
+ */
+export function ServiceRadioGroup({ labelledBy, children }: { labelledBy: string; children: ReactNode }) {
+  const t = useTranslations("ServiceStep");
+  const { serviceId, missing } = useStep();
+  const showMissing = missing > 0 && !serviceId;
+  return (
+    <div role="radiogroup" aria-labelledby={labelledBy} aria-describedby={showMissing ? missingId : undefined} className="mt-3">
+      <div role="alert" aria-atomic="true">
+        {showMissing ? (
+          <p key={missing} id={missingId} className="mb-3 flex items-start gap-2 rounded-sm bg-danger-surface px-4 py-3 text-sm font-medium text-danger">
+            <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <span>{t("serviceMissing")}</span>
+          </p>
+        ) : null}
+      </div>
+      {children}
+    </div>
+  );
 }
 
 /**
@@ -93,7 +143,10 @@ export function WindowChooser({ windows, services, areaName, lookAheadDays }: Wi
   const days = windows[serviceId] ?? (serviceId ? null : windows[""]);
   const service = services.find((candidate) => candidate.id === serviceId);
   const firstFree = days?.find((day) => day.hasFree) ?? days?.[0];
-  const [chosenDate, setChosenDate] = useState<string | null>(null);
+  // The chosen time's day opens first (back from step 2), otherwise the first day with a free time.
+  const [chosenDate, setChosenDate] = useState<string | null>(
+    () => days?.find((candidate) => candidate.windows.some((window) => window.startsAt === startsAt))?.date ?? null,
+  );
   const day = days?.find((candidate) => candidate.date === chosenDate) ?? firstFree;
 
   return (
@@ -106,7 +159,7 @@ export function WindowChooser({ windows, services, areaName, lookAheadDays }: Wi
           <p className="text-sm text-ink-muted">{service ? t("windowsLead", { duration: service.duration }) : t("windowsLeadNoService")}</p>
         </div>
         {days && days.length > 0 && day ? (
-          <div className="flex flex-col gap-1.5 md:w-72">
+          <div className="flex shrink-0 flex-col gap-1.5 md:w-80">
             <label htmlFor="tanggal" className="text-xs font-medium text-ink-muted">
               {t("dayLabel")}
             </label>
@@ -122,7 +175,7 @@ export function WindowChooser({ windows, services, areaName, lookAheadDays }: Wi
               >
                 {days.map((option) => (
                   <option key={option.date} value={option.date}>
-                    {option.hasFree ? option.label : t("dayFull", { day: option.label })}
+                    {option.hasFree ? option.short : t("dayFull", { day: option.short })}
                   </option>
                 ))}
               </select>
@@ -147,24 +200,17 @@ export function WindowChooser({ windows, services, areaName, lookAheadDays }: Wi
           <legend className="sr-only">{t("chipsLegend", { day: day.label })}</legend>
           <div className="flex flex-wrap gap-2.5">
             {day.windows.map((window) => (
-              <label
+              <TimeChip
                 key={window.startsAt}
-                className="relative inline-flex min-h-touch min-w-24 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-card px-5 text-sm font-semibold text-ink tabular-nums inset-ring-[1.5px] inset-ring-outline transition-colors duration-150 ease-out-quart hover:bg-sunken active:bg-lime-wash has-checked:bg-primary has-checked:text-on-primary has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus has-disabled:cursor-not-allowed has-disabled:bg-sunken has-disabled:font-medium has-disabled:text-ink-muted has-disabled:inset-ring-0"
-              >
-                <input
-                  type="radio"
-                  name="starts"
-                  form={formId}
-                  value={window.startsAt}
-                  disabled={window.isFull}
-                  checked={window.startsAt === startsAt}
-                  onChange={() => setStartsAt(window.startsAt)}
-                  aria-label={window.isFull ? t("chipFullLabel", { start: window.start, end: window.end }) : t("chipLabel", { start: window.start, end: window.end })}
-                  className="peer absolute inset-0 size-full cursor-pointer appearance-none rounded-full opacity-0 disabled:cursor-not-allowed"
-                />
-                <Check className="hidden size-4 shrink-0 peer-checked:block" strokeWidth={2.5} aria-hidden="true" />
-                <span aria-hidden="true">{window.isFull ? t("chipFull", { start: window.start }) : window.start}</span>
-              </label>
+                name="starts"
+                form={formId}
+                value={window.startsAt}
+                start={window.start}
+                end={window.end}
+                full={window.isFull}
+                checked={window.startsAt === startsAt}
+                onChange={() => setStartsAt(window.startsAt)}
+              />
             ))}
           </div>
           <p className="mt-3 text-sm text-ink-muted">{t("timeNote")}</p>
@@ -180,62 +226,92 @@ type SummaryProps = {
   areaName: string;
   services: StepService[];
   windows: Record<string, StepDay[] | null>;
+  /** A signed-in customer needs no "no account needed". */
+  signedIn: boolean;
 };
 
+const submitId = "pilih-layanan-kirim";
+
 /** "Ringkasan": what is chosen so far, the full price and "Pesan sekarang" (the step's one form). */
-export function StepSummary({ action, areaId, areaName, services, windows }: SummaryProps) {
+export function StepSummary({ action, areaId, areaName, services, windows, signedIn }: SummaryProps) {
   const t = useTranslations("ServiceStep");
-  const { formId, serviceId, startsAt } = useStep();
+  const { formId, serviceId, startsAt, missing, setMissing } = useStep();
   const service = services.find((candidate) => candidate.id === serviceId);
   const day = (windows[serviceId] ?? []).find((candidate) => candidate.windows.some((window) => window.startsAt === startsAt));
   const window = day?.windows.find((candidate) => candidate.startsAt === startsAt);
 
+  // Without a service there is nothing to order yet: say so by the services and go there.
+  function onSubmit(event: FormEvent<HTMLFormElement>) {
+    if (service) return;
+    event.preventDefault();
+    setMissing(missing + 1);
+    const first =
+      document.querySelector<HTMLInputElement>(`input[name="layanan"][form="${formId}"]:checked`) ??
+      document.querySelector<HTMLInputElement>(`input[name="layanan"][form="${formId}"]`);
+    first?.focus();
+    first?.scrollIntoView({ block: "center" });
+  }
+
+  const button = (id: string | undefined, compact: boolean) => (
+    <button
+      id={id}
+      type="submit"
+      form={formId}
+      aria-describedby={service ? "langkah-berikut" : "pilih-layanan-dulu"}
+      className={`${flowAccentButton} ${compact ? "min-h-12 shrink-0 px-4 text-sm" : "mt-5 w-full"}`}
+    >
+      {t("submit")}
+      {compact ? null : <ArrowRight className="size-5 shrink-0" aria-hidden="true" />}
+    </button>
+  );
+
   return (
-    <form id={formId} method="get" action={action} aria-labelledby="ringkasan" className={`${flowCard} flex flex-col`}>
-      <input type="hidden" name="area" value={areaId} />
-      <h2 id="ringkasan" className={flowCardTitle}>
-        {t("summaryTitle")}
-      </h2>
-      <dl className="mt-4 flex flex-col gap-3 border-b border-border pb-4 text-sm">
-        <SummaryRow term={t("summaryService")}>{service?.name ?? <Missing>{t("summaryNoService")}</Missing>}</SummaryRow>
-        <SummaryRow term={t("summaryArea")}>{areaName}</SummaryRow>
-        <SummaryRow term={t("summarySchedule")}>
-          {day && window ? (
-            <>
-              {day.short}
-              <br />
-              {t("summaryWindow", { start: window.start, end: window.end })}
-            </>
-          ) : (
-            <Missing>{t("summaryNoWindow")}</Missing>
-          )}
-        </SummaryRow>
-      </dl>
-      <div className="mt-4 flex items-baseline justify-between gap-4">
-        <p className="text-base font-semibold text-ink">{t("total")}</p>
-        <p className="font-display text-price font-semibold whitespace-nowrap text-ink tabular-nums" aria-live="polite">
-          {service?.price ?? ""}
+    <>
+      <form id={formId} method="get" action={action} onSubmit={onSubmit} aria-labelledby="ringkasan" className={`${flowCard} flex flex-col`}>
+        <input type="hidden" name="area" value={areaId} />
+        <h2 id="ringkasan" className={flowCardTitle}>
+          {t("summaryTitle")}
+        </h2>
+        <dl className="mt-4 flex flex-col gap-3 border-b border-border pb-4 text-sm">
+          <SummaryRow term={t("summaryService")}>{service?.name ?? <Missing>{t("summaryNoService")}</Missing>}</SummaryRow>
+          <SummaryRow term={t("summaryArea")}>{areaName}</SummaryRow>
+          <SummaryRow term={t("summarySchedule")}>
+            {day && window ? (
+              <>
+                {day.label}
+                <br />
+                <span className="whitespace-nowrap">{t("summaryWindow", { start: window.start, end: window.end })}</span>
+              </>
+            ) : (
+              <Missing>{t("summaryNoWindow")}</Missing>
+            )}
+          </SummaryRow>
+        </dl>
+        {/* One live region with its label, so a screen reader hears "Total Rp 85.000", not a bare price. */}
+        <div aria-live="polite" aria-atomic="true" className="mt-4 flex items-baseline justify-between gap-4">
+          <p className="text-base font-semibold text-ink">{t("total")}</p>
+          <p className="font-display text-price font-semibold whitespace-nowrap text-ink tabular-nums">{service?.price ?? ""}</p>
+        </div>
+        <p className="mt-2 text-sm text-ink-muted">{t("totalNote")}</p>
+        {button(submitId, false)}
+        {service ? null : (
+          <p id="pilih-layanan-dulu" className="mt-2 text-center text-sm text-ink-muted">
+            {t("chooseServiceFirst")}
+          </p>
+        )}
+        <p id="langkah-berikut" className="mt-3 text-sm text-ink-muted">
+          {signedIn ? t("nextNoteSignedIn") : t("nextNote")}
         </p>
-      </div>
-      <p className="mt-2 text-sm text-ink-muted">{t("totalNote")}</p>
-      <button
-        type="submit"
-        disabled={!service}
-        aria-describedby={service ? "langkah-berikut" : "pilih-layanan-dulu"}
-        className={`${flowAccentButton} mt-5 w-full`}
-      >
-        {t("submit")}
-        <ArrowRight className="size-5 shrink-0" aria-hidden="true" />
-      </button>
-      {service ? null : (
-        <p id="pilih-layanan-dulu" className="mt-2 text-center text-sm text-ink-muted">
-          {t("chooseServiceFirst")}
-        </p>
-      )}
-      <p id="langkah-berikut" className="mt-3 text-sm text-ink-muted">
-        {t("nextNote")}
-      </p>
-    </form>
+      </form>
+      <BookingBar
+        watchId={submitId}
+        title={service?.name ?? t("barNoService")}
+        price={service?.price}
+        detail={day && window ? day.short : t("barNoTime")}
+        time={day && window ? t("barWindow", { start: window.start, end: window.end }) : undefined}
+        action={button(undefined, true)}
+      />
+    </>
   );
 }
 

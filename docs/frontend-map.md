@@ -28,8 +28,8 @@ role check (`RoleGate`) and one content component.
 |---|---|---|
 | `/` landing | `(marketing)/page.tsx`, `(marketing)/layout.tsx` | `marketing/`: hero, hero-job-card, trust-row, services-grid, how-it-works, safety, faq-teaser, cta-shell, marketing-header, marketing-footer |
 | `/home` app home | `(customer)/home/page.tsx` | `customer/`: area-picker, job-status-card, service-row (uses sample data in `home-preview-data.ts`) |
-| `/services` catalog | `(customer)/services/page.tsx` | `customer/`: service-catalog, service-card, catalog-filters, catalog-form, free-windows, service-visual, catalog-skeleton; `reviews/service-rating.tsx` |
-| `/pesan` order form (with the emailed code) | `(customer)/pesan/page.tsx` | `customer/`: order-content, order-form, order-where, booking-window-picker, booking-controls, booking-unavailable; `auth/code-entry` |
+| `/services` catalog | `(customer)/services/page.tsx` | `customer/`: service-catalog, service-step (step 1 summary and chips), time-chip, booking-bar (phone bar), booking-trust, booking-stepper, catalog-filters, catalog-form, service-visual, catalog-skeleton; `reviews/service-rating.tsx` |
+| `/pesan` order form (with the emailed code) | `(customer)/pesan/page.tsx` | `customer/`: order-content, order-form, order-where, booking-window-picker, booking-days, time-chip, booking-bar, order-draft (kept for "Ubah"), booking-controls, booking-unavailable; `auth/code-entry` |
 | `/login` | `(auth)/login/page.tsx`, `(auth)/layout.tsx` | `auth/`: auth-card, login-code-form, login-form, switch-link |
 | `/orders` list and `/orders?order=` details | `(customer)/orders/page.tsx` | `customer/`: orders-content, order-list, order-confirmation, order-status, order-job, order-recording, recording-player, recording-countdown, recording-notice, payment-form, order-live; `reviews/`: order-review, review-form, stars |
 | `/orders/live` live view | `(customer)/orders/live/page.tsx` | `customer/`: live-content, live-viewer, live-waiting, order-live |

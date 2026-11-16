@@ -53,6 +53,8 @@ export function groupSlotsByJakartaDay(slots: readonly FreeSlot[], now: Date): S
 const timeFormats = new Map<Locale, Intl.DateTimeFormat>();
 const weekdayFormats = new Map<Locale, Intl.DateTimeFormat>();
 const dayMonthFormats = new Map<Locale, Intl.DateTimeFormat>();
+const shortWeekdayFormats = new Map<Locale, Intl.DateTimeFormat>();
+const shortDayMonthFormats = new Map<Locale, Intl.DateTimeFormat>();
 
 function cached(cache: Map<Locale, Intl.DateTimeFormat>, locale: Locale, options: Intl.DateTimeFormatOptions) {
   let format = cache.get(locale);
@@ -68,11 +70,19 @@ export function formatJakartaTime(iso: string, locale: Locale): string {
   return cached(timeFormats, locale, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
 }
 
-/** A YYYY-MM-DD Jakarta day as its weekday ("Selasa") and its date ("27 Oktober"). */
-export function formatJakartaDay(date: string, locale: Locale): { weekday: string; date: string } {
+/**
+ * A YYYY-MM-DD Jakarta day as its weekday ("Selasa") and its date ("27 Oktober"); "short" writes
+ * both short ("Sel", "27 Okt") for the day selects, which must fit a 360 px phone.
+ */
+export function formatJakartaDay(date: string, locale: Locale, style: "long" | "short" = "long"): { weekday: string; date: string } {
   const [year, month, day] = date.split("-").map(Number);
   // Noon in Jakarta (05:00Z) is safely inside that day.
   const moment = new Date(Date.UTC(year, month - 1, day, 5));
+  if (style === "short")
+    return {
+      weekday: cached(shortWeekdayFormats, locale, { weekday: "short" }).format(moment),
+      date: cached(shortDayMonthFormats, locale, { day: "numeric", month: "short" }).format(moment),
+    };
   return {
     weekday: cached(weekdayFormats, locale, { weekday: "long" }).format(moment),
     date: cached(dayMonthFormats, locale, { day: "numeric", month: "long" }).format(moment),

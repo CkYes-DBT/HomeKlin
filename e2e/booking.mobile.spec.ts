@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { adminClient } from "../tests/integration/test-project";
 import {
   agencyMarks,
@@ -11,7 +11,7 @@ import {
   windowText,
   type Window,
 } from "./booking-test-data";
-import { chooseWindow, jakartaDate, orderPath, stepOneChip } from "./order-test-data";
+import { jakartaDate, orderPath, stepOneChip } from "./order-test-data";
 import { readTestUsers, signedInAs } from "./setup/auth-state";
 
 // T9 on a phone (customers are mobile-first), on the order page since T9b (/pesan), in the three steps
@@ -48,9 +48,10 @@ test.afterAll(async () => {
   for (const orderId of await ordersAt(id, area, usedStarts)) await cancelOrder(orderId);
 });
 
-const bookingForm = (page: Page) => page.getByRole("form", { name: "Pesan layanan" });
+const bookingForm = (page: Page, lang: "id" | "en" = "id") => page.getByRole("form", { name: lang === "id" ? "Pesan layanan" : "Book a cleaning" });
 const consentSwitch = (page: Page) => page.getByRole("switch", { name: /Saya setuju/ });
-const submitButton = (page: Page) => page.getByRole("button", { name: "Lanjut ke pembayaran" });
+// The form's own button; the phone bar repeats it outside the form (BookingBar), joined with form="...".
+const submitButton = (page: Page) => bookingForm(page).getByRole("button", { name: "Lanjut ke pembayaran" });
 const note = "Masuk lewat pintu samping. Kunci ada di pos satpam.";
 
 test.describe("as a signed-in customer", () => {
@@ -72,46 +73,76 @@ test.describe("as a signed-in customer", () => {
     const price = (await card.getByText(/^Rp\s[\d.]+$/).textContent()) ?? "";
     expect(price).toMatch(/^Rp/);
     const summary1 = page.getByRole("form", { name: "Ringkasan" });
-    await expect(summary1.getByRole("button", { name: "Pesan sekarang" })).toBeDisabled();
+    // "Pesan sekarang" is never disabled: without a service it says so and goes to the services.
+    const bookNow = summary1.getByRole("button", { name: "Pesan sekarang" });
+    await expect(bookNow).toBeEnabled();
+    await expect(bookNow).toHaveAccessibleDescription("Pilih layanan dulu untuk melanjutkan.");
+    await bookNow.click();
+    await expect(page).toHaveURL(/\/services\?/);
+    const serviceGroup = page.getByRole("radiogroup", { name: "Layanan", exact: true });
+    await expect(serviceGroup).toHaveAccessibleDescription("Pilih salah satu layanan untuk melanjutkan.");
+    await expect(serviceGroup.getByRole("radio").first()).toBeFocused();
     await page.getByRole("radio", { name: service.name, exact: true }).check();
+    await expect(page.getByText("Pilih salah satu layanan untuk melanjutkan.")).toHaveCount(0);
     await expect(summary1.getByText(price, { exact: true })).toBeVisible();
     const times = page.getByRole("region", { name: "Jam kosong di Jakarta Barat" });
     await times.getByLabel("Tanggal").selectOption(jakartaDate(first.startsAt));
     await times.getByRole("radio", { name: stepOneChip(first) }).check();
-    await summary1.getByRole("button", { name: "Pesan sekarang" }).click();
+    await bookNow.click();
 
-    // Step 2 opens with the service, the area and the time chosen, and the full price.
+    // Step 2 opens with the service, the area and the time chosen, shown once, read-only.
     await expect(page).toHaveURL(/\/pesan\?/);
     const url = new URL(page.url());
     expect(Object.fromEntries(url.searchParams)).toEqual({ layanan: service.id, area, starts: first.startsAt });
     await expect(page.getByRole("heading", { level: 1, name: "Detail pemesanan" })).toBeVisible();
     await expect(currentStep).toContainText("Pesan");
     await expect(page.getByText("Langkah 2 dari 3")).toBeVisible();
-    const summary = page.getByRole("region", { name: "Layanan" });
-    await expect(summary.getByLabel("Pilih layanan")).toHaveValue(service.id);
-    await expect(summary.getByText(service.name, { exact: true })).toBeVisible();
-    await expect(summary.getByText("± 2 jam")).toBeVisible();
-    await expect(bookingForm(page).getByText(price, { exact: true })).toBeVisible();
-    await expect(bookingForm(page).getByLabel("Area layanan")).toHaveValue(area);
-    // Signed in: no email and no code, the order goes straight through.
+    const choice = page.getByRole("region", { name: "Layanan dan jadwal" });
+    await expect(choice.getByText(service.name, { exact: true })).toBeVisible();
+    await expect(choice.getByText("± 2 jam")).toBeVisible();
+    await expect(choice.getByText(price, { exact: true })).toBeVisible();
+    await expect(choice.getByText("Jakarta Barat", { exact: true })).toBeVisible();
+    await expect(choice.getByText(`${windowText(first)} WIB`, { exact: true })).toBeVisible();
+    // No pickers to fill in again.
+    await expect(page.getByLabel("Pilih layanan")).toHaveCount(0);
+    await expect(page.getByLabel("Area layanan")).toHaveCount(0);
+    await expect(bookingForm(page).getByRole("radio")).toHaveCount(0);
+    await expect(bookingForm(page).getByText(price, { exact: true }).last()).toBeVisible();
+    // Signed in: no email and no code, the order goes straight through, and no "no account needed".
     await expect(page.getByText("Anda memesan sebagai")).toBeVisible();
-
-    // Another window, late in the range; the choice goes into the address too.
-    await chooseWindow(page, target);
-    const chosen = page.getByRole("group", { name: "Jadwal kedatangan" });
-    await expect(chosen.getByText(dayText(target.startsAt), { exact: true })).toBeVisible();
-    await expect(chosen.getByText(`${windowText(target)} WIB`, { exact: true })).toBeVisible();
-    await expect(page).toHaveURL(new RegExp(`starts=${encodeURIComponent(target.startsAt)}`));
+    await expect(page.getByText(/Tidak perlu membuat akun/)).toHaveCount(0);
 
     await page.getByLabel("Alamat lengkap").fill(address);
     await page.getByLabel("Nomor HP").fill(phone);
     await page.getByLabel("Catatan untuk Petugas (opsional)").fill(note);
-    // The streaming consent comes with a plain explanation, and booking waits for it.
+
+    // "Ubah": back to step 1 with the choice, then another time late in the range; what was typed stays.
+    await choice.getByRole("link", { name: "Ubah layanan dan jadwal" }).click();
+    await expect(page).toHaveURL(/\/services\?/);
+    expect(Object.fromEntries(new URL(page.url()).searchParams)).toEqual({ area, layanan: service.id, starts: first.startsAt });
+    await expect(page.getByRole("radio", { name: service.name, exact: true })).toBeChecked();
+    await expect(times.getByRole("radio", { name: stepOneChip(first) })).toBeChecked();
+    await times.getByLabel("Tanggal").selectOption(jakartaDate(target.startsAt));
+    await times.getByRole("radio", { name: stepOneChip(target) }).check();
+    await bookNow.click();
+    await expect(page).toHaveURL(new RegExp(`starts=${encodeURIComponent(target.startsAt)}`));
+    await expect(choice.getByText(dayText(target.startsAt), { exact: true })).toBeVisible();
+    await expect(choice.getByText(`${windowText(target)} WIB`, { exact: true })).toBeVisible();
+    await expect(page.getByLabel("Alamat lengkap")).toHaveValue(address);
+    await expect(page.getByLabel("Nomor HP")).toHaveValue(phone);
+    await expect(page.getByLabel("Catatan untuk Petugas (opsional)")).toHaveValue(note);
+
+    // The streaming consent comes with a plain explanation, and booking waits for it: the button
+    // works, the switch is marked and gets the cursor. The consent itself is never kept for "Ubah".
     await expect(page.getByText(/Hanya Anda dan tim pemantau HomeKlin/)).toBeVisible();
     await expect(page.getByText(/disimpan 7 hari, lalu dihapus/)).toBeVisible();
-    await expect(submitButton(page)).toBeDisabled();
-    await consentSwitch(page).check();
+    await expect(consentSwitch(page)).not.toBeChecked();
     await expect(submitButton(page)).toBeEnabled();
+    await submitButton(page).click();
+    await expect(consentSwitch(page)).toBeFocused();
+    await expect(consentSwitch(page)).toHaveAccessibleDescription("Nyalakan persetujuan siaran untuk memesan.");
+    await consentSwitch(page).check();
+    await expect(page.getByText("Nyalakan persetujuan siaran untuk memesan.")).toHaveCount(0);
     await submitButton(page).click();
 
     // Booking and the redirect run on the server; under a full parallel run that can take over 5 s.
@@ -160,13 +191,17 @@ test.describe("as a signed-in customer", () => {
     await page.getByLabel("Alamat lengkap").fill(address);
     await page.getByLabel("Nomor HP").fill(phone);
     await expect(consentSwitch(page)).not.toBeChecked();
-    await expect(submitButton(page)).toBeDisabled();
-    await expect(page.getByText("Nyalakan persetujuan siaran di atas untuk melanjutkan.")).toBeVisible();
+    // The button stays usable; its hint names the switch and links to it, wherever it sits.
+    await expect(submitButton(page)).toBeEnabled();
+    await expect(submitButton(page)).toHaveAccessibleDescription("Nyalakan persetujuan siaran untuk melanjutkan.");
+    await page.getByRole("link", { name: "persetujuan siaran" }).click();
+    await expect(consentSwitch(page)).toBeFocused();
 
-    // Sent anyway (the button is only a hint; the server decides): refused, next to the switch.
-    await bookingForm(page).evaluate((form) => (form as HTMLFormElement).requestSubmit());
+    // Sent without it: the server refuses, the switch says why and gets the cursor.
+    await submitButton(page).click();
     await expect(page.getByText("Nyalakan persetujuan siaran untuk memesan.", { exact: true })).toBeVisible();
     await expect(consentSwitch(page)).toHaveAttribute("aria-invalid", "true");
+    await expect(consentSwitch(page)).toBeFocused();
     await expect(page).toHaveURL(/\/pesan\?/);
     await expect(page.getByLabel("Alamat lengkap")).toHaveValue(address);
     const id = customerId();
@@ -193,8 +228,8 @@ test.describe("as a signed-in customer", () => {
   test("says plainly when someone else takes the window first, and offers the other windows", async ({ page }) => {
     const target = await windowFor("13.00");
     await page.goto(orderPath(service.id, area, target.startsAt));
-    const chosen = page.getByRole("group", { name: "Jadwal kedatangan" });
-    await expect(chosen.getByText(`${windowText(target)} WIB`, { exact: true })).toBeVisible();
+    const choice = page.getByRole("region", { name: "Layanan dan jadwal" });
+    await expect(choice.getByText(`${windowText(target)} WIB`, { exact: true })).toBeVisible();
     await page.getByLabel("Alamat lengkap").fill(address);
     await page.getByLabel("Nomor HP").fill(phone);
     await consentSwitch(page).check();
@@ -208,16 +243,44 @@ test.describe("as a signed-in customer", () => {
       await expect(alert).toContainText("Pelanggan lain memesan tempat terakhir");
       await expect(page).toHaveURL(/\/pesan\?/);
 
-      // The other free windows are offered right there, without the one that was taken.
+      // The pickers open on that day: the taken window is marked full and cannot be chosen, the others can.
       const day = page.getByRole("group", { name: dayText(target.startsAt) });
-      await expect(day.getByRole("radio", { name: windowText(target) })).toHaveCount(0);
-      await expect(day.getByRole("radio").first()).toBeVisible();
-      await expect(chosen.getByText("Belum ada jadwal yang dipilih")).toBeVisible();
+      await expect(day.getByRole("radio", { name: stepOneChip(target), exact: true })).toHaveCount(0);
+      await expect(day.getByRole("radio", { name: `${stepOneChip(target)}, penuh` })).toBeDisabled();
+      await expect(day.getByRole("radio", { disabled: false }).first()).toBeVisible();
+      await expect(page.getByRole("group", { name: "Jadwal kedatangan" }).getByText("Belum ada jadwal yang dipilih")).toBeVisible();
       // What the customer typed and agreed to is kept.
       await expect(page.getByLabel("Alamat lengkap")).toHaveValue(address);
       await expect(consentSwitch(page)).toBeChecked();
       const id = customerId();
       if (id) expect(await ordersAt(id, area, [target.startsAt])).toEqual([]);
+    } finally {
+      await restore();
+    }
+  });
+
+  test("writes the times on steps 1 and 2 the same way, a full one shown as full on both", async ({ page }) => {
+    const full = await windowFor("15.00", 2);
+    const restore = await fillWindow(area, full.startsAt);
+    try {
+      await page.goto(`/services?area=${area}&layanan=${service.id}`);
+      const times = page.getByRole("region", { name: "Jam kosong di Jakarta Barat" });
+      await times.getByLabel("Tanggal").selectOption(jakartaDate(full.startsAt));
+      const chips = async (scope: Locator) => ({
+        names: await scope.getByRole("radio").evaluateAll((radios) => radios.map((radio) => radio.getAttribute("aria-label"))),
+        texts: (await scope.locator("label").allInnerTexts()).map((text) => text.replace(/\s+/g, " ").trim()),
+      });
+      const stepOne = await chips(times.locator("fieldset"));
+      expect(stepOne.texts).toContain(`${windowText(full)} penuh`);
+      await expect(times.getByRole("radio", { name: `${stepOneChip(full)}, penuh` })).toBeDisabled();
+
+      // Step 2 with the time still to choose (as from a landing link): the same chips, the same rule.
+      await page.goto(orderPath(service.id, area));
+      await page.getByLabel("Tanggal", { exact: true }).selectOption(jakartaDate(full.startsAt));
+      const stepTwo = await chips(page.getByRole("group", { name: dayText(full.startsAt) }));
+      expect(stepTwo).toEqual(stepOne);
+      for (const text of stepTwo.texts) expect(text).toMatch(/^\d{2}\.\d{2}-\d{2}\.\d{2}( penuh)?$/);
+      await expect(page.getByRole("radio", { name: `${stepOneChip(full)}, penuh` })).toBeDisabled();
     } finally {
       await restore();
     }
@@ -238,24 +301,30 @@ test.describe("as a signed-in customer", () => {
     await expect(page.getByText("Layanan dari tautan ini tidak dapat dipesan. Pilih layanan lain di bawah.")).toBeVisible();
     const choice = page.getByLabel("Pilih layanan");
     await expect(choice).toHaveValue("");
+    // The options carry the name only (the price shows under the select, never cut off).
+    await expect(choice.getByRole("option", { name: service.name, exact: true })).toBeAttached();
     await choice.selectOption(service.id);
-    await expect(page.getByRole("region", { name: "Layanan" }).getByText(service.name, { exact: true })).toBeVisible();
+    const summary = page.getByRole("region", { name: "Layanan" }).locator("p");
+    await expect(summary.getByText(service.name, { exact: true })).toBeVisible();
+    await expect(summary.getByText(/^Rp\s[\d.]+$/)).toBeVisible();
+    // The times are read again for that service; the window from the address stays chosen.
     await expect(page).toHaveURL(new RegExp(`layanan=${service.id}`));
-    // The window from the address is still chosen.
     await expect(page.getByRole("group", { name: "Jadwal kedatangan" })).toContainText(windowText(target));
+    await expect(page.getByRole("radio", { name: stepOneChip(target), exact: true })).toBeChecked();
   });
 
   test("works in English, with times in Jakarta time", async ({ page }) => {
     const target = await windowFor("08.00", 1);
     await page.goto(orderPath(service.id, area, target.startsAt, "/en"));
     await expect(page.getByRole("heading", { level: 1, name: "Booking details" })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Service" }).getByText(service.nameEn, { exact: true })).toBeVisible();
-    await expect(
-      page.getByRole("group", { name: "Arrival time" }).getByText(`${windowText(target)} WIB`, { exact: true }),
-    ).toBeVisible();
+    const choice = page.getByRole("region", { name: "Service and time" });
+    await expect(choice.getByText(service.nameEn, { exact: true })).toBeVisible();
+    await expect(choice.getByText(`${windowText(target)} WIB`, { exact: true })).toBeVisible();
     await expect(page.getByText(/Only you and the HomeKlin monitoring team/)).toBeVisible();
     await expect(page.getByRole("switch", { name: /I agree/ })).not.toBeChecked();
-    await expect(page.getByRole("button", { name: "Continue to payment" })).toBeDisabled();
+    const button = bookingForm(page, "en").getByRole("button", { name: "Continue to payment" });
+    await expect(button).toBeEnabled();
+    await expect(button).toHaveAccessibleDescription("Turn on the streaming consent to carry on.");
   });
 
   test.describe("at 360 px", () => {
@@ -263,14 +332,72 @@ test.describe("as a signed-in customer", () => {
 
     test("the booking page has no horizontal scroll and names no agency, in both languages", async ({ page }) => {
       const target = await windowFor("13.00", 1);
-      for (const prefix of ["", "/en"]) {
+      for (const [prefix, lang] of [["", "id"], ["/en", "en"]] as const) {
         await page.goto(orderPath(service.id, area, target.startsAt, prefix));
-        await expect(submitButton(page).or(page.getByRole("button", { name: "Continue to payment" }))).toBeVisible();
-        await expect(page.getByRole("radio").first()).toBeVisible();
+        await expect(bookingForm(page, lang).getByRole("button", { name: lang === "id" ? "Lanjut ke pembayaran" : "Continue to payment" })).toBeAttached();
+        await expect(page.getByRole("region", { name: lang === "id" ? "Layanan dan jadwal" : "Service and time" })).toBeVisible();
         expect(await page.content()).not.toMatch(agencyWording);
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
         expect(overflow).toBeLessThanOrEqual(0);
       }
+      // The pickers' selects fit too: names only, short day names.
+      await page.goto(orderPath(service.id, area, undefined, "/en"));
+      await page.getByLabel("Choose a service").selectOption(service.id);
+      for (const select of [page.getByLabel("Choose a service"), page.getByLabel("Date", { exact: true })]) {
+        const fits = await select.evaluate((element) => {
+          const field = element as HTMLSelectElement;
+          const option = field.selectedOptions[0];
+          const probe = document.createElement("span");
+          probe.style.font = getComputedStyle(field).font;
+          probe.style.whiteSpace = "nowrap";
+          probe.style.position = "absolute";
+          probe.textContent = option?.textContent ?? "";
+          document.body.append(probe);
+          const text = probe.getBoundingClientRect().width;
+          probe.remove();
+          const style = getComputedStyle(field);
+          return text <= field.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+        });
+        expect(fits).toBe(true);
+      }
+    });
+
+    test("keeps the choice, the price and the button in a bar above the menu while the button is out of sight", async ({ page }) => {
+      const target = await windowFor("10.00", 2);
+      for (const path of [`/services?area=${area}&layanan=${service.id}`, orderPath(service.id, area, target.startsAt)]) {
+        await page.goto(path);
+        const bar = page.getByRole("region", { name: "Pilihan Anda" });
+        await expect(bar).toBeVisible();
+        await expect(bar).toContainText(service.name);
+        await expect(bar).toContainText(/Rp\s[\d.]+/);
+        const button = bar.getByRole("button");
+        const box = await button.boundingBox();
+        expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+        // It sits right above the bottom navigation, never over it.
+        const navBox = await page.getByRole("navigation", { name: "Navigasi utama" }).boundingBox();
+        // (Polled: the bar slides in.)
+        await expect
+          .poll(async () => {
+            const barBox = await bar.boundingBox();
+            return (barBox?.y ?? 0) + (barBox?.height ?? 0);
+          })
+          .toBeLessThanOrEqual((navBox?.y ?? 0) + 1);
+        // With the step's own button on screen the bar steps aside (and leaves the accessibility tree).
+        const own = path.startsWith("/services")
+          ? page.getByRole("form", { name: "Ringkasan" }).getByRole("button", { name: "Pesan sekarang" })
+          : submitButton(page);
+        await own.scrollIntoViewIfNeeded();
+        await expect(bar).toHaveCount(0);
+        await expect(page.getByTestId("booking-bar")).toHaveAttribute("data-shown", "false");
+      }
+      // On step 2 its button sends the form like the form's own button: without the consent, the switch says why.
+      await page.goto(orderPath(service.id, area, target.startsAt));
+      await page.getByLabel("Alamat lengkap").fill(address);
+      await page.getByLabel("Nomor HP").fill(phone);
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.getByRole("region", { name: "Pilihan Anda" }).getByRole("button", { name: "Lanjut ke pembayaran" }).click();
+      await expect(consentSwitch(page)).toBeFocused();
+      await expect(consentSwitch(page)).toHaveAttribute("aria-invalid", "true");
     });
   });
 });
@@ -284,9 +411,8 @@ test.describe("as a visitor", () => {
     await page.goto(`/book?${params.toString()}`);
 
     await expect(page).toHaveURL(orderPath(service.id, area, target.startsAt));
-    await expect(page.getByRole("region", { name: "Layanan" }).getByText(service.name, { exact: true })).toBeVisible();
-    await expect(
-      page.getByRole("group", { name: "Jadwal kedatangan" }).getByText(`${windowText(target)} WIB`, { exact: true }),
-    ).toBeVisible();
+    const choice = page.getByRole("region", { name: "Layanan dan jadwal" });
+    await expect(choice.getByText(service.name, { exact: true })).toBeVisible();
+    await expect(choice.getByText(`${windowText(target)} WIB`, { exact: true })).toBeVisible();
   });
 });

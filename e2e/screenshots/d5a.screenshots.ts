@@ -122,7 +122,7 @@ async function shootAll(
 }
 
 test("step 1 with a service and a time chosen (one time full), and step 2", async ({ browser }) => {
-  test.setTimeout(300_000);
+  test.setTimeout(600_000);
   const windows = await freeWindows(area);
   const day = new Date(windows[0].startsAt).toISOString().slice(0, 10);
   const sameDay = windows.filter((candidate) => new Date(candidate.startsAt).toISOString().slice(0, 10) === day);
@@ -144,6 +144,22 @@ test("step 1 with a service and a time chosen (one time full), and step 2", asyn
     await page.getByRole("switch").check();
   });
   await shootAll(browser, "step2-signed-in", `/pesan?${params.toString()}`, customer);
+  // The booking-flow fixes (2026-11-16): step 2 without a choice (as from a landing link), with the
+  // pickers and the same chips as step 1, and the consent error after pressing the button without it.
+  await shootAll(browser, "step2-pickers", `/pesan?layanan=regular&area=${area}`, guest);
+  await shootAll(browser, "step2-consent-error", `/pesan?${params.toString()}`, customer, async (page, lang) => {
+    await page.getByLabel(lang === "id" ? "Alamat lengkap" : "Full address").fill("Jl. Kemang Contoh No. 12, Gambir, Jakarta Pusat 10110");
+    await page.getByLabel(lang === "id" ? "Nomor HP" : "Mobile number").fill("0812 3456 7890");
+    await page
+      .getByRole("form", { name: lang === "id" ? "Pesan layanan" : "Book a cleaning" })
+      .getByRole("button", { name: lang === "id" ? "Lanjut ke pembayaran" : "Continue to payment" })
+      .click();
+    await expect(page.getByRole("switch")).toBeFocused();
+  });
+  await shootAll(browser, "step1-no-service", `/services?area=${area}`, guest, async (page, lang) => {
+    await page.getByRole("form", { name: lang === "id" ? "Ringkasan" : "Summary" }).getByRole("button", { name: lang === "id" ? "Pesan sekarang" : "Book now" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: lang === "id" ? "Pilih salah satu layanan" : "Choose one of the services" })).toBeVisible();
+  });
 });
 
 test("step 3, the confirmation, an order's page and the orders", async ({ browser }) => {
