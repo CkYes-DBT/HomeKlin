@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth/dal";
 import { listMyOrders, type CustomerOrder } from "@/lib/booking/orders";
 import { getCatalogServices, getServiceAreas } from "@/lib/catalog/cached";
 import type { Service, ServiceArea } from "@/lib/catalog/catalog";
+import { readPaymentState } from "@/lib/payment/state";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { parseBookedOrderId, parseOpenedOrderId } from "./booking-query";
 import { flowOutlineButton } from "./flow-styles";
@@ -67,13 +68,15 @@ export async function OrdersContent({ searchParams }: { searchParams: Promise<Se
   if (order) {
     const areaName = areas.find((candidate) => candidate.id === order.areaId)?.name[locale] ?? order.areaId;
     if (bookedId) {
+      // The method already charged for a waiting order, so a reload shows the same account number or QR code.
+      const details = order.status === "pending_payment" ? await readPaymentState(await createSupabaseServerClient({ writeCookies: false }), order.id) : null;
       return (
         <div className="flex flex-col gap-4">
           <BackToList />
           {order.status === "paid" ? (
             <PaymentConfirmed order={order} serviceName={serviceName(order)} areaName={areaName} />
           ) : (
-            <PaymentStep order={order} serviceName={serviceName(order)} areaName={areaName} cameBackFromPayment={cameBackFromPayment(params)} />
+            <PaymentStep order={order} serviceName={serviceName(order)} areaName={areaName} cameBackFromPayment={cameBackFromPayment(params)} details={details} />
           )}
         </div>
       );

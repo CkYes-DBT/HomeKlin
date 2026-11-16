@@ -674,7 +674,6 @@
     "watching": "The customer can watch."
   },
   "Payment": {
-    "secureNote": "Payment opens on Midtrans’ secure payment page.",
     "sandboxNote": "Simulated payment, no real money.",
     "submit": "Pay now",
     "pending": "Opening the payment…",
@@ -684,7 +683,9 @@
       "notCustomer": "Your session has ended. Log in again to pay for this order.",
       "notFound": "This order was not found in your account.",
       "notPayable": "This order is no longer awaiting payment. Reload the page to see its status.",
-      "paymentUnavailable": "The payment page could not be opened. Please try again in a moment."
+      "paymentUnavailable": "The payment could not be started. Please try again in a moment.",
+      "tooManyAttempts": "Too many attempts for this order. Contact our support to pay for it.",
+      "invalidChoice": "This way to pay is not available. Choose another."
     }
   },
   "PreviewData": {
@@ -2177,7 +2178,7 @@
   },
   "PaymentStep": {
     "title": "Payment",
-    "lead": "You pay exactly the price of the service. Your order is placed and its time is held for you.",
+    "lead": "Choose how to pay. You pay exactly the price of the service.",
     "closedLead": {
       "pending_payment": "Pay for this order to keep its time.",
       "paid": "This order is paid.",
@@ -2186,15 +2187,7 @@
     },
     "closedBody": "This order can no longer be paid. Choose a new time to book.",
     "bookAgain": "Book again",
-    "sandboxBody": "The Midtrans page that opens is its test mode (Sandbox).",
-    "methodsTitle": "Ways to pay",
-    "methodsLead": "You choose one on Midtrans’ page after pressing Pay now.",
-    "methods": {
-      "qris": "Scan the QR code from any bank or e-wallet app.",
-      "bankTransfer": "Transfer to a virtual account number from your bank.",
-      "card": "Visa and Mastercard.",
-      "ewallet": "GoPay or ShopeePay."
-    },
+    "sandboxBody": "Finish it with the Midtrans simulator or a test card.",
     "orderLabel": "Your order",
     "orderTitle": "Your order",
     "fields": {
@@ -2208,6 +2201,84 @@
     "seeOrder": "See the order details",
     "emailNoteTitle": "After payment, we send you an email.",
     "emailNoteBody": "It has your order details and a link to your order page. Your cleaner’s profile follows once assigned."
+  },
+  "PaymentChooser": {
+    "methodsTitle": "Payment method",
+    "methods": {
+      "qris": {
+        "title": "QRIS",
+        "body": "Scan the QR code from any bank or e-wallet app."
+      },
+      "bank": {
+        "title": "Virtual account",
+        "body": "Transfer to a virtual account number from your bank."
+      },
+      "card": {
+        "title": "Credit or debit card",
+        "body": "Visa and Mastercard."
+      }
+    },
+    "bankLegend": "Bank",
+    "banks": {
+      "bca": "BCA",
+      "mandiri": "Mandiri",
+      "bni": "BNI",
+      "bri": "BRI"
+    },
+    "card": {
+      "number": "Card number",
+      "expiry": "Expires (MM/YY)",
+      "cvv": "CVV",
+      "secure": "The card number goes straight to Midtrans and never reaches HomeKlin.",
+      "test": "Test card: 4811 1111 1111 1114, any future month and year, CVV 123. 3-D Secure password: 112233."
+    },
+    "pending": "Processing the payment",
+    "errors": {
+      "cardFields": "Fill in the card number, expiry date and CVV correctly.",
+      "cardInvalid": "The card was not accepted. Check the number, expiry date and CVV.",
+      "cardUnavailable": "Paying by card is not available right now. Choose another way or try again later.",
+      "cardDeclined": "The bank declined the card. This order can no longer be paid; choose a new time to book.",
+      "cardNotVerified": "The card could not be verified. Choose Change payment method to try again."
+    },
+    "waiting": {
+      "title": "Waiting for your payment",
+      "auto": "This page changes by itself once we receive the payment.",
+      "change": "Change payment method",
+      "changing": "Working",
+      "expires": "Pay before {time} WIB",
+      "amount": "Amount to pay",
+      "copy": "Copy",
+      "copied": "Copied",
+      "qris": {
+        "title": "Scan the QR code to pay",
+        "body": "Open any bank or e-wallet app, choose scan QR, and point it at this code.",
+        "alt": "QRIS code to pay for this order"
+      },
+      "va": {
+        "title": "Transfer to a {bank} virtual account",
+        "body": "In the {bank} app or at an ATM, choose transfer to a virtual account and enter this number. The amount fills in by itself.",
+        "number": "Virtual account number"
+      },
+      "mandiri": {
+        "title": "Pay through Mandiri",
+        "body": "In Livin’ by Mandiri or at a Mandiri ATM, choose Pay, then Multipayment. Enter this company code and payment code.",
+        "biller": "Company code",
+        "key": "Payment code"
+      },
+      "card": {
+        "title": "Your card payment is being processed",
+        "body": "We are waiting to hear from the bank. If the 3-D Secure check closed before it finished, choose Change payment method to try again."
+      },
+      "sandbox": {
+        "title": "Midtrans test mode",
+        "body": "No money moves. To complete this payment, open the Midtrans simulator and enter the number or code above.",
+        "link": "Open the Midtrans simulator"
+      }
+    },
+    "threeDs": {
+      "title": "Card check by your bank",
+      "close": "Close"
+    }
   },
   "PaymentConfirmed": {
     "title": "Payment successful",

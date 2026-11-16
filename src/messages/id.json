@@ -674,7 +674,6 @@
     "watching": "Pelanggan dapat menonton."
   },
   "Payment": {
-    "secureNote": "Pembayaran dibuka di halaman pembayaran aman Midtrans.",
     "sandboxNote": "Pembayaran simulasi, tidak ada uang sungguhan.",
     "submit": "Bayar sekarang",
     "pending": "Membuka pembayaran…",
@@ -684,7 +683,9 @@
       "notCustomer": "Sesi Anda sudah berakhir. Masuk lagi untuk membayar pesanan ini.",
       "notFound": "Pesanan ini tidak ditemukan di akun Anda.",
       "notPayable": "Pesanan ini tidak lagi menunggu pembayaran. Muat ulang halaman untuk melihat statusnya.",
-      "paymentUnavailable": "Halaman pembayaran belum dapat dibuka. Coba lagi dalam beberapa saat."
+      "paymentUnavailable": "Pembayaran belum dapat dimulai. Coba lagi dalam beberapa saat.",
+      "tooManyAttempts": "Terlalu banyak percobaan untuk pesanan ini. Hubungi bantuan kami untuk membayarnya.",
+      "invalidChoice": "Cara membayar ini tidak tersedia. Pilih cara lain."
     }
   },
   "PreviewData": {
@@ -2177,7 +2178,7 @@
   },
   "PaymentStep": {
     "title": "Pembayaran",
-    "lead": "Total yang Anda bayar sama dengan harga layanan. Pesanan Anda sudah dibuat dan jadwalnya kami simpan.",
+    "lead": "Pilih cara membayar. Total yang Anda bayar sama dengan harga layanan.",
     "closedLead": {
       "pending_payment": "Bayar pesanan ini agar jadwalnya tetap untuk Anda.",
       "paid": "Pesanan ini sudah dibayar.",
@@ -2186,15 +2187,7 @@
     },
     "closedBody": "Pesanan ini tidak dapat dibayar lagi. Pilih jadwal baru untuk memesan.",
     "bookAgain": "Pesan lagi",
-    "sandboxBody": "Halaman Midtrans yang terbuka adalah mode ujinya (Sandbox).",
-    "methodsTitle": "Cara membayar",
-    "methodsLead": "Anda memilih salah satu di halaman Midtrans setelah menekan Bayar sekarang.",
-    "methods": {
-      "qris": "Pindai kode QR dari aplikasi bank atau dompet digital apa pun.",
-      "bankTransfer": "Transfer ke nomor virtual account dari bank pilihan Anda.",
-      "card": "Visa dan Mastercard.",
-      "ewallet": "GoPay atau ShopeePay."
-    },
+    "sandboxBody": "Selesaikan dengan simulator Midtrans atau kartu uji.",
     "orderLabel": "Pesanan Anda",
     "orderTitle": "Pesanan Anda",
     "fields": {
@@ -2208,6 +2201,84 @@
     "seeOrder": "Lihat detail pesanan",
     "emailNoteTitle": "Setelah pembayaran, kami mengirim email.",
     "emailNoteBody": "Isinya detail pesanan dan tautan ke halaman pesanan Anda. Profil Petugas HomeKlin menyusul setelah ditugaskan."
+  },
+  "PaymentChooser": {
+    "methodsTitle": "Metode pembayaran",
+    "methods": {
+      "qris": {
+        "title": "QRIS",
+        "body": "Scan kode QR dari aplikasi bank atau dompet digital apa pun."
+      },
+      "bank": {
+        "title": "Virtual account",
+        "body": "Transfer ke nomor virtual account dari bank pilihan Anda."
+      },
+      "card": {
+        "title": "Kartu kredit atau debit",
+        "body": "Visa dan Mastercard."
+      }
+    },
+    "bankLegend": "Bank",
+    "banks": {
+      "bca": "BCA",
+      "mandiri": "Mandiri",
+      "bni": "BNI",
+      "bri": "BRI"
+    },
+    "card": {
+      "number": "Nomor kartu",
+      "expiry": "Berlaku sampai (BB/TT)",
+      "cvv": "CVV",
+      "secure": "Nomor kartu dikirim langsung ke Midtrans dan tidak pernah sampai ke HomeKlin.",
+      "test": "Kartu uji: 4811 1111 1111 1114, berlaku sampai bulan dan tahun mana pun di masa depan, CVV 123. Kata sandi 3-D Secure: 112233."
+    },
+    "pending": "Memproses pembayaran",
+    "errors": {
+      "cardFields": "Isi nomor kartu, tanggal berlaku, dan CVV dengan benar.",
+      "cardInvalid": "Kartu tidak diterima. Periksa nomor, tanggal berlaku, dan CVV Anda.",
+      "cardUnavailable": "Pembayaran kartu belum dapat dipakai sekarang. Pilih cara lain atau coba lagi nanti.",
+      "cardDeclined": "Kartu ditolak oleh bank. Pesanan ini tidak dapat dibayar lagi; pilih jadwal baru untuk memesan.",
+      "cardNotVerified": "Verifikasi kartu tidak berhasil. Pilih Ganti cara bayar untuk mencoba lagi."
+    },
+    "waiting": {
+      "title": "Menunggu pembayaran Anda",
+      "auto": "Halaman ini berubah sendiri setelah pembayaran kami terima.",
+      "change": "Ganti cara bayar",
+      "changing": "Memproses",
+      "expires": "Bayar sebelum {time} WIB",
+      "amount": "Jumlah yang dibayar",
+      "copy": "Salin",
+      "copied": "Tersalin",
+      "qris": {
+        "title": "Scan kode QR untuk membayar",
+        "body": "Buka aplikasi bank atau dompet digital apa pun, pilih scan QR, lalu arahkan ke kode ini.",
+        "alt": "Kode QRIS untuk membayar pesanan ini"
+      },
+      "va": {
+        "title": "Transfer ke virtual account {bank}",
+        "body": "Di aplikasi atau ATM {bank}, pilih transfer ke virtual account dan masukkan nomor ini. Jumlahnya terisi otomatis.",
+        "number": "Nomor virtual account"
+      },
+      "mandiri": {
+        "title": "Bayar lewat Mandiri",
+        "body": "Di Livin’ by Mandiri atau ATM Mandiri, pilih Bayar, lalu Multipayment. Masukkan kode perusahaan dan kode pembayaran ini.",
+        "biller": "Kode perusahaan",
+        "key": "Kode pembayaran"
+      },
+      "card": {
+        "title": "Pembayaran kartu sedang diproses",
+        "body": "Kami menunggu kabar dari bank. Jika verifikasi 3-D Secure tertutup sebelum selesai, pilih Ganti cara bayar untuk mencoba lagi."
+      },
+      "sandbox": {
+        "title": "Mode uji Midtrans",
+        "body": "Tidak ada uang yang dipindahkan. Untuk menyelesaikan pembayaran ini, buka simulator Midtrans dan masukkan nomor atau kode di atas.",
+        "link": "Buka simulator Midtrans"
+      }
+    },
+    "threeDs": {
+      "title": "Verifikasi kartu dari bank",
+      "close": "Tutup"
+    }
   },
   "PaymentConfirmed": {
     "title": "Pembayaran berhasil",

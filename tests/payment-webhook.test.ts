@@ -72,12 +72,31 @@ describe("POST /api/payments/midtrans", () => {
       p_status: expected,
       p_amount: 85000,
       p_payment_type: null,
+      p_attempt: 0,
+    });
+  });
+
+  it("finds the order and the attempt in an id made on HomeKlin's payment step ('<order id>_<attempt>')", async () => {
+    const response = await answer(await post(signed({ order_id: `${orderId}_3`, transaction_status: "expire" })));
+    expect(response).toEqual({ status: 200, body: { result: "cancelled" } });
+    expect(rpc).toHaveBeenCalledWith("apply_payment_result", {
+      p_order: orderId,
+      p_status: "cancelled",
+      p_amount: 85000,
+      p_payment_type: null,
+      p_attempt: 3,
     });
   });
 
   it("passes the payment method Midtrans names on to the order (B8)", async () => {
     await answer(await post(signed({ transaction_status: "settlement", payment_type: "gopay" })));
-    expect(rpc).toHaveBeenCalledWith("apply_payment_result", { p_order: orderId, p_status: "paid", p_amount: 85000, p_payment_type: "gopay" });
+    expect(rpc).toHaveBeenCalledWith("apply_payment_result", {
+      p_order: orderId,
+      p_status: "paid",
+      p_amount: 85000,
+      p_payment_type: "gopay",
+      p_attempt: 0,
+    });
   });
 
   it("answers a repeated notification the same way, with whatever the order already is", async () => {
@@ -135,6 +154,14 @@ describe("POST /api/payments/midtrans", () => {
   it("answers 404 for an order id that is not one of HomeKlin's orders", async () => {
     const response = await answer(await post(signed({ order_id: "payment_notif_test_G000000000" })));
     expect(response).toEqual({ status: 404, body: { error: "order_not_found" } });
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("answers 404 for an id with an attempt that is not a number, or an order id with extra text", async () => {
+    for (const odd of [`${orderId}_x`, `${orderId}_1_2`, `${orderId}-2`]) {
+      const response = await answer(await post(signed({ order_id: odd })));
+      expect(response).toEqual({ status: 404, body: { error: "order_not_found" } });
+    }
     expect(rpc).not.toHaveBeenCalled();
   });
 

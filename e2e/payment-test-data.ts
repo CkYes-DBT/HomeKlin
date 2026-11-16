@@ -18,8 +18,12 @@ export async function orderRow(orderId: string) {
   return data as { status: string; price_idr: number; slot_id: string };
 }
 
-/** A notification as Midtrans sends it for this order, signed with the given key. */
-export async function notification(orderId: string, transactionStatus: string, statusCode: string, key = serverKey()) {
+/**
+ * A notification as Midtrans sends it for this order, signed with the given key. `midtransId` is the id
+ * Midtrans knows the payment by: the order's own id, or "<order id>_<attempt>" for a payment made on
+ * HomeKlin's payment step.
+ */
+export async function notification(orderId: string, transactionStatus: string, statusCode: string, key = serverKey(), midtransId = orderId) {
   const amount = `${(await orderRow(orderId)).price_idr}.00`;
   return {
     transaction_time: "2026-10-28 10:15:00",
@@ -27,9 +31,9 @@ export async function notification(orderId: string, transactionStatus: string, s
     transaction_id: crypto.randomUUID(),
     status_message: "midtrans payment notification",
     status_code: statusCode,
-    signature_key: createHash("sha512").update(orderId + statusCode + amount + key).digest("hex"),
+    signature_key: createHash("sha512").update(midtransId + statusCode + amount + key).digest("hex"),
     payment_type: "bank_transfer",
-    order_id: orderId,
+    order_id: midtransId,
     merchant_id: "G000000000",
     gross_amount: amount,
     fraud_status: "accept",

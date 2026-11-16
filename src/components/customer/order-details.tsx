@@ -7,14 +7,13 @@ import { ClientMessages } from "@/i18n/client-messages";
 import { Link } from "@/i18n/navigation";
 import type { CustomerOrder } from "@/lib/booking/orders";
 import { formatRupiah } from "@/lib/format";
-import { flowCard, flowCardTitle, flowOutlineButton, flowTextLink } from "./flow-styles";
+import { flowCard, flowCardTitle, flowOutlineButton, flowPrimaryButton, flowTextLink } from "./flow-styles";
 import { liveInProgress } from "./live-status";
 import { OrderHero } from "./order-hero";
 import { OrderLive } from "./order-live";
 import { OrderRecording } from "./order-recording";
 import { getOrderWords, OrderStatusPill } from "./order-status";
 import { OrderTimelineCard } from "./order-timeline-card";
-import { PaymentForm } from "./payment-form";
 import { paymentMethodKey } from "./payment-method";
 import { recordingState } from "./recording-time";
 import { ResendEmail } from "./resend-email";
@@ -39,9 +38,10 @@ type OrderDetailsProps = {
 // as HomeKlin only: the order as the customer reads it never carries the agency (listMyOrders).
 export async function OrderDetails({ order, serviceName, duration, areaName, now }: OrderDetailsProps) {
   const locale = await getLocale();
-  const [t, tMethod, tReplay, words] = await Promise.all([
+  const [t, tMethod, tPayment, tReplay, words] = await Promise.all([
     getTranslations("OrderConfirmation"),
     getTranslations("PaymentMethod"),
+    getTranslations("Payment"),
     getTranslations("Replay"),
     getOrderWords(locale),
   ]);
@@ -122,9 +122,10 @@ export async function OrderDetails({ order, serviceName, duration, areaName, now
             </dl>
             {awaitingPayment ? (
               <div className="mt-4">
-                <ClientMessages namespaces={["Payment"]}>
-                  <PaymentForm orderId={order.id} />
-                </ClientMessages>
+                {/* Paying happens on step 3, where the customer chooses how (QRIS, a bank or a card). */}
+                <Link href={`/orders?booked=${order.id}`} className={flowPrimaryButton}>
+                  {tPayment("submit")}
+                </Link>
               </div>
             ) : null}
           </section>

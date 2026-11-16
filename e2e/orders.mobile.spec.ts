@@ -206,11 +206,13 @@ test.describe("with an order of each status", () => {
     await expect(ordersList(page)).toBeVisible();
   });
 
-  test("a waiting order still offers Bayar sekarang from its details", async ({ page }) => {
+  test("a waiting order still leads to paying from its details (step 3 lets the customer choose how)", async ({ page }) => {
     await page.goto(`/orders?order=${ids.waiting}`);
     const details = page.getByRole("region", { name: "Detail pesanan" });
     await expect(details.getByText("Menunggu pembayaran")).toBeVisible();
-    await expect(details.getByRole("button", { name: "Bayar sekarang" })).toBeVisible();
+    await details.getByRole("link", { name: "Bayar sekarang" }).click();
+    await expect(page).toHaveURL(`/orders?booked=${ids.waiting}`);
+    await expect(page.getByRole("button", { name: "Bayar sekarang" })).toBeVisible();
   });
 
   test("a failed order's details do not promise the slot", async ({ page }) => {
@@ -270,7 +272,7 @@ test.describe("with an order of each status", () => {
     await rowOf(page, ids.waiting, "/en").click();
     await expect(page).toHaveURL(`/en/orders?order=${ids.waiting}`);
     const details = page.getByRole("region", { name: "Order details" });
-    await expect(details.getByRole("button", { name: "Pay now" })).toBeVisible();
+    await expect(details.getByRole("link", { name: "Pay now" })).toBeVisible();
     await page.getByRole("link", { name: "Back to your orders" }).click();
     await expect(page).toHaveURL("/en/orders");
   });

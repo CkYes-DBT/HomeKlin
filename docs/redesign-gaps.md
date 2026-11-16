@@ -246,7 +246,7 @@ Pass 5a built in D5 (2026-11-15): the booking flow, the home and the orders. Moc
 
 | Mock element | Built instead | Backend needed |
 |---|---|---|
-| Choosing QRIS, virtual account or card on the page | The ways to pay as information ("Cara membayar"); the choice is made on Midtrans' Snap page | `enabled_payments` passed to Snap (B8, optional, not built) |
+| Choosing QRIS, virtual account or card on the page | Built as in the mock (2026-11-16): QRIS, virtual account with BCA, Mandiri, BNI or BRI, and a card; the server charges the chosen method with Midtrans' Core API, and the page shows the QR code or account number itself, then turns into the confirmation when Midtrans' signed notification arrives. The customer no longer goes to Midtrans' Snap page | Migration `20261116090000_payment_on_our_page.sql` (payment attempts and details) |
 | "Kembali ke detail pemesanan" | "Lihat detail pesanan" (the order is made already; step 2 cannot edit it), and "Kembali ke daftar pesanan" above the steps | Editing an unpaid order |
 | "Email" in the summary | Order number, service, time, area and address | None |
 | Not in the mock | A failed or cancelled order shows its status here with "Pesan lagi" instead of the button; back from Midtrans, "Pembayaran sedang dikonfirmasi" until the signed notification arrives | None |

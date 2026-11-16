@@ -1,3 +1,4 @@
+import { parseMidtransOrderId } from "@/lib/payment/midtrans";
 import { amountIdr, hasValidSignature, parseNotification, paymentResult } from "@/lib/payment/notification";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
@@ -9,8 +10,6 @@ import { createSupabaseServiceClient } from "@/lib/supabase/service";
 // Sources: https://docs.midtrans.com/docs/https-notification-webhooks ("Responding HTTP Notification",
 // "Best Practice to Handle Notification") and node_modules/next/dist/docs/01-app/03-api-reference/
 // 03-file-conventions/route.md
-
-const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function reply(status: number, body: Record<string, string>) {
   return Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -35,17 +34,22 @@ export async function POST(request: Request) {
     console.info("[payment] %s is %s: nothing to change yet", notification.orderId, notification.transactionStatus);
     return reply(200, { result: "ignored" });
   }
-  // Midtrans' own test notification and other merchants' order ids are not HomeKlin orders.
-  if (!uuid.test(notification.orderId)) return reply(404, { error: "order_not_found" });
+  // Midtrans' own test notification and other merchants' order ids are not HomeKlin orders. HomeKlin's
+  // are "<order id>" (a Snap payment made before payment moved to HomeKlin's page: attempt 0) or
+  // "<order id>_<attempt>"; the attempt lets the database ignore the cancellation of a method the
+  // customer left.
+  const midtransId = parseMidtransOrderId(notification.orderId);
+  if (!midtransId) return reply(404, { error: "order_not_found" });
   const amount = amountIdr(notification.grossAmount);
   if (amount === null) return reply(400, { error: "amount_mismatch" });
 
   try {
     const { data, error } = await createSupabaseServiceClient().rpc("apply_payment_result", {
-      p_order: notification.orderId,
+      p_order: midtransId.orderId,
       p_status: result,
       p_amount: amount,
       p_payment_type: notification.paymentType ?? null,
+      p_attempt: midtransId.attempt,
     });
     if (error) {
       if (error.message === "order_not_found" || error.message === "amount_mismatch") {

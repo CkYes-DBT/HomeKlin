@@ -58,7 +58,7 @@ Versions are pinned in `package.json` at scaffold time (latest stable then). Do 
 | Database, auth, realtime chat, storage | Supabase (Postgres, Auth, Realtime, Storage); row-level security enforces roles |
 | Live streaming | LiveKit Cloud (WebRTC), free tier |
 | Recording storage | Supabase Storage private bucket + `recordings` table; scheduled job (Supabase pg_cron or Vercel Cron) deletes after 7 days; demo uses pre-recorded clips |
-| Payment | Midtrans Sandbox, Snap + notification webhook (simulated) |
+| Payment | Midtrans Sandbox, Core API (the customer chooses QRIS, a bank's virtual account or a card on HomeKlin's own payment step; the server charges that method) + signed notification webhook (simulated). Changed from Snap on 2026-11-16 at the user's request. |
 | Language switch (ID/EN) | next-intl, Indonesian default |
 | Validation | Zod |
 | Unit/integration tests | Vitest |

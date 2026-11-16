@@ -1,14 +1,15 @@
-import { ArrowRight, Building2, CircleAlert, CreditCard, Info, Mail, QrCode, RefreshCw, Video, Wallet, type LucideIcon } from "lucide-react";
+import { ArrowRight, CircleAlert, Info, Mail, RefreshCw, Video, type LucideIcon } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { ClientMessages } from "@/i18n/client-messages";
 import { Link } from "@/i18n/navigation";
 import type { CustomerOrder } from "@/lib/booking/orders";
 import { formatRupiah } from "@/lib/format";
+import type { PaymentDetails } from "@/lib/payment/methods";
 import { BookingStepper } from "./booking-stepper";
 import { flowCard, flowCardTitle, flowNote, flowPageTitle, flowPrimaryButton, flowTextLink } from "./flow-styles";
 import { getOrderWords, OrderStatusPill } from "./order-status";
-import { PaymentForm } from "./payment-form";
+import { PaymentCheckout } from "./payment-checkout";
 import { paymentMethodKey } from "./payment-method";
 import { ResendEmail } from "./resend-email";
 
@@ -18,31 +19,60 @@ type StepProps = {
   areaName: string;
 };
 
-/** The ways Midtrans Snap offers, shown as information: the customer chooses on Midtrans' page. */
-const methods: { key: "qris" | "bankTransfer" | "card" | "ewallet"; Icon: LucideIcon }[] = [
-  { key: "qris", Icon: QrCode },
-  { key: "bankTransfer", Icon: Building2 },
-  { key: "card", Icon: CreditCard },
-  { key: "ewallet", Icon: Wallet },
-];
-
 // Step 3 of ordering, /orders?booked=<id> while the order waits for payment (T10, restyled in D5 after
-// the Customer-Payment and Phone-Payment mocks): the steps, that it is a simulation, the ways to pay,
-// and beside them the order with "Bayar sekarang", which opens Midtrans' Sandbox page (startPayment
-// checks the customer and the price on the server). Midtrans' Snap page still lets the customer choose
-// the method (enabled_payments was not built, Phase 15 B8), so the methods here are information, not a
-// choice. Back from Midtrans the order still waits until Midtrans' signed notification arrives (T11),
-// so the page says the payment is being confirmed rather than claiming it is paid. A failed or
-// cancelled order shows here with its status and no button.
-export async function PaymentStep({ order, serviceName, areaName, cameBackFromPayment }: StepProps & { cameBackFromPayment: boolean }) {
+// the Customer-Payment and Phone-Payment mocks): the steps, that it is a simulation, and the payment
+// itself on this page (./payment-checkout.tsx): the customer chooses QRIS, a bank's virtual account or a
+// card, presses "Bayar sekarang", and gets the account number or QR code to pay with right here. The
+// server charges Midtrans' Sandbox (payOrder checks the customer and the price); the page then reads the
+// order again until Midtrans' signed notification arrives (T11), so it never claims the order is paid
+// itself. A failed or cancelled order shows here with its status and no button.
+export async function PaymentStep({
+  order,
+  serviceName,
+  areaName,
+  cameBackFromPayment,
+  details,
+}: StepProps & { cameBackFromPayment: boolean; details: PaymentDetails | null }) {
   const locale = await getLocale();
-  const [t, tPayment, tMethod, words] = await Promise.all([
-    getTranslations("PaymentStep"),
-    getTranslations("Payment"),
-    getTranslations("PaymentMethod"),
-    getOrderWords(locale),
-  ]);
+  const [t, tPayment, words] = await Promise.all([getTranslations("PaymentStep"), getTranslations("Payment"), getOrderWords(locale)]);
   const awaiting = order.status === "pending_payment";
+  // Midtrans' public key, for paying by card; without it the card option is left out.
+  const clientKey = process.env.MIDTRANS_CLIENT_KEY?.trim() || null;
+
+  const summary = (
+    <>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className={flowCardTitle}>{t("orderTitle")}</h2>
+        <OrderStatusPill status={order.status} label={words.status(order.status)} />
+      </div>
+      <SummaryRows
+        rows={[
+          { term: t("fields.code"), value: order.orderCode },
+          { term: t("fields.service"), value: words.service(serviceName) },
+          { term: t("fields.window"), value: words.arrival(order) },
+          { term: t("fields.area"), value: areaName },
+          { term: t("fields.address"), value: order.address },
+        ]}
+      />
+      <div className="mt-4 flex items-baseline justify-between gap-4">
+        <p className="font-semibold text-ink">{t("total")}</p>
+        <p className="font-display text-price font-semibold whitespace-nowrap text-ink tabular-nums">{formatRupiah(order.priceIdr, locale)}</p>
+      </div>
+    </>
+  );
+  const seeOrder = (
+    <Link href={`/orders?order=${order.id}`} className={`${flowTextLink} mt-3`}>
+      {t("seeOrder")}
+    </Link>
+  );
+  const emailNote = (
+    <p className={flowNote}>
+      <NoteIcon icon={Mail} />
+      <span>
+        <strong className="font-semibold">{t("emailNoteTitle")}</strong> {t("emailNoteBody")}
+      </span>
+    </p>
+  );
 
   return (
     <div className="flex flex-col gap-6 md:gap-7">
@@ -73,26 +103,20 @@ export async function PaymentStep({ order, serviceName, areaName, cameBackFromPa
           </p>
         ) : null}
 
-        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-6">
-          {awaiting ? (
-            <div className="flex flex-col gap-3">
-              <h2 className={flowCardTitle}>{t("methodsTitle")}</h2>
-              <p className="text-sm text-ink-muted">{t("methodsLead")}</p>
-              <ul className="flex flex-col gap-3">
-                {methods.map(({ key, Icon }) => (
-                  <li key={key} className="flex items-center gap-4 rounded-lg bg-card p-4 md:px-6 md:py-5">
-                    <span aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-md bg-lime-wash text-on-lime-wash">
-                      <Icon className="size-5" />
-                    </span>
-                    <span className="flex min-w-0 flex-col">
-                      <span className="font-semibold text-ink">{tMethod(key)}</span>
-                      <span className="text-sm text-ink-muted">{t(`methods.${key}`)}</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : (
+        {awaiting ? (
+          <ClientMessages namespaces={["Payment", "PaymentChooser"]}>
+            <PaymentCheckout
+              orderId={order.id}
+              details={details}
+              clientKey={clientKey}
+              amountText={formatRupiah(order.priceIdr, locale)}
+              summary={summary}
+              footer={seeOrder}
+              note={emailNote}
+            />
+          </ClientMessages>
+        ) : (
+          <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-6">
             <div className={`${flowCard} flex flex-col items-start gap-3`}>
               <p className="flex items-start gap-2 text-ink">
                 <CircleAlert className="mt-1 size-4.5 shrink-0 text-ink-muted" aria-hidden="true" />
@@ -103,51 +127,14 @@ export async function PaymentStep({ order, serviceName, areaName, cameBackFromPa
                 <ArrowRight className="size-5 shrink-0" aria-hidden="true" />
               </Link>
             </div>
-          )}
-
-          {/* On phones the order and "Bayar sekarang" come first; the ways to pay are background. */}
-          <aside aria-label={t("orderLabel")} className="order-first flex flex-col gap-4 lg:sticky lg:top-24 lg:order-none">
-            <div className={flowCard}>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className={flowCardTitle}>{t("orderTitle")}</h2>
-                <OrderStatusPill status={order.status} label={words.status(order.status)} />
+            <aside aria-label={t("orderLabel")} className="flex flex-col gap-4 lg:sticky lg:top-24">
+              <div className={flowCard}>
+                {summary}
+                {seeOrder}
               </div>
-              <SummaryRows
-                rows={[
-                  { term: t("fields.code"), value: order.orderCode },
-                  { term: t("fields.service"), value: words.service(serviceName) },
-                  { term: t("fields.window"), value: words.arrival(order) },
-                  { term: t("fields.area"), value: areaName },
-                  { term: t("fields.address"), value: order.address },
-                ]}
-              />
-              <div className="mt-4 flex items-baseline justify-between gap-4">
-                <p className="font-semibold text-ink">{t("total")}</p>
-                <p className="font-display text-price font-semibold whitespace-nowrap text-ink tabular-nums">
-                  {formatRupiah(order.priceIdr, locale)}
-                </p>
-              </div>
-              {awaiting ? (
-                <div className="mt-5">
-                  <ClientMessages namespaces={["Payment"]}>
-                    <PaymentForm orderId={order.id} sandboxNote={false} />
-                  </ClientMessages>
-                </div>
-              ) : null}
-              <Link href={`/orders?order=${order.id}`} className={`${flowTextLink} mt-3`}>
-                {t("seeOrder")}
-              </Link>
-            </div>
-            {awaiting ? (
-              <p className={flowNote}>
-                <NoteIcon icon={Mail} />
-                <span>
-                  <strong className="font-semibold">{t("emailNoteTitle")}</strong> {t("emailNoteBody")}
-                </span>
-              </p>
-            ) : null}
-          </aside>
-        </div>
+            </aside>
+          </div>
+        )}
       </section>
     </div>
   );

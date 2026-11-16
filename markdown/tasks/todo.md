@@ -406,3 +406,9 @@ Conventions for every task: tests written first; `npm run typecheck`, `npm run l
 
 ### Checkpoint E: backend for the redesign
 - [ ] Approved tiers built; all integration tests pass; migrated on test; live migration with the user's permission.
+
+## Phase 16: Payment on our own page (2026-11-16, user request)
+
+- [x] **P1 Pay on HomeKlin's page with a chosen method** (L): the payment step offers QRIS, a bank's virtual account (BCA, Mandiri, BNI, BRI) and a card (Customer-Payment mock); the server charges the choice with Midtrans' Core API (Sandbox) instead of sending the customer to Snap. Done 2026-11-16: migration `20261116090000_payment_on_our_page.sql` (`payment_attempt`, `payment_details`, `begin_payment_attempt`, `attach_payment_details`, `order_payment_state`, `apply_payment_result` with the attempt: a cancel or failure of an older attempt changes nothing, money for any attempt counts); `src/lib/payment/midtrans.ts` (Core API charge and cancel; Midtrans id `<order>_<attempt>`, plain id for old Snap payments), `methods.ts`, `actions.ts` (`payOrder`, `changePaymentMethod`), the webhook reads the attempt; UI `payment-checkout.tsx`, `payment-methods.tsx`, `payment-waiting.tsx` (QR code, account number with copy, polling, "Ganti cara bayar"), `card-input.ts`, `midtrans-card.ts` (card token and 3-D Secure in the browser; the number never reaches the server). The order page links to step 3 instead of its own button. Tests: unit, integration (`payment-attempts`), e2e `payment.mobile.spec.ts`; screenshots `docs/screenshots/pay/`.
+  - Needs from the user: `MIDTRANS_CLIENT_KEY` in Vercel and as a GitHub secret (cards are left out of the page without it); `npm run supabase -- migrate live` before the code goes live.
+
