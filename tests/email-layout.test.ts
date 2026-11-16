@@ -57,9 +57,9 @@ describe("the order emails' layout", () => {
   });
 
   it("says a private link is the customer's own, and only then", () => {
-    expect(assigned.html).toContain("Tautan ini khusus untuk Anda");
-    expect(assigned.text).toContain("Tautan ini khusus untuk Anda");
-    expect(ready.html).not.toContain("This link is for you only");
+    expect(assigned.html).toContain("Tautan ini langsung memasukkan Anda ke akun Anda");
+    expect(assigned.text).toContain("Tautan ini langsung memasukkan Anda ke akun Anda");
+    expect(ready.html).not.toContain("This link signs you in to your account");
   });
 
   it("shows the Petugas HomeKlin by initials when there is no photo, with the time as words", () => {

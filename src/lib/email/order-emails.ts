@@ -31,7 +31,7 @@ type Facts = {
 
 const siteUrl = () => (process.env.SITE_URL ?? "https://home-klin.vercel.app").replace(/\/+$/, "");
 const localePrefix = (locale: Locale) => (locale === routing.defaultLocale ? "" : `/${locale}`);
-/** The order's private page (B14a, opens without signing in), else the signed-in orders page. */
+/** The order's private link (B14a, signs the customer in and opens the order), else the signed-in orders page. */
 const orderUrl = async (orderId: string, locale: Locale) =>
   (await createOrderLink(orderId, locale)) ?? `${siteUrl()}${localePrefix(locale)}/orders?order=${orderId}`;
 /** A site image (/images/...) as an address mail apps can load; an https address as it is. */

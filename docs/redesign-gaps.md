@@ -233,7 +233,7 @@ Pass 5a built in D5 (2026-11-15): the booking flow, the home and the orders. Moc
 
 | Mock element | Built instead | Backend needed |
 |---|---|---|
-| "Sekali / Berulang" (recurring bookings) | Left out: not approved (Phase 15 B14) | Recurring bookings (schedule, payment per visit) |
+| "Sekali / Berulang" (recurring bookings) | Left out: not needed (user, 2026-11-16) | None |
 | "Nama lengkap" field | Left out: `book_slot` takes no name; a guest's account gets its name later on the account page | A name argument on `book_slot` or on the code sign-in |
 | Service shown only in the summary with "Ubah" | The "Layanan" card with its select stays (the landing's links and the old `/book` address open step 2 directly), and "Ubah" in the summary leads back to step 1 with the choice | None |
 | Date as a calendar input | A select of the days that have free times, then that day's chips; the area select stays in the same card ("Area dan jadwal") | None |
@@ -310,7 +310,7 @@ Pass 5b built in D5 (2026-11-15): live, recordings, help and the guest chat, the
 
 | Mock element | Built instead | Backend needed |
 |---|---|---|
-| Not in the mocks (the emails link "homeklin.id/pesanan/HK-1042") | `/o/<token>`: the order number, service, time, area, status steps, the Petugas HomeKlin and how it was paid; no address, phone or email (`order_by_link` returns none). Watching live, replaying and help need signing in ("Masuk dengan email"). A wrong, revoked or expired link: "Tautan ini tidak berlaku". Not indexed, no Referer | Live view and replay through the link (a link-scoped stream and recording token) |
+| Not in the mocks (the emails link "homeklin.id/pesanan/HK-1042") | `/o/<token>` signs the order's customer in and opens their full order page `/orders?order=<id>`, with the live view, the recording and help (user decision 2026-11-16: the account is made when they order, and the email is theirs). Only a customer account is ever signed in this way. A wrong, cancelled or expired link leads to the sign-in page with "Tautan di email ini sudah tidak berlaku". Never cached, no Referer | None |
 
 ### Emails (`Customer-Email-Order`, `Customer-Email-Replay`)
 

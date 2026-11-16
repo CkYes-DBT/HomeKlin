@@ -2237,7 +2237,7 @@
   },
   "OrderEmails": {
     "title": "Email pesanan",
-    "body": "Tautan di email pesanan membuka halaman ini tanpa masuk. Jika email itu sampai ke orang lain, batalkan tautannya. Email berikutnya membawa tautan baru.",
+    "body": "Tautan di email pesanan langsung memasukkan Anda ke akun ini. Jika email itu sampai ke orang lain, batalkan tautannya. Email berikutnya membawa tautan baru.",
     "revoke": {
       "submit": "Batalkan tautan email",
       "pending": "Membatalkan…",
@@ -2288,23 +2288,6 @@
     "tooShort": "Tulis pertanyaan Anda, paling sedikit 5 karakter.",
     "submit": "Chat dengan admin",
     "pending": "Membuka chat…"
-  },
-  "OrderLinkPage": {
-    "metaTitle": "Pesanan Anda",
-    "title": "Pesanan {code}",
-    "privateTitle": "Tautan ini khusus untuk Anda.",
-    "privateBody": "Jangan bagikan ke orang lain. Tautan berlaku sampai {day}. Alamat dan kontak Anda tidak ditampilkan di sini.",
-    "asideLabel": "Masuk dan bantuan",
-    "signInTitle": "Siaran dan rekaman",
-    "signInBody": "Untuk menonton siaran langsung dan memutar rekaman, masuk dengan email yang Anda pakai saat memesan.",
-    "signIn": "Masuk dengan email",
-    "recordingKept": "Rekaman tersedia sampai {day}, {time} WIB.",
-    "recordingGone": "Rekaman pesanan ini sudah dihapus atau tidak tersedia.",
-    "invalidTitle": "Tautan ini tidak berlaku",
-    "invalidBody": "Tautan ini salah, sudah dicabut, atau sudah lewat masa berlakunya. Masuk dengan email pesanan Anda untuk melihat pesanan.",
-    "errorTitle": "Pesanan belum bisa ditampilkan",
-    "errorBody": "Ada gangguan saat membaca tautan ini. Muat ulang halaman untuk mencoba lagi.",
-    "retry": "Muat ulang"
   },
   "Replay": {
     "title": "Rekaman pekerjaan",

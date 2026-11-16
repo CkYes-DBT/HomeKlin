@@ -6,8 +6,8 @@ import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 // The private link to one order's page from its emails (B14a, supabase/migrations/20261114220000_order_links.sql).
 // The link is /o/<token> (or /en/o/<token>): a random 256-bit token that only the email holds; the
-// database keeps its SHA-256. The page reads the order on the server with getOrderByLink, never signs
-// anyone in, and shows only what order_by_link returns (no address, phone or email). A link works for
+// database keeps its SHA-256. Opening it signs the order's customer in
+// (src/lib/orders/order-link-sign-in.ts) and leads to their full order page. A link works for
 // 30 days; the order's customer revokes them all with revokeOrderLinks (src/lib/booking/email-actions.ts).
 
 const sha256 = (text: string) => createHash("sha256").update(text).digest("hex");

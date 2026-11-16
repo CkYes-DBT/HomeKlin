@@ -30,19 +30,19 @@ export const escapeHtml = (value: string) =>
 const words = {
   id: {
     noButton: "Tombol tidak berfungsi? Salin tautan ini ke browser Anda:",
-    privateLink: "Tautan ini khusus untuk Anda. Jangan bagikan ke orang lain.",
+    privateLink: "Tautan ini langsung memasukkan Anda ke akun Anda. Jangan bagikan ke orang lain.",
     help: "Butuh bantuan? Balas email ini, atau buka",
     helpLink: "Bantuan",
   },
   en: {
     noButton: "Button not working? Copy this link into your browser:",
-    privateLink: "This link is for you only. Do not share it.",
+    privateLink: "This link signs you in to your account. Do not share it.",
     help: "Need help? Reply to this email, or open",
     helpLink: "Help",
   },
 } satisfies Record<Locale, Record<string, string>>;
 
-/** A private order link (B14a) opens the order without signing in, so the email says it is theirs. */
+/** A private order link (B14a) signs the customer in, so the email says not to share it. */
 export const isPrivateLink = (url: string) => /\/o\/[A-Za-z0-9_-]+$/.test(url);
 
 export type EmailSection =

@@ -17,6 +17,15 @@ export async function claimCustomerAccount(user: SupabaseClient, server: Supabas
   const reset = await server.auth.admin.updateUserById(userId, { password: randomBytes(48).toString("base64url") });
   if (reset.error) throw new Error(`Could not secure the account: ${reset.error.message}`);
 
+  await startSessionFor(user, server, email);
+}
+
+/**
+ * Gives `user` (a cookie-writing client: a Server Action or a Route Handler) a fresh session for the
+ * account with this email, through a one-time code the server makes itself; nothing is emailed. Used
+ * after a code check (above) and by the private order link (src/lib/orders/order-link-sign-in.ts).
+ */
+export async function startSessionFor(user: SupabaseClient, server: SupabaseClient, email: string): Promise<void> {
   const link = await server.auth.admin.generateLink({ type: "magiclink", email });
   if (link.error) throw new Error(`Could not renew the session: ${link.error.message}`);
   const renewed = await user.auth.verifyOtp({ email, token: link.data.properties.email_otp, type: "email" });

@@ -25,7 +25,14 @@ export const securityHeaders = [
 const nextConfig: NextConfig = {
   cacheComponents: true,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    // The private order link (/o/<token>, /en/o/<token>) carries its token in the address, so it never
+    // sends a Referer; a later rule overrides the same header of an earlier one.
+    const noReferrer = [{ key: "Referrer-Policy", value: "no-referrer" }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      { source: "/o/:token", headers: noReferrer },
+      { source: "/:locale/o/:token", headers: noReferrer },
+    ];
   },
   partialPrefetching: true,
   experimental: {

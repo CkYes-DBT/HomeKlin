@@ -2237,7 +2237,7 @@
   },
   "OrderEmails": {
     "title": "Order emails",
-    "body": "The link in the order emails opens this page without logging in. If an email reached someone else, cancel its links. The next email carries a new link.",
+    "body": "The link in the order emails signs you straight in to this account. If an email reached someone else, cancel its links. The next email carries a new link.",
     "revoke": {
       "submit": "Cancel email links",
       "pending": "Cancelling…",
@@ -2288,23 +2288,6 @@
     "tooShort": "Write your question, at least 5 characters.",
     "submit": "Chat with admin",
     "pending": "Opening the chat…"
-  },
-  "OrderLinkPage": {
-    "metaTitle": "Your order",
-    "title": "Order {code}",
-    "privateTitle": "This link is for you only.",
-    "privateBody": "Do not share it. It works until {day}. Your address and contact details are not shown here.",
-    "asideLabel": "Log in and help",
-    "signInTitle": "Live stream and recording",
-    "signInBody": "To watch live and replay the recording, log in with the email you used to order.",
-    "signIn": "Log in with email",
-    "recordingKept": "The recording is kept until {day}, {time} WIB.",
-    "recordingGone": "The recording of this order has been deleted or is not available.",
-    "invalidTitle": "This link does not work",
-    "invalidBody": "This link is wrong, has been revoked, or has expired. Log in with the email of your order to see it.",
-    "errorTitle": "The order cannot be shown yet",
-    "errorBody": "Something went wrong while reading this link. Reload the page to try again.",
-    "retry": "Reload"
   },
   "Replay": {
     "title": "Job recording",

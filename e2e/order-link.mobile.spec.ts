@@ -1,14 +1,13 @@
 import { createHash, randomBytes } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import { adminClient } from "../tests/integration/test-project";
-import { agencyMarks } from "./booking-test-data";
 import { createJobWorld, seededAgencyId, sessionOf, type JobWorld } from "./job-test-data";
 
-// B14a with its page (D5 pass 5b): the private link in the order emails, /o/<token>, opens that one
-// order's page without signing in. It shows the order number, the service, the time, the area, the
-// status steps and the Petugas HomeKlin, but never the address, the phone, the email or the agency, and
-// nothing of any other order. A made-up, revoked or expired token gets one plain answer. The links are
-// stored the way createOrderLink does (only the token's SHA-256), with the test project's secret key.
+// B14a, changed by the user on 2026-11-16: the private link in the order emails, /o/<token>, signs the
+// order's customer in and opens their full order page (live view, recording, help), because the account
+// is made when they order and the email is theirs. A made-up, revoked or expired token signs no one in
+// and leads to the sign-in page with a notice. The links are stored the way createOrderLink does (only
+// the token's SHA-256), with the test project's secret key. Each test starts signed out.
 
 test.describe.configure({ mode: "serial", timeout: 90_000 });
 
@@ -47,55 +46,40 @@ test.afterAll(async () => {
   await world?.cleanup();
 });
 
-test("opens that one order without signing in, with no address, phone or agency", async ({ page }) => {
+test("signs the customer in and opens their full order page", async ({ page }) => {
   await page.goto(`/o/${tokens.good}`);
-  await expect(page.getByText("Tautan ini khusus untuk Anda.")).toBeVisible();
-  const details = page.getByRole("region", { name: "Detail pesanan" });
-  await expect(details.getByText(code, { exact: true })).toBeVisible();
-  await expect(details).toContainText("Pembersihan Rutin");
-  await expect(details).toContainText("Jakarta Timur");
-  await expect(page.getByRole("region", { name: "Petugas HomeKlin" })).toContainText("Uji Petugas Tautan");
-  await expect(page.getByRole("region", { name: "Status pekerjaan" })).toBeVisible();
-  // Still signed out: the header offers "Masuk", and watching leads to signing in.
-  await expect(page.getByRole("banner").getByRole("link", { name: "Masuk", exact: true })).toBeVisible();
-
-  const marks = await agencyMarks();
-  const served = await (await page.request.get(`/o/${tokens.good}`)).text();
-  for (const html of [await page.content(), served]) {
-    for (const secret of [address, otherAddress, otherCode, "Catatan rahasia", "+6281234567890", "@example.com"]) {
-      expect(html).not.toContain(secret);
-    }
-    expect(html).not.toMatch(/agensi|agency|mitra|partner/i);
-    for (const mark of marks) expect(html).not.toContain(mark);
-  }
+  await expect(page).toHaveURL(`/orders?order=${orderId}`);
+  await expect(page.getByText(code, { exact: true }).first()).toBeVisible();
+  // Signed in now: the header no longer offers "Masuk".
+  await expect(page.getByRole("banner").getByRole("link", { name: "Masuk", exact: true })).toHaveCount(0);
+  // The session stays: the orders page opens on its own afterwards.
+  await page.goto("/orders");
+  await expect(page).toHaveURL("/orders");
 });
 
 test("works in English", async ({ page }) => {
   await page.goto(`/en/o/${tokens.good}`);
-  await expect(page.getByText("This link is for you only.")).toBeVisible();
-  await expect(page.getByRole("region", { name: "Order details" }).getByText(code, { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(`/en/orders?order=${orderId}`);
+  await expect(page.getByText(code, { exact: true }).first()).toBeVisible();
 });
 
-test("a made-up, revoked or expired link shows nothing of any order", async ({ page }) => {
+test("the redirect is never cached and sends no Referer", async ({ request }) => {
+  const reply = await request.get(`/o/${tokens.good}`, { maxRedirects: 0 });
+  expect(reply.status()).toBe(303);
+  expect(reply.headers()["cache-control"]).toContain("no-store");
+  expect(reply.headers()["referrer-policy"]).toBe("no-referrer");
+});
+
+test("a made-up, revoked or expired link signs no one in and shows nothing of any order", async ({ page }) => {
   for (const token of [newToken(), tokens.revoked, tokens.expired, "not-a-token"]) {
     await page.goto(`/o/${token}`);
-    await expect(page.getByRole("heading", { level: 1, name: "Tautan ini tidak berlaku" })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Detail pesanan" })).toHaveCount(0);
+    await expect(page).toHaveURL(/\/login\?tautan=tidak-berlaku/);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     const html = await page.content();
     for (const secret of [code, otherCode, address, otherAddress, "Uji Petugas Tautan"]) expect(html).not.toContain(secret);
+    await page.goto("/orders");
+    await expect(page).toHaveURL(/\/login\?next=/);
   }
-});
-
-test.describe("at 360 px", () => {
-  test.use({ viewport: { width: 360, height: 740 } });
-
-  test("has no sideways scroll", async ({ page }) => {
-    for (const path of [`/o/${tokens.good}`, `/en/o/${tokens.good}`, "/o/not-a-token"]) {
-      await page.goto(path);
-      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-      expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
-    }
-  });
 });
 
 // Review H1: the order's customer cancels the links in its emails from the signed-in order page, and
@@ -113,7 +97,7 @@ test("the customer cancels the email links, and the old link stops working", asy
   const visitor = await browser.newContext({ baseURL, storageState: { cookies: [], origins: [] } });
   const stranger = await visitor.newPage();
   await stranger.goto(`/o/${tokens.good}`);
-  await expect(stranger.getByRole("heading", { level: 1, name: "Tautan ini tidak berlaku" })).toBeVisible();
+  await expect(stranger).toHaveURL(/\/login\?tautan=tidak-berlaku/);
   await expect(stranger.getByText(code, { exact: true })).toHaveCount(0);
   await visitor.close();
 });
