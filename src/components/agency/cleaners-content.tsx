@@ -24,7 +24,8 @@ import { panel, secondaryButton } from "./styles";
 type SearchParams = Record<string, string | string[] | undefined>;
 
 const headCell = "px-4 py-3 text-left text-xs font-semibold text-ink-muted";
-const weekLink = "inline-flex size-11 items-center justify-center rounded-full border border-border-control bg-card text-ink transition-colors duration-150 ease-out-quart";
+const weekLink =
+  "inline-flex size-11 items-center justify-center rounded-full border border-border-control bg-card text-ink transition-[background-color,transform] duration-150 ease-out-quart";
 
 type Read = { agency: MyAgency; cleaners: AgencyCleaner[]; jobs: AgencyJob[]; slots: AgencySlot[] } | null;
 
@@ -148,7 +149,7 @@ export async function CleanersContent({ searchParams }: { searchParams: Promise<
         action={
           <nav aria-label={t("availability.weekNav")} className="flex items-center gap-2">
             {index > 0 ? (
-              <Link href={weekHref(index - 1)} aria-label={t("availability.previous")} className={`${weekLink} hover:bg-sunken active:bg-lime-wash`}>
+              <Link href={weekHref(index - 1)} aria-label={t("availability.previous")} className={`${weekLink} hover:bg-sunken active:scale-95 active:bg-lime-wash`}>
                 <ChevronLeft className="size-5" aria-hidden="true" />
               </Link>
             ) : (
@@ -157,7 +158,7 @@ export async function CleanersContent({ searchParams }: { searchParams: Promise<
               </span>
             )}
             {index < lastScheduleWeek ? (
-              <Link href={weekHref(index + 1)} aria-label={t("availability.next")} className={`${weekLink} hover:bg-sunken active:bg-lime-wash`}>
+              <Link href={weekHref(index + 1)} aria-label={t("availability.next")} className={`${weekLink} hover:bg-sunken active:scale-95 active:bg-lime-wash`}>
                 <ChevronRight className="size-5" aria-hidden="true" />
               </Link>
             ) : (

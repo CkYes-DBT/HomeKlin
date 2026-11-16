@@ -26,7 +26,7 @@ import { SlotRowActions } from "./slot-row-actions";
 type SearchParams = Record<string, string | string[] | undefined>;
 
 const navLink =
-  "inline-flex min-h-touch items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition-colors duration-150 ease-out-quart";
+  "inline-flex min-h-touch items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition-[background-color,border-color,color,transform] duration-150 ease-out-quart";
 
 // "Jadwal" (T27): the agency's own arrival windows, one week of seven Jakarta days at a time (?week=0 to
 // 8, the 60 days agency_slots() lists), optionally one of its areas (?area=), by day and then by area,
@@ -92,7 +92,7 @@ export async function ScheduleContent({ searchParams }: { searchParams: Promise<
           </header>
           <nav aria-label={t("weekNav")} className="flex items-center gap-1">
             {week > 0 ? (
-              <Link href={query({ week: week - 1 })} className={`${navLink} text-ink hover:bg-sunken active:bg-lime-wash`}>
+              <Link href={query({ week: week - 1 })} className={`${navLink} text-ink hover:bg-sunken active:scale-[0.98] active:bg-lime-wash`}>
                 <ChevronLeft className="size-4 shrink-0" aria-hidden="true" />
                 {t("previousWeek")}
               </Link>
@@ -103,7 +103,7 @@ export async function ScheduleContent({ searchParams }: { searchParams: Promise<
               </span>
             )}
             {week < lastScheduleWeek ? (
-              <Link href={query({ week: week + 1 })} className={`${navLink} text-ink hover:bg-sunken active:bg-lime-wash`}>
+              <Link href={query({ week: week + 1 })} className={`${navLink} text-ink hover:bg-sunken active:scale-[0.98] active:bg-lime-wash`}>
                 {t("nextWeek")}
                 <ChevronRight className="size-4 shrink-0" aria-hidden="true" />
               </Link>
@@ -128,7 +128,7 @@ export async function ScheduleContent({ searchParams }: { searchParams: Promise<
                   className={`${navLink} border ${
                     current
                       ? "border-primary bg-lime-wash text-on-lime-wash"
-                      : "border-border bg-card text-ink hover:border-border-control hover:bg-sunken"
+                      : "border-border bg-card text-ink hover:border-border-control hover:bg-sunken active:scale-[0.98] active:bg-lime-wash"
                   }`}
                 >
                   {area.id ? <MapPin className="size-4 shrink-0" aria-hidden="true" /> : null}
@@ -165,7 +165,7 @@ export async function ScheduleContent({ searchParams }: { searchParams: Promise<
                             <li
                               key={slot.id}
                               data-slot={slot.id}
-                              className="grid gap-3 px-4 py-3 md:grid-cols-[9rem_minmax(0,1fr)_auto] md:items-start md:px-5"
+                              className="grid gap-3 px-4 py-3 md:grid-cols-[9rem_minmax(0,1fr)_auto] md:items-start md:px-5 partner-swap-in"
                             >
                               <span className="pt-2.5 text-sm font-semibold whitespace-nowrap text-ink tabular-nums">{window}</span>
                               <span className="flex flex-wrap items-center gap-2 text-sm text-ink-muted md:pt-2.5">

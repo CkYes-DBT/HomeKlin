@@ -1,8 +1,10 @@
 // The agency back office's buttons and small controls (T27-T29), in the redesign's back-office look
 // since D2 (markdown/design.md, Buttons and Forms; the agency layout opts in to `.theme-forest`): pills
 // with 44 px targets, a forest primary, an outlined secondary and an outlined danger for removing, and
-// `sm` fields. Focus rings come from the global :focus-visible rule; reduced motion turns the
-// transitions off globally. aria-disabled keeps a busy button focusable.
+// `sm` fields. Hover changes the colour; a press darkens and presses in to 98% (never a lift), in
+// 150 ms. The owner console uses them too, so the partner screens' own motion (easing the press, and
+// colour only under reduced motion) lives in ./motion.css, not here. Focus rings come from the global
+// :focus-visible rule. aria-disabled keeps a busy button focusable.
 
 const pill =
   "inline-flex min-h-touch shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold whitespace-nowrap transition-[background-color,border-color,color,transform] duration-150 ease-out-quart active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100 aria-disabled:cursor-progress aria-disabled:active:scale-100";

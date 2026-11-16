@@ -51,7 +51,7 @@ export function LiveStatus({ orderId, initial }: { orderId: string; initial: Str
   if (status === "active") {
     return (
       <span role="status" className="inline-flex shrink-0 items-center gap-2 rounded-full bg-live-surface px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-live">
-        <span aria-hidden="true" className="size-2 animate-breathe rounded-full bg-live-dot" />
+        <span aria-hidden="true" className="size-2 rounded-full bg-live-dot partner-live-dot" />
         {label}
       </span>
     );

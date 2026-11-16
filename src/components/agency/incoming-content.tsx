@@ -162,7 +162,7 @@ export async function IncomingContent({ searchParams }: { searchParams: Promise<
                 return (
                   <tr key={job.id} data-job={job.id} className="border-t border-border align-top transition-colors duration-150 ease-out-quart hover:bg-field">
                     <td className={cell}>
-                      <Link href={detail} className="font-semibold text-ink underline decoration-border-control underline-offset-4 hover:decoration-primary">
+                      <Link href={detail} className="font-semibold text-ink underline decoration-border-control underline-offset-4 transition-colors duration-150 ease-out-quart hover:decoration-primary active:text-band">
                         {service}
                       </Link>
                       <span className="mt-0.5 block text-xs text-ink-muted">{where}</span>

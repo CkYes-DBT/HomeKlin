@@ -1,0 +1,216 @@
+/*
+ * The partner back office's motion (agency pages only; the agency layout puts `.partner-motion` on its
+ * wrapper). Operate mode: motion confirms an action, explains a state change and keeps a page
+ * continuous; it stays fast and quiet. Every transition and animation is 300 ms or less, except the
+ * live dot's slow breathing loop. Content is visible by default: the entrances only start from
+ * transparent (fill mode backwards), so a page without this file looks the same, only still.
+ * Plain global CSS with a `partner-` prefix (next.config.ts sends every .css file through Tailwind as
+ * global CSS, so CSS Modules are not scoped here); the agency layout imports it. Checked by
+ * tests/agency-motion.test.ts and e2e/agency-back-office.desktop.spec.ts.
+ */
+
+.partner-motion {
+  /* A confident arrival and a quick, quiet exit. */
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-in: cubic-bezier(0.5, 0, 0.75, 0);
+}
+
+/* Hover and press: hover changes the colour (never a lift), a press darkens and presses in to 98%, in
+   the 150 ms of the class strings (./styles.ts). Tailwind's scale utilities set the `scale` property,
+   which the shared class strings do not transition, so on the partner screens it is added here. */
+.partner-motion [class*="active:scale-"] {
+  transition-property: color, background-color, border-color, text-decoration-color, opacity, scale;
+}
+
+/* What streams in after the shell: each section of the page column fades up 4 px as it arrives (the
+   prerendered page title does not). The tiles at the top of a page are a list, so they follow each
+   other by 40 ms, at most 120 ms. */
+.partner-motion main > div > :not(header:first-child, ul),
+.partner-motion main > div > ul > li {
+  animation: partner-stream-in 220ms var(--motion-ease-out) backwards;
+}
+
+.partner-motion main > div > ul > li:nth-child(2) {
+  animation-delay: 40ms;
+}
+
+.partner-motion main > div > ul > li:nth-child(3) {
+  animation-delay: 80ms;
+}
+
+.partner-motion main > div > ul > li:nth-child(n + 4) {
+  animation-delay: 120ms;
+}
+
+@keyframes partner-stream-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* An in-place part that swaps in (the confirm step, the service checkboxes, a new window): a short
+   fade, no movement. */
+.partner-swap-in {
+  animation: partner-swap-in 160ms var(--motion-ease-out) backwards;
+}
+
+@keyframes partner-swap-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* A panel that opens in place (a cleaner's edit row, the services' edit note): its grid row grows from
+   0fr to 1fr, so the height follows the content without animating height. It opens in 260 ms and
+   closes in 180 ms (use-presence.ts keeps it on the page that long, inert). Without @starting-style
+   support it simply opens. */
+.partner-collapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transition:
+    grid-template-rows 260ms var(--motion-ease-out),
+    opacity 200ms var(--motion-ease-out);
+}
+
+@starting-style {
+  .partner-collapse {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+
+.partner-collapse[data-closing] {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition-duration: 180ms, 120ms;
+  transition-timing-function: var(--motion-ease-in);
+}
+
+/* clip, not hidden: focusing a field while the row opens must not scroll the content inside it. */
+.partner-collapse > * {
+  min-height: 0;
+  overflow: clip;
+}
+
+/* The answer to an action (./action-feedback.tsx): it slides up 6 px and fades in over 250 ms, and
+   fades out faster when it goes. */
+.partner-toast {
+  animation: partner-toast-in 250ms var(--motion-ease-out) backwards;
+}
+
+.partner-toast[data-leaving] {
+  animation: partner-toast-out 150ms var(--motion-ease-in) forwards;
+}
+
+@keyframes partner-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes partner-toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+}
+
+/* The live dot breathes, slowly and calmly (never a flashing red REC light): a soft ring of the dot's
+   own colour swells out from it and fades, while the dot dims a little. Only the dot moves; the badge
+   and its word stay still. */
+.partner-live-dot {
+  position: relative;
+  animation: partner-breathe 2400ms ease-in-out infinite;
+}
+
+.partner-live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: inherit;
+  opacity: 0;
+  pointer-events: none;
+  animation: partner-halo 2400ms var(--ease-out-quart, cubic-bezier(0.25, 1, 0.5, 1)) infinite;
+}
+
+@keyframes partner-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes partner-halo {
+  0% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+
+/* Reduced motion: no loop and no movement. The global rule in globals.css shortens everything to
+   0.01 ms; the messages and panels keep a short fade here instead, so an action is still confirmed
+   (these rules are more specific, so their !important wins). */
+@media (prefers-reduced-motion: reduce) {
+  /* A press only darkens. */
+  .partner-motion :active {
+    scale: none !important;
+  }
+
+  .partner-live-dot,
+  .partner-live-dot::after {
+    animation: none !important;
+  }
+
+  .partner-live-dot::after {
+    display: none;
+  }
+
+  .partner-motion main > div > :not(header:first-child, ul),
+  .partner-motion main > div > ul > li {
+    animation: none !important;
+  }
+
+  .partner-swap-in {
+    animation-name: partner-swap-in !important;
+    animation-duration: 120ms !important;
+  }
+
+  .partner-collapse {
+    transition-property: opacity !important;
+    transition-duration: 120ms !important;
+  }
+
+  .partner-toast {
+    animation-name: partner-toast-fade !important;
+    animation-duration: 150ms !important;
+  }
+
+  .partner-toast[data-leaving] {
+    animation-name: partner-toast-fade-out !important;
+    animation-duration: 120ms !important;
+  }
+}
+
+@keyframes partner-toast-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes partner-toast-fade-out {
+  to {
+    opacity: 0;
+  }
+}

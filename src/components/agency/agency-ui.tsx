@@ -70,7 +70,7 @@ export function JobStatus({ progress, label }: { progress: JobProgress; label: s
   if (progress === "inProgress") {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-live-surface px-3 py-1 text-xs font-medium whitespace-nowrap text-live">
-        <span aria-hidden="true" className="size-2 shrink-0 animate-breathe rounded-full bg-live-dot" />
+        <span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-live-dot partner-live-dot" />
         {label}
       </span>
     );
@@ -168,7 +168,7 @@ export function DetailArrow({ href, label }: { href: { pathname: string; query: 
     <Link
       href={href}
       aria-label={label}
-      className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-primary transition-colors duration-150 ease-out-quart hover:bg-sunken active:bg-lime-wash"
+      className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-primary transition-[background-color,transform] duration-150 ease-out-quart hover:bg-sunken active:scale-95 active:bg-lime-wash"
     >
       <ArrowRight className="size-5" aria-hidden="true" />
     </Link>

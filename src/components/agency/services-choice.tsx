@@ -9,6 +9,7 @@ import type { AgencyFailureKey } from "@/lib/agency/actions";
 import { ActionFeedback } from "./action-feedback";
 import type { AgencyAction } from "./agency-action";
 import { panel, primaryButton, secondaryButton } from "./styles";
+import { collapseExitMilliseconds, usePresence } from "./use-presence";
 
 export type ServiceChoiceRow = {
   id: string;
@@ -41,7 +42,9 @@ const headCell = "px-4 py-3 text-left text-xs font-semibold text-ink-muted";
 // "Simpan pilihan" and "Batal"; a box above them offers every service, also the ones HomeKlin adds
 // later (the agency's state before it ever chose). saveAgencyServices checks the role and the ids on
 // the server, and the database saves the choice for the caller's own agency only; customers are then
-// routed only to agencies that offer the service. Batal puts the boxes back as they were saved.
+// routed only to agencies that offer the service. Batal puts the boxes back as they were saved. The
+// edit note opens and closes smoothly (motion.css, .partner-collapse) and the boxes and the words swap
+// with a short fade.
 export function ServicesChoice({ rows, restricted, saveAgencyServices }: ServicesChoiceProps) {
   const t = useTranslations("AgencyServicesPage");
   const tError = useTranslations("AgencyErrors");
@@ -50,6 +53,7 @@ export function ServicesChoice({ rows, restricted, saveAgencyServices }: Service
   const [chosen, setChosen] = useState<ReadonlySet<string>>(() => new Set(rows.filter((row) => row.offered).map((row) => row.id)));
   const [offerAll, setOfferAll] = useState(!restricted);
   const editButton = useRef<HTMLButtonElement>(null);
+  const note = usePresence(editing, collapseExitMilliseconds);
 
   const [state, formAction, pending] = useActionState(async (previous: State, formData: FormData): Promise<State> => {
     void previous;
@@ -95,14 +99,22 @@ export function ServicesChoice({ rows, restricted, saveAgencyServices }: Service
     startTransition(() => formAction(formData));
   }
 
-  const offeredPill = <StatusPill Icon={CircleCheck} pill="bg-success-surface text-success" label={t("offered")} />;
-  const notOfferedPill = <StatusPill Icon={CircleMinus} pill="bg-sunken text-ink-muted" label={t("notOffered")} />;
+  const offeredPill = (
+    <span className="partner-swap-in">
+      <StatusPill Icon={CircleCheck} pill="bg-success-surface text-success" label={t("offered")} />
+    </span>
+  );
+  const notOfferedPill = (
+    <span className="partner-swap-in">
+      <StatusPill Icon={CircleMinus} pill="bg-sunken text-ink-muted" label={t("notOffered")} />
+    </span>
+  );
 
   function status(row: ServiceChoiceRow) {
     if (!editing) return row.offered ? offeredPill : notOfferedPill;
     const checked = offerAll || chosen.has(row.id);
     return (
-      <label className="inline-flex min-h-touch cursor-pointer items-center gap-2.5 text-sm font-medium text-ink has-disabled:cursor-not-allowed has-disabled:text-ink-muted">
+      <label className="inline-flex min-h-touch cursor-pointer items-center gap-2.5 text-sm font-medium text-ink has-disabled:cursor-not-allowed has-disabled:text-ink-muted partner-swap-in">
         <input
           type="checkbox"
           value={row.id}
@@ -141,21 +153,28 @@ export function ServicesChoice({ rows, restricted, saveAgencyServices }: Service
         )}
       </div>
 
-      {editing ? (
-        <div className="flex flex-col gap-3 rounded-md bg-lime-wash px-4 py-3 text-sm text-on-lime-wash">
-          <p className="flex items-start gap-2">
-            <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-            <span>{t("editing")}</span>
-          </p>
-          <label className="inline-flex min-h-touch cursor-pointer items-center gap-2.5 font-medium">
-            <input
-              type="checkbox"
-              checked={offerAll}
-              onChange={(event) => setOfferAll(event.target.checked)}
-              className="size-5 shrink-0 cursor-pointer accent-primary"
-            />
-            {t("offerAll")}
-          </label>
+      {/* -mb-4 and pb-4 cancel the form's gap while the note is closed, so nothing jumps. */}
+      {note.mounted ? (
+        <div className="partner-collapse -mb-4" data-closing={note.leaving || undefined} inert={note.leaving}>
+          <div>
+            <div className="pb-4">
+              <div className="flex flex-col gap-3 rounded-md bg-lime-wash px-4 py-3 text-sm text-on-lime-wash">
+                <p className="flex items-start gap-2">
+                  <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                  <span>{t("editing")}</span>
+                </p>
+                <label className="inline-flex min-h-touch cursor-pointer items-center gap-2.5 font-medium">
+                  <input
+                    type="checkbox"
+                    checked={offerAll}
+                    onChange={(event) => setOfferAll(event.target.checked)}
+                    className="size-5 shrink-0 cursor-pointer accent-primary"
+                  />
+                  {t("offerAll")}
+                </label>
+              </div>
+            </div>
+          </div>
         </div>
       ) : null}
 

@@ -94,7 +94,7 @@ export function SlotRowActions({ slotId, capacity, booked, label, setSlotCapacit
             {t("bookedLock")}
           </span>
         ) : confirming ? (
-          <form action={removeAction} onSubmit={() => setLast("remove")} className="flex items-center gap-2" role="group" aria-label={t("removeConfirm")}>
+          <form action={removeAction} onSubmit={() => setLast("remove")} className="flex items-center gap-2 partner-swap-in" role="group" aria-label={t("removeConfirm")}>
             <input type="hidden" name="slotId" value={slotId} />
             <span className="text-sm font-medium text-ink">{t("removeConfirm")}</span>
             <button ref={yesButton} type="submit" onClick={hold} aria-disabled={removing || undefined} className={dangerButton}>

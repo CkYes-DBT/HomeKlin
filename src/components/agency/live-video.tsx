@@ -131,7 +131,7 @@ export function LiveVideo({ orderId, src: firstSrc, initialProblem, label }: Liv
             <button
               type="button"
               onClick={() => void reload()}
-              className="inline-flex min-h-touch items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-primary transition-colors duration-150 ease-out-quart hover:bg-card hover:text-ink active:bg-lime-wash"
+              className="inline-flex min-h-touch items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-primary transition-[background-color,color,transform] duration-150 ease-out-quart hover:bg-card hover:text-ink active:scale-[0.98] active:bg-lime-wash"
             >
               <RotateCw className="size-4 shrink-0" aria-hidden="true" />
               {t("reload")}

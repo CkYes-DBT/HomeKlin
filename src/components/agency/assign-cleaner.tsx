@@ -43,7 +43,7 @@ export function AssignCleaner({ orderId, cleaners, cleanerId }: AssignCleanerPro
     return (
       <span className="flex flex-col items-start gap-1 text-sm text-ink-muted">
         {t("noCleaners")}
-        <Link href="/agency/cleaners" className="inline-flex min-h-touch items-center gap-1.5 font-semibold text-primary underline-offset-4 hover:underline">
+        <Link href="/agency/cleaners" className="inline-flex min-h-touch items-center gap-1.5 font-semibold text-primary underline-offset-4 transition-colors duration-150 ease-out-quart hover:underline active:text-band">
           <UserPlus className="size-4 shrink-0" aria-hidden="true" />
           {t("addCleaners")}
         </Link>
@@ -61,7 +61,7 @@ export function AssignCleaner({ orderId, cleaners, cleanerId }: AssignCleanerPro
   const assignedName = state?.assigned ? cleaners.find((cleaner) => cleaner.id === state.assigned)?.fullName : undefined;
 
   return (
-    <form onSubmit={submit} noValidate className="flex min-w-0 flex-col gap-1.5">
+    <form onSubmit={submit} noValidate className="flex min-w-0 flex-col gap-1.5 partner-swap-in">
       <input type="hidden" name="orderId" value={orderId} />
       <div className="flex flex-wrap items-center gap-2">
         <label htmlFor={`${id}-cleaner`} className="sr-only">

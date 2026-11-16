@@ -141,7 +141,25 @@ test.afterAll(async () => {
   }
 });
 
-const slotRow = (page: Page, id: string) => page.locator(`li[data-slot="${id}"]`);
+/**
+ * Whether an element (or its ::after) runs a CSS animation now, and whether any of its keyframes moves
+ * it (transform, translate or scale), from its computed animation-name and the page's own keyframes.
+ */
+function motionOf(locator: Locator, pseudo?: "::after"): Promise<{ animated: boolean; moves: boolean }> {
+  return locator.evaluate((element, pseudoElement) => {
+    const names = getComputedStyle(element, pseudoElement ?? null)
+      .animationName.split(",")
+      .map((name) => name.trim())
+      .filter((name) => name !== "none");
+    const rules = [...document.styleSheets].flatMap((sheet) => [...sheet.cssRules]);
+    const moves = names.some((name) =>
+      rules.some((rule) => rule instanceof CSSKeyframesRule && rule.name === name && /transform|translate|scale/.test(rule.cssText)),
+    );
+    return { animated: names.length > 0, moves };
+  }, pseudo);
+}
+
+const slotRow = (page: Page, id: string) =>page.locator(`li[data-slot="${id}"]`);
 const jobRow = (table: Locator, text: string) => table.getByRole("row").filter({ hasText: text });
 
 async function freeStarts(): Promise<string[]> {
@@ -431,6 +449,43 @@ test.describe("the agency", () => {
       .eq("full_name", "Uji Petugas Siaran")
       .single<{ phone: string; area_id: string }>();
     expect(data).toEqual({ phone: "+6281211112222", area_id: jobArea });
+  });
+
+  // src/components/agency/motion.module.css: the live dot breathes, an answer slides in and an edit row
+  // opens and closes; under reduced motion the dot is still and the answer only fades, and the row
+  // still opens and closes.
+  test("moves calmly, and holds still under reduced motion", async ({ page }) => {
+    await page.goto(`/agency/orders/job?order=${jobs.live}`);
+    const dot = page.getByRole("main").locator("header").getByText("Berlangsung", { exact: true }).locator('span[aria-hidden="true"]');
+    await expect(dot).toHaveCount(1);
+    expect(await motionOf(dot)).toEqual({ animated: true, moves: false });
+    expect(await motionOf(dot, "::after")).toEqual({ animated: true, moves: true });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    expect(await motionOf(dot)).toEqual({ animated: false, moves: false });
+    expect(await motionOf(dot, "::after")).toEqual({ animated: false, moves: false });
+
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto("/agency/cleaners");
+    const row = page.getByRole("table", { name: "Petugas Anda" }).locator("tr[data-cleaner]").filter({ hasText: "Uji Petugas Siaran" });
+    const edit = row.getByRole("button", { name: "Ubah nomor HP dan area Uji Petugas Siaran" });
+    const form = page.getByRole("form", { name: "Nomor HP dan area Uji Petugas Siaran" });
+    const panel = form.locator("xpath=../..");
+    for (const reducedMotion of ["no-preference", "reduce"] as const) {
+      await page.emulateMedia({ reducedMotion });
+      await edit.click();
+      await expect(form.getByLabel("Nomor HP")).toBeFocused();
+      const transition = await panel.evaluate((element) => getComputedStyle(element).transitionProperty);
+      expect(transition).toBe(reducedMotion === "reduce" ? "opacity" : "grid-template-rows, opacity");
+      await form.getByLabel("Nomor HP").fill("12345");
+      await form.getByRole("button", { name: "Simpan" }).click();
+      const answer = form.getByRole("alert").locator("p");
+      await expect(answer).toHaveText("Periksa nomor HP, misalnya 0812 3456 7890.", { timeout: 20_000 });
+      expect(await motionOf(answer)).toEqual({ animated: true, moves: reducedMotion !== "reduce" });
+      await form.getByRole("button", { name: "Batal" }).click();
+      await expect(form).toHaveCount(0);
+      await expect(edit).toBeFocused();
+    }
+    await expect(row).toContainText("+6281211112222");
   });
 
   test("cannot assign another agency's job, nor another agency's cleaner", async () => {

@@ -9,6 +9,7 @@ import type { AgencyFailureKey } from "@/lib/agency/actions";
 import { ActionFeedback } from "./action-feedback";
 import type { AgencyAction } from "./agency-action";
 import { primaryButton, rowControl, secondaryButton } from "./styles";
+import { collapseExitMilliseconds, usePresence } from "./use-presence";
 
 type CleanerRowProps = {
   cleaner: { id: string; fullName: string; phone: string | null; areaId: string | null };
@@ -30,7 +31,8 @@ const cell = "px-4 py-3 align-middle";
 // phone and area, whether at work now, and this week's jobs, with "Ubah" opening a form row under it
 // for the phone (0812..., stored as +628...) and the area, one of the agency's own. updateCleanerDetails
 // checks the role and both fields on the server, and the database checks that the cleaner and the area
-// are the caller agency's. Batal and a save close the form and put the cursor back on "Ubah".
+// are the caller agency's. Batal and a save close the form and put the cursor back on "Ubah". The form
+// row opens and closes smoothly (motion.css, .partner-collapse); while it closes it is inert.
 export function CleanerRow({ cleaner, areas, photo, status, weekJobs, updateCleanerDetails }: CleanerRowProps) {
   const t = useTranslations("AgencyCleanersPage");
   const tError = useTranslations("AgencyErrors");
@@ -38,6 +40,7 @@ export function CleanerRow({ cleaner, areas, photo, status, weekJobs, updateClea
   const [editing, setEditing] = useState(false);
   const editButton = useRef<HTMLButtonElement>(null);
   const firstField = useRef<HTMLDivElement>(null);
+  const formRow = usePresence(editing, collapseExitMilliseconds);
   const areaName = cleaner.areaId ? (areas.find((area) => area.id === cleaner.areaId)?.name ?? cleaner.areaId) : null;
 
   const [state, formAction, pending] = useActionState(async (previous: State, formData: FormData): Promise<State> => {
@@ -111,62 +114,66 @@ export function CleanerRow({ cleaner, areas, photo, status, weekJobs, updateClea
           </button>
         </td>
       </tr>
-      {editing ? (
+      {formRow.mounted ? (
         <tr className="bg-field">
-          <td colSpan={6} className="px-4 pt-2 pb-5">
-            <form id={`${id}-form`} onSubmit={submit} noValidate aria-label={t("details.formLabel", { name: cleaner.fullName })} className="flex flex-col gap-4">
-              <input type="hidden" name="cleanerId" value={cleaner.id} />
-              <div ref={firstField} className="grid gap-4 md:grid-cols-2 md:gap-x-6">
-                <TextField
-                  look="panel"
-                  id={`${id}-phone`}
-                  name="phone"
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="off"
-                  label={t("details.phone")}
-                  hint={t("details.phoneHint")}
-                  defaultValue={cleaner.phone ?? ""}
-                  aria-invalid={state?.formError === "phoneInvalid" ? true : undefined}
-                />
-                <div className="flex flex-col gap-2">
-                  <label htmlFor={`${id}-area`} className="px-1 text-sm font-medium text-ink">
-                    {t("details.area")}
-                  </label>
-                  <span className="relative">
-                    <select
-                      id={`${id}-area`}
-                      name="areaId"
-                      defaultValue={cleaner.areaId ?? ""}
-                      aria-describedby={`${id}-area-hint`}
-                      aria-invalid={state?.formError === "areaNotServed" ? true : undefined}
-                      className={`${rowControl} w-full cursor-pointer appearance-none pr-10`}
-                    >
-                      <option value="">{t("details.noArea")}</option>
-                      {areas.map((option) => (
-                        <option key={option.id} value={option.id}>
-                          {option.name}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-ink-muted" aria-hidden="true" />
-                  </span>
-                  <p id={`${id}-area-hint`} className="px-1 text-sm text-ink-muted">
-                    {t("details.areaHint")}
-                  </p>
-                </div>
+          <td colSpan={6} className="p-0">
+            <div className="partner-collapse" data-closing={formRow.leaving || undefined} inert={formRow.leaving}>
+              <div>
+                <form id={`${id}-form`} onSubmit={submit} noValidate aria-label={t("details.formLabel", { name: cleaner.fullName })} className="flex flex-col gap-4 px-4 pt-2 pb-5">
+                  <input type="hidden" name="cleanerId" value={cleaner.id} />
+                  <div ref={firstField} className="grid gap-4 md:grid-cols-2 md:gap-x-6">
+                    <TextField
+                      look="panel"
+                      id={`${id}-phone`}
+                      name="phone"
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="off"
+                      label={t("details.phone")}
+                      hint={t("details.phoneHint")}
+                      defaultValue={cleaner.phone ?? ""}
+                      aria-invalid={state?.formError === "phoneInvalid" ? true : undefined}
+                    />
+                    <div className="flex flex-col gap-2">
+                      <label htmlFor={`${id}-area`} className="px-1 text-sm font-medium text-ink">
+                        {t("details.area")}
+                      </label>
+                      <span className="relative">
+                        <select
+                          id={`${id}-area`}
+                          name="areaId"
+                          defaultValue={cleaner.areaId ?? ""}
+                          aria-describedby={`${id}-area-hint`}
+                          aria-invalid={state?.formError === "areaNotServed" ? true : undefined}
+                          className={`${rowControl} w-full cursor-pointer appearance-none pr-10`}
+                        >
+                          <option value="">{t("details.noArea")}</option>
+                          {areas.map((option) => (
+                            <option key={option.id} value={option.id}>
+                              {option.name}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-ink-muted" aria-hidden="true" />
+                      </span>
+                      <p id={`${id}-area-hint`} className="px-1 text-sm text-ink-muted">
+                        {t("details.areaHint")}
+                      </p>
+                    </div>
+                  </div>
+                  <ActionFeedback error={state?.formError ? tError(state.formError) : undefined} resultKey={resultKey} />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button type="submit" aria-disabled={pending || undefined} className={primaryButton}>
+                      {pending ? <LoaderCircle className="size-4 shrink-0 animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
+                      {pending ? t("details.saving") : t("details.save")}
+                    </button>
+                    <button type="button" onClick={() => setEditing(false)} className={secondaryButton}>
+                      {t("details.cancel")}
+                    </button>
+                  </div>
+                </form>
               </div>
-              <ActionFeedback error={state?.formError ? tError(state.formError) : undefined} resultKey={resultKey} />
-              <div className="flex flex-wrap items-center gap-2">
-                <button type="submit" aria-disabled={pending || undefined} className={primaryButton}>
-                  {pending ? <LoaderCircle className="size-4 shrink-0 animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
-                  {pending ? t("details.saving") : t("details.save")}
-                </button>
-                <button type="button" onClick={() => setEditing(false)} className={secondaryButton}>
-                  {t("details.cancel")}
-                </button>
-              </div>
-            </form>
+            </div>
           </td>
         </tr>
       ) : null}
