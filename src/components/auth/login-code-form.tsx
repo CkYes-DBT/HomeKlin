@@ -91,6 +91,7 @@ export function LoginCodeForm({ next }: LoginCodeFormProps) {
           id="login-email"
           name="email"
           type="email"
+          look="forest"
           label={tAuth("fields.email")}
           autoComplete="email"
           autoCapitalize="none"
@@ -123,7 +124,7 @@ export function LoginCodeForm({ next }: LoginCodeFormProps) {
       ) : null}
 
       <FormAlert message={formError} tone="danger" resultKey={answers} />
-      {step === "form" ? <SubmitButton pending={pending} label={t("submitCode")} pendingLabel={t("pendingCode")} /> : null}
+      {step === "form" ? <SubmitButton tone="forest" pending={pending} label={t("submitCode")} pendingLabel={t("pendingCode")} /> : null}
     </form>
   );
 }

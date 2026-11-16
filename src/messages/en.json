@@ -1833,10 +1833,24 @@
       "cleaner": "Cleaner {name}"
     }
   },
+  "AuthShell": {
+    "homeLink": "HomeKlin, home page",
+    "back": "Back to the home page",
+    "panelLabel": "About HomeKlin",
+    "tagline": "One door to <accent>every</accent> HomeKlin account",
+    "lead": "Customers, cleaners and the HomeKlin team log in here. Once you are in, you go straight to your own pages.",
+    "featureLive": "Watch the cleaning live",
+    "featureRecordings": "Recordings kept for 7 days",
+    "featureHelp": "Help from the HomeKlin team"
+  },
   "LoginPage": {
     "metaTitle": "Log in",
-    "title": "Log in to HomeKlin",
-    "lead": "Customers log in with a code from their email, no password needed."
+    "title": "Log in",
+    "leadCode": "Enter your email and we send you a 6-digit code. Customers log in without a password.",
+    "leadPassword": "Use the email and password of your account. For HomeKlin cleaner and staff accounts, and demo accounts.",
+    "linkExpired": "The link in this email no longer works. Sign in with the code we email you to see your order.",
+    "helpPrompt": "Need help logging in?",
+    "helpLink": "Contact the HomeKlin team"
   },
   "Auth": {
     "fields": {
@@ -1874,9 +1888,7 @@
     "codeTitle": "Enter the code from the email",
     "codeSentTo": "If <strong>{email}</strong> has a HomeKlin account, we sent a 6-digit code to that email.",
     "withPassword": "Log in with a password",
-    "withCode": "Log in with an email code",
-    "passwordTitle": "Log in with a password",
-    "passwordNote": "For HomeKlin cleaner and staff accounts, and demo accounts.",
+    "forgotPassword": "Forgot your password? Use an email code",
     "firstTimePrompt": "Never booked before?",
     "firstTimeLink": "Book a service"
   },

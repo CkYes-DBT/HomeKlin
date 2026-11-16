@@ -1,23 +1,25 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useActionState } from "react";
+import { useActionState, type ReactNode } from "react";
 import { signIn } from "@/lib/auth/actions";
 import { FormAlert, PasswordField, SubmitButton, TextField, useFocusFirstError, useResultKey } from "./form-controls";
 
 type LoginFormProps = {
   /** The page to open after signing in (?next=), carried on in a hidden field. */
   next?: string;
+  /** Shown between the fields and the button: the page's "Lupa kata sandi?" line. */
+  belowFields?: ReactNode;
 };
 
 // Sign in with email and password (T5): staff, cleaners and the demo accounts. Customers sign in
 // by emailed code (login-code-form.tsx, T9b); the sign-in page shows this form at /login?cara=sandi. The form posts to the signIn Server Action, which checks the
 // input with Zod, signs in with Supabase and sends the user to their role's home or to `next`. It also
 // works before JavaScript loads (a plain form post). Browser validation is off (noValidate) so that
-// every message comes from the server, in the page's language.
+// every message comes from the server, in the page's language. The look is the sign-in card's (forest).
 // Sources: node_modules/next/dist/docs/01-app/02-guides/forms.md ("Validation errors", "Pending
 // states") and https://react.dev/reference/react/useActionState
-export function LoginForm({ next }: LoginFormProps) {
+export function LoginForm({ next, belowFields }: LoginFormProps) {
   const t = useTranslations("Auth");
   const locale = useLocale();
   const [state, formAction, pending] = useActionState(signIn, null);
@@ -30,11 +32,12 @@ export function LoginForm({ next }: LoginFormProps) {
     <form ref={form} action={formAction} noValidate className="flex flex-col">
       <input type="hidden" name="locale" value={locale} />
       {next ? <input type="hidden" name="next" value={next} /> : null}
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-4">
         <TextField
           id="login-email"
           name="email"
           type="email"
+          look="forest"
           label={t("fields.email")}
           autoComplete="email"
           autoCapitalize="none"
@@ -46,6 +49,7 @@ export function LoginForm({ next }: LoginFormProps) {
         <PasswordField
           id="login-password"
           name="password"
+          look="forest"
           label={t("fields.password")}
           showLabel={t("fields.showPassword")}
           autoComplete="current-password"
@@ -55,12 +59,13 @@ export function LoginForm({ next }: LoginFormProps) {
           error={errors.password && t(`errors.${errors.password}`)}
         />
       </div>
+      {belowFields}
       <FormAlert
         message={formError && t(`errors.${formError}`)}
         tone={formError === "confirmEmail" ? "info" : "danger"}
         resultKey={resultKey}
       />
-      <SubmitButton pending={pending} label={t("login.submit")} pendingLabel={t("login.pending")} />
+      <SubmitButton tone="forest" pending={pending} label={t("login.submit")} pendingLabel={t("login.pending")} />
     </form>
   );
 }

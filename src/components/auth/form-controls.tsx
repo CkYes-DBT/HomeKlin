@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleAlert, Eye, EyeOff, Info, LoaderCircle } from "lucide-react";
+import { ArrowRight, CircleAlert, Eye, EyeOff, Info, LoaderCircle } from "lucide-react";
 import { useEffect, useRef, useState, type InputHTMLAttributes } from "react";
 import type { AuthFormState } from "@/lib/auth/actions";
 
@@ -19,9 +19,10 @@ type FieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "id" | "className"
   /**
    * app (default): the T3b pill of the sign-in and customer forms. panel: the redesign's back-office
    * input (markdown/design.md, Forms) for admin's in-list panels: 44 px, small radius, white on the
-   * panel's fill, a 12 px label above. Opt-in, so the customer forms keep their look.
+   * panel's fill, a 12 px label above. Opt-in, so the customer forms keep their look. forest: the
+   * sign-in card (the SignIn mocks): 48 px, small radius, the field fill inside the white card.
    */
-  look?: "app" | "panel";
+  look?: "app" | "panel" | "forest";
 };
 
 const inputClass =
@@ -45,6 +46,18 @@ export const appLook = {
   hint: "px-1 text-sm text-ink-faint",
   error: "flex items-start gap-1.5 px-1 text-sm font-medium text-danger",
 };
+
+/** The sign-in card's field (look="forest", inside `theme-forest`): 48 px, 8 px radius, filled, edged in the control colour. */
+export const forestLook = {
+  field: "flex flex-col gap-1.5",
+  label: "text-sm font-semibold text-ink",
+  input:
+    "h-12 w-full rounded-sm bg-field px-3.5 text-base text-ink caret-primary inset-ring-1 inset-ring-border-control transition-shadow duration-150 ease-out-quart placeholder:text-ink-muted hover:inset-ring-primary aria-invalid:bg-danger-surface aria-invalid:inset-ring-2 aria-invalid:inset-ring-danger disabled:cursor-not-allowed disabled:bg-sunken disabled:inset-ring-border",
+  hint: "text-sm text-ink-muted",
+  error: "flex items-start gap-1.5 text-sm font-medium text-danger",
+};
+
+const looks = { app: appLook, panel: panelLook, forest: forestLook } as const;
 
 /** The ids under a field (hint, then error), for its aria-describedby. */
 function notesFor(id: string, hint?: string, error?: string) {
@@ -76,7 +89,7 @@ function FieldNotes({ hint, hintId, error, errorId, look = appLook }: FieldNotes
 
 export function TextField({ id, label, hint, error, look: lookName = "app", ...input }: FieldProps) {
   const notes = notesFor(id, hint, error);
-  const look = lookName === "panel" ? panelLook : appLook;
+  const look = looks[lookName];
   return (
     <div className={look.field}>
       <label htmlFor={id} className={look.label}>
@@ -101,12 +114,13 @@ type PasswordFieldProps = Omit<FieldProps, "type"> & {
 
 // On a phone a mistyped password is the most common reason a sign-in fails, so the password can be
 // shown. The button sits inside the field, a full 44 px target, and never submits the form.
-// look="panel": the redesign's back-office input (the owner's "Buat akun admin", D3).
+// look="panel": the redesign's back-office input (the owner's "Buat akun admin", D3); look="forest":
+// the sign-in card, with the same square-cornered show button.
 export function PasswordField({ id, label, hint, error, showLabel, look: lookName = "app", ...input }: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
   const notes = notesFor(id, hint, error);
-  const panel = lookName === "panel";
-  const look = panel ? panelLook : appLook;
+  const panel = lookName === "panel" || lookName === "forest";
+  const look = looks[lookName];
   return (
     <div className={look.field}>
       <label htmlFor={id} className={look.label}>
@@ -146,10 +160,39 @@ type SubmitButtonProps = {
   label: string;
   /** Said while the server works ("Sedang masuk…"), next to a spinner. */
   pendingLabel: string;
+  /** forest: the sign-in card's dark pill with the lime arrow circle (the SignIn mocks). */
+  tone?: "app" | "forest";
 };
 
+/** The sign-in card's submit pill: full width, 52 px, the label on the left, a lime circle with the arrow on the right. */
+export const forestSubmitClass =
+  "inline-flex h-13 w-full items-center justify-between gap-3 rounded-full bg-primary pr-2 pl-6 text-base font-semibold text-on-primary transition-[background-color,transform] duration-150 ease-out-quart hover:bg-primary-container active:scale-[0.98] active:bg-band disabled:cursor-progress disabled:bg-primary-container disabled:active:scale-100 motion-reduce:active:scale-100";
+
+/** The label and the lime circle inside the forest submit pill; the circle holds a spinner while the server works. */
+export function ForestSubmitContent({ pending, label, pendingLabel }: Omit<SubmitButtonProps, "tone">) {
+  return (
+    <>
+      <span className="min-w-0 text-left">{pending ? pendingLabel : label}</span>
+      <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-lime text-on-lime">
+        {pending ? (
+          <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" />
+        ) : (
+          <ArrowRight className="size-4" strokeWidth={2.4} />
+        )}
+      </span>
+    </>
+  );
+}
+
 // Disabled while the request runs, so a double tap sends one request.
-export function SubmitButton({ pending, label, pendingLabel }: SubmitButtonProps) {
+export function SubmitButton({ pending, label, pendingLabel, tone = "app" }: SubmitButtonProps) {
+  if (tone === "forest") {
+    return (
+      <button type="submit" disabled={pending} className={`mt-6 ${forestSubmitClass}`}>
+        <ForestSubmitContent pending={pending} label={label} pendingLabel={pendingLabel} />
+      </button>
+    );
+  }
   return (
     <button
       type="submit"

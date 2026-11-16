@@ -90,7 +90,7 @@ test.describe("signing in", () => {
   test("sends a visitor from /orders to sign in, then on to /orders", async ({ page }) => {
     await page.goto("/orders");
     await expect(page).toHaveURL(/\/login\?next=%2Forders$/);
-    await expect(page.getByRole("heading", { level: 1, name: "Masuk ke HomeKlin" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Masuk", exact: true })).toBeVisible();
     // Customers get a code; the password way keeps the page the visitor wanted.
     await expect(page.getByRole("button", { name: "Kirim kode" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Masuk dengan kata sandi" })).toHaveAttribute(
@@ -181,7 +181,7 @@ test.describe("signing out", () => {
 test.describe("in English", () => {
   test("signs in from /en/login, with English messages, and stays in English", async ({ page }) => {
     await page.goto("/en/login");
-    await expect(page.getByRole("heading", { level: 1, name: "Log in to HomeKlin" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Log in", exact: true })).toBeVisible();
     await page.getByRole("link", { name: "Log in with a password" }).click();
     await expect(page).toHaveURL("/en/login?cara=sandi");
     await page.getByLabel("Email", { exact: true }).fill(customer.email);
