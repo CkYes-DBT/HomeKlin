@@ -61,3 +61,6 @@ src/messages/*.d.json.ts
 
 # design mocks from the user's Claude Design canvas (local reference only)
 /mocks/
+
+# the Impeccable design plugin's local settings and cache
+/.impeccable/
