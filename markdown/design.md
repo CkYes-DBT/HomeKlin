@@ -629,7 +629,8 @@ CSS only; no animation library.
 - Press feedback: `scale(0.98)` on buttons.
 - Hero entry, once: headline, subtext and buttons rise 12 px and fade in over 500 ms, staggered by 80 ms. The hero photo and the status card do not animate, so the largest paint is never delayed.
 - The live dot breathes (2.4 s).
-- Nothing else moves: no scroll reveals, marquee, parallax or carousel auto-play. `prefers-reduced-motion: reduce` turns every animation and transition off.
+- Partner screens (2026-11-16, `src/components/agency/motion.css`, scoped by the agency layout's `partner-motion` class): press feedback also eases the `scale` property (150 ms); in-place panels open over 260 ms (`cubic-bezier(0.16, 1, 0.3, 1)`, grid rows 0fr to 1fr) and close over 180 ms; content that streams in fades up 4 px over 220 ms (lists stagger 40 ms, at most 120 ms); action messages slide up 6 px over 250 ms and fade out over 150 ms; the live dot's ring swells in its own colour. Everything except the dot loop is 300 ms or less.
+- Nothing else moves: no scroll reveals, marquee, parallax or carousel auto-play. `prefers-reduced-motion: reduce` turns every animation and transition off, except on the partner screens, which keep short opacity fades (120 to 150 ms) that confirm an action, and stop the dot and all movement.
 
 ## Accessibility
 
