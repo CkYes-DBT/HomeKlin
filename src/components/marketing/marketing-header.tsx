@@ -25,9 +25,9 @@ const linkClass =
 // and on phones one link to the other language, measured to fit a 360 px row beside the wordmark
 // and the button (which drops its arrow circle there). The footer carries the help link on phones.
 // T5: from 640 px "Masuk" (or, once signed in, the account chip with the first name) sits before
-// "Pesan sekarang". The 360 px row has no room for it; on phones signing in starts from the app bar
-// that "Pesan sekarang" opens. It reads the session, so it streams in behind <Suspense> and the rest
-// of the header stays prerendered.
+// "Pesan sekarang", which opens the booking flow at step 1 (/services). The 360 px row has no room for
+// "Masuk"; on phones a guest signs in with the emailed code on step 2 of booking. It reads the session,
+// so it streams in behind <Suspense> and the rest of the header stays prerendered.
 export function MarketingHeader() {
   const t = useTranslations("MarketingHeader");
   return (
@@ -74,7 +74,7 @@ export function MarketingHeader() {
                 <AccountSlot palette="forest" showName />
               </Suspense>
             </div>
-            <ButtonLink href="/pesan" variant="forest" hideArrowOnPhones>
+            <ButtonLink href="/services" variant="forest" hideArrowOnPhones>
               {t("cta")}
             </ButtonLink>
           </div>

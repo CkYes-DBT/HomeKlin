@@ -3,6 +3,8 @@ import { signedInAs } from "./setup/auth-state";
 
 // The customer pages' language switch floats at the bottom-left of the viewport (the customer layout),
 // on every page, above the phone's bottom bar and clear of the content. Runs on a phone and a desktop.
+// /services is step 1 of the booking flow, which has no bottom bar: there the switch sits over the
+// bottom edge and moves up above the phone's booking bar while it shows (e2e/booking-flow.spec.ts).
 const paths = ["/home", "/services", "/support", "/orders", "/en/home"];
 
 test.use(signedInAs.customer);
@@ -36,16 +38,42 @@ for (const path of paths) {
 
     // It never covers the bottom bar (phones).
     const bar = page.getByRole("navigation", { name: path.startsWith("/en") ? "Main navigation" : "Navigasi utama" });
-    const barBox = await bar.last().boundingBox();
+    const barBox = (await bar.count()) > 0 ? await bar.last().boundingBox() : null;
     if (barBox && barBox.y > viewport.height / 2) expect(box.y + box.height).toBeLessThanOrEqual(barBox.y);
 
-    // At the end of the page, the last content ends above it.
-    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-    const lastBottom = await page.evaluate(
-      () => document.querySelector("main")!.lastElementChild!.getBoundingClientRect().bottom,
-    );
-    const after = (await group.boundingBox())!;
-    expect(lastBottom).toBeLessThanOrEqual(after.y);
+    // At the end of the page, the last content ends above it. On a booking step a phone may show the
+    // booking bar there, whose empty spacer ends the page: then no visible text or control may sit
+    // under the switch instead.
+    if (path.endsWith("/services")) {
+      // Polled, scrolling again each time: the catalog streams in under the page's shell, and the
+      // switch glides with the booking bar.
+      await expect
+        .poll(async () => {
+          await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+          const zone = (await group.boundingBox())!;
+          return page.evaluate((box) => {
+            const items = document.querySelectorAll("main :is(a, button, input, select, textarea, label, p, h1, h2, h3, li)");
+            return [...items].filter((item) => {
+              if (item.closest("[data-testid='booking-bar'], [aria-hidden='true'], [inert]")) return false;
+              const r = item.getBoundingClientRect();
+              return r.width > 0 && r.height > 0 && r.left < box.x + box.width && box.x < r.right && r.top < box.y + box.height && box.y < r.bottom;
+            }).length;
+          }, zone);
+        })
+        .toBe(0);
+    } else {
+      // Polled, scrolling again each time: the content streams in under the page's shell.
+      await expect
+        .poll(async () => {
+          await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+          const after = (await group.boundingBox())!;
+          const lastBottom = await page.evaluate(
+            () => document.querySelector("main")!.lastElementChild!.getBoundingClientRect().bottom,
+          );
+          return lastBottom <= after.y;
+        })
+        .toBe(true);
+    }
   });
 }
 
@@ -64,8 +92,8 @@ test("is reachable by keyboard and switches the language, keeping the page", asy
 });
 
 test("stays in place while the page scrolls", async ({ page }) => {
-  await page.goto("/services");
-  const group = toggle(page, "/services");
+  await page.goto("/support");
+  const group = toggle(page, "/support");
   const before = (await group.boundingBox())!;
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   const after = (await group.boundingBox())!;

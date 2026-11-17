@@ -8,8 +8,9 @@ import type { StorageState } from "./setup/auth-state";
 
 // T12 on a phone: /orders lists the customer's own orders, newest first, each with its status, and a
 // paid order shows its job slot. A row opens the order on /orders?order=<id>, which never says the
-// order was just made; /orders?booked=<id> stays the confirmation and Midtrans' return. An id the
-// customer has no order with falls back to the list and reveals nothing.
+// order was just made; step 3 of booking, /orders/pay?order=<id>, is the payment, the confirmation and
+// Midtrans' return (its old address /orders?booked=<id> leads there). An id the customer has no order
+// with falls back to the list and reveals nothing.
 // The spec makes its own customers, so the list holds exactly what it booked, whatever other specs do
 // with the shared customer at the same time. The tests build on each other (empty first), so they run
 // in order. Paid, failed and cancelled are set with signed notifications (e2e/payment-test-data.ts).
@@ -211,7 +212,7 @@ test.describe("with an order of each status", () => {
     const details = page.getByRole("region", { name: "Detail pesanan" });
     await expect(details.getByText("Menunggu pembayaran")).toBeVisible();
     await details.getByRole("link", { name: "Bayar sekarang" }).click();
-    await expect(page).toHaveURL(`/orders?booked=${ids.waiting}`);
+    await expect(page).toHaveURL(`/orders/pay?order=${ids.waiting}`);
     await expect(page.getByRole("button", { name: "Bayar sekarang" })).toBeVisible();
   });
 
@@ -224,16 +225,20 @@ test.describe("with an order of each status", () => {
   });
 
   test("the confirmation stays as it was, Midtrans' return included, and leads to the list", async ({ page }) => {
+    // The old address (in emails already sent) opens the payment page.
     await page.goto(`/orders?booked=${ids.waiting}`);
+    await expect(page).toHaveURL(`/orders/pay?order=${ids.waiting}`);
     const confirmation = page.getByRole("region", { name: "Pembayaran" });
     await expect(confirmation.getByText("Menunggu pembayaran")).toBeVisible();
     await expect(confirmation.getByRole("button", { name: "Bayar sekarang" })).toBeVisible();
     await expect(page.getByRole("status").filter({ hasText: "Pembayaran sedang dikonfirmasi" })).toHaveCount(0);
 
     await page.goto(`/orders?booked=${ids.waiting}&order_id=${ids.waiting}&status_code=201&transaction_status=pending`);
+    await expect(page).toHaveURL(`/orders/pay?order=${ids.waiting}&order_id=${ids.waiting}&status_code=201&transaction_status=pending`);
     await expect(page.getByRole("status").filter({ hasText: "Pembayaran sedang dikonfirmasi" })).toBeVisible();
 
-    await backLink(page).click();
+    // The booking flow's header leads to the list.
+    await page.getByRole("banner").getByRole("link", { name: "Ke pesanan Anda" }).click();
     await expect(page).toHaveURL("/orders");
     await expect(ordersList(page)).toBeVisible();
   });
@@ -244,12 +249,14 @@ test.describe("with an order of each status", () => {
     await expect(rowOf(page, ids.others)).toHaveCount(0);
     expect(await page.content()).not.toContain(ids.others);
 
-    for (const param of ["order", "booked"]) {
+    // The order's page shows the list in its place; the payment page (and its old address) leads to it.
+    for (const address of ["/orders?order=", "/orders?booked=", "/orders/pay?order="]) {
       for (const id of [ids.others, randomUUID()]) {
-        await page.goto(`/orders?${param}=${id}`);
+        await page.goto(`${address}${id}`);
+        if (address !== "/orders?order=") await expect(page).toHaveURL("/orders");
         await expect(ordersList(page).getByRole("listitem")).toHaveCount(6);
         await expect(page.getByRole("region", { name: /Detail pesanan|Pembayaran/ })).toHaveCount(0);
-        const html = await (await page.request.get(page.url())).text();
+        const html = await (await page.request.get(`${address}${id}`)).text();
         for (const text of [await page.content(), html]) expect(text).not.toContain("Rahasia Orang Lain");
       }
     }

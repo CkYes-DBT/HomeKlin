@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "@/i18n/navigation";
 import { claimCustomerAccount } from "@/lib/auth/code-session";
 import { authorize } from "@/lib/auth/dal";
+import { paymentStepHref } from "@/lib/booking/payment-address";
 import { orderConfirmationEmail, sendAppEmail } from "@/lib/email/send";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
@@ -84,7 +85,7 @@ async function emailConfirmation(
       endsAt: order.endsAt,
       address: order.address,
       priceIdr: order.priceIdr,
-      orderUrl: `${siteUrl()}${prefix}/orders?booked=${orderId}`,
+      orderUrl: `${siteUrl()}${prefix}${paymentStepHref(orderId)}`,
     },
     order.locale,
   );
@@ -119,7 +120,7 @@ async function book(
   if (email) {
     await emailConfirmation(supabase, email, placed.order_id, { ...order, endsAt: placed.ends_at, priceIdr: placed.price_idr });
   }
-  return redirect({ href: { pathname: "/orders", query: { booked: placed.order_id } }, locale: order.locale });
+  return redirect({ href: paymentStepHref(placed.order_id), locale: order.locale });
 }
 
 /** A signed-in customer orders. */

@@ -14,9 +14,10 @@ export async function generateMetadata(): Promise<Metadata> {
 // Customers only (T5). Everything renders inside the role check, which every protected page makes
 // itself, because a layout's check does not protect its pages
 // (node_modules/next/dist/docs/01-app/02-guides/authentication.md, "Layouts and auth checks").
-// Since D5 the content carries its own title, because it is three pages in one address: "Pesanan Anda"
-// (the list), step 3 of ordering (/orders?booked=<order id>: the payment, then the confirmation) and an
-// order's page (/orders?order=<order id>).
+// The content carries its own title, because it is two pages in one address: "Pesanan Anda" (the list)
+// and an order's page (/orders?order=<order id>). Step 3 of ordering, the payment and its confirmation,
+// is /orders/pay in the booking flow (2026-11-17); its old address, /orders?booked=<order id>, leads
+// there.
 export default function OrdersPage({ searchParams }: PageProps<"/[locale]/orders">) {
   return (
     <PageContainer wide>

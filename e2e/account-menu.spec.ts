@@ -1,4 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
+import { createTestUser, deleteTestUsers, type TestUser } from "../tests/integration/test-project";
+import { signInWithPassword } from "./order-test-data";
 import { signedInAs, signedOut } from "./setup/auth-state";
 
 // The customer's "Akun" is a menu, not a page: it shows who is signed in and a "Keluar" action, and the
@@ -63,18 +65,22 @@ test.describe("the account menu of a signed-in customer", () => {
     await trigger(page).click();
     await expect(page.getByRole("menu")).toBeVisible();
     // By keyboard, so no pointer press outside closes the menu: only the new page can.
-    await nav(page).getByRole("link", { name: "Layanan", exact: true }).focus();
+    await nav(page).getByRole("link", { name: "Pesanan", exact: true }).focus();
     await page.keyboard.press("Enter");
-    await expect(page).toHaveURL("/services");
+    await expect(page).toHaveURL("/orders");
     await expect(page.getByRole("menu")).toHaveCount(0);
   });
 
   test("gives the button and the item a touch target of at least 44 px and stays on screen", async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 740 });
     await page.goto("/home");
-    const button = await trigger(page).boundingBox();
-    expect(button?.width).toBeGreaterThanOrEqual(44);
-    expect(button?.height).toBeGreaterThanOrEqual(44);
+    // boundingBox() does not wait, and the button is drawn again once the session has streamed in:
+    // polled until it is measured.
+    const size = async () => {
+      const box = await trigger(page).boundingBox();
+      return box ? Math.min(box.width, box.height) : 0;
+    };
+    await expect.poll(size).toBeGreaterThanOrEqual(44);
 
     await trigger(page).click();
     const item = await page.getByRole("menuitem", { name: "Keluar" }).boundingBox();
@@ -88,15 +94,6 @@ test.describe("the account menu of a signed-in customer", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
   });
 
-  // The log-out ends the browser's own session only (scope "local"), so the saved test session still works.
-  test("logs out from the menu, and /orders then needs a sign-in again", async ({ page }) => {
-    await page.goto("/home");
-    await trigger(page).click();
-    await page.getByRole("menuitem", { name: "Keluar" }).click();
-    await expect(page).toHaveURL("/");
-    await page.goto("/orders");
-    await expect(page).toHaveURL(/\/login\?next=%2Forders$/);
-  });
 
   test("keeps working in English", async ({ page }) => {
     await page.goto("/en/home");
@@ -111,6 +108,32 @@ test.describe("the account menu of a signed-in customer", () => {
     await expect(page).toHaveURL("/home");
     await page.goto("/en/account");
     await expect(page).toHaveURL("/en/home");
+  });
+});
+
+// The log-out ends the browser's own session (scope "local"). Every spec that uses the saved customer
+// session shares that one session, so this test signs in a customer of its own: logging the saved
+// session out would sign the customer out of the specs running beside it.
+test.describe("logging out from the account menu", () => {
+  test.use(signedOut);
+  let customer: TestUser;
+
+  test.beforeAll(async () => {
+    customer = await createTestUser("menu-logout", { full_name: "Uji Pelanggan" });
+  });
+
+  test.afterAll(async () => {
+    if (customer) await deleteTestUsers([customer]);
+  });
+
+  test("logs out from the menu, and /orders then needs a sign-in again", async ({ page }) => {
+    await signInWithPassword(page, customer);
+    await page.goto("/home");
+    await trigger(page).click();
+    await page.getByRole("menuitem", { name: "Keluar" }).click();
+    await expect(page).toHaveURL("/");
+    await page.goto("/orders");
+    await expect(page).toHaveURL(/\/login\?next=%2Forders$/);
   });
 });
 

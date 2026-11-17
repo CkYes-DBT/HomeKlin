@@ -7,6 +7,7 @@ import {
   startTransition,
   useActionState,
   useEffect,
+  useEffectEvent,
   useRef,
   useState,
   useTransition,
@@ -23,7 +24,7 @@ import { chosenWindow, markTaken, type BookingDay } from "./booking-days";
 import { flowCard, flowCardTitle, flowNote, flowNoteIcon, flowPrimaryButton, flowTextLink } from "./flow-styles";
 import { draftFromForm, restoreOrderDraft, saveOrderDraft } from "./order-draft";
 import { OrderWhere } from "./order-where";
-import { orderSearch } from "./order-query";
+import { orderSearch, serviceStepHref } from "./order-query";
 import { intentFor, viewAfter, type OrderIntent, type OrderView } from "./order-steps";
 
 /** An area as the order form shows it; days is null when its windows could not be read. */
@@ -91,14 +92,15 @@ function tabStorage(): Storage | null {
 // transition, so React does not reset it after an answer.
 // Since the booking-flow fixes (2026-11-16):
 // - A valid choice from step 1 shows as one read-only card, "Layanan dan jadwal", with "Ubah" back to
-//   step 1; the pickers show only when the choice is missing or no longer free. "Ubah" keeps what was
-//   typed in this tab (./order-draft.ts), and step 2 fills it in again when it opens.
+//   step 1; the pickers show only when the choice is missing or no longer free. Leaving step 2 ("Ubah",
+//   the header's "Kembali", the browser's back button, a new language) keeps what was typed in this
+//   tab (./order-draft.ts), and step 2 fills it in again when it opens; sending the order does not.
 // - The button is never disabled for the consent: pressed without it, the server's answer marks the
 //   switch and the cursor goes there (the first field to fix, in page order); the hint under the
 //   button links to the switch.
 // - A new service on the pickers reloads this content with that service in the address, so its own
 //   times follow (B12); the typed fields and the choice stay, since only the props change.
-// - On phones a bar above the bottom navigation carries the choice, the price and the button.
+// - On phones a bar at the bottom of the screen carries the choice, the price and the button.
 // Sources: node_modules/next/dist/docs/01-app/01-getting-started/07-mutating-data.md ("Event
 // Handlers"), node_modules/next/dist/docs/01-app/02-guides/forms.md ("Validation errors", "Pending
 // states"), node_modules/next/dist/docs/01-app/03-api-reference/04-functions/use-router.md and
@@ -127,6 +129,8 @@ export function OrderForm(props: OrderFormProps) {
   const [edits, setEdits] = useState(0);
   const [noteLength, setNoteLength] = useState(0);
   const form = useRef<HTMLFormElement>(null);
+  // While an order or a code request is on its way: leaving then (to step 3) keeps no draft.
+  const sending = useRef(false);
   const windowAlert = useRef<HTMLDivElement>(null);
 
   // A guest who typed the right code is signed in, whether the page knows it yet or not.
@@ -172,7 +176,7 @@ export function OrderForm(props: OrderFormProps) {
     if (edits > 0) form.current?.querySelector<HTMLElement>('input[name="email"]')?.focus();
   }, [edits]);
 
-  // Back from step 1 after "Ubah": what was typed before comes back into the empty fields.
+  // Back on step 2 after leaving it: what was typed before comes back into the empty fields.
   const [restoredNote, setRestoredNote] = useState<number | null>(null);
   useEffect(() => {
     const storage = tabStorage();
@@ -189,6 +193,22 @@ export function OrderForm(props: OrderFormProps) {
     if (note instanceof HTMLTextAreaElement) setRestoredNote(note.value.length);
   }, []);
   const noteCount = restoredNote ?? noteLength;
+
+  // Leaving step 2 any way but by sending: what was typed is kept in the tab for when it opens again.
+  // The form element is taken at mount, so its fields can still be read once it has left the page.
+  const keepDraft = useEffectEvent((element: HTMLFormElement) => {
+    const storage = tabStorage();
+    if (storage && !sending.current) saveOrderDraft(storage, draftFromForm(new FormData(element)));
+  });
+  useEffect(() => {
+    const element = form.current;
+    return () => {
+      if (element) keepDraft(element);
+    };
+  }, []);
+  useEffect(() => {
+    sending.current = false;
+  }, [answers]);
 
   const area = areas.find((candidate) => candidate.id === areaId) ?? areas[0];
   const days = markTaken(area.days ?? [], taken);
@@ -230,18 +250,13 @@ export function OrderForm(props: OrderFormProps) {
     data.set("intent", chosen);
     setIntent(chosen);
     if (!signedIn) setEmail(String(data.get("email") ?? "").trim());
+    sending.current = true;
     startTransition(() => dispatch(data));
   }
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     send(intentFor(current));
-  }
-
-  /** "Ubah": keeps what was typed in this tab, then step 1 opens with the choice. */
-  function keepDraft() {
-    const storage = tabStorage();
-    if (storage && form.current) saveOrderDraft(storage, draftFromForm(new FormData(form.current)));
   }
 
   function toConsent(event: MouseEvent<HTMLAnchorElement>) {
@@ -251,13 +266,9 @@ export function OrderForm(props: OrderFormProps) {
     target?.scrollIntoView({ block: "center" });
   }
 
-  const backToStepOne = `/services?${new URLSearchParams({
-    area: area.id,
-    ...(service ? { layanan: service.id } : {}),
-    ...(selected ? { starts: selected.window.startsAt } : {}),
-  }).toString()}`;
+  const backToStepOne = serviceStepHref({ areaId: area.id, serviceId: service?.id, startsAt: selected?.window.startsAt });
   const changeLink = (
-    <Link href={backToStepOne} onClick={keepDraft} aria-label={tOrder("recapChangeLabel")} className={flowTextLink}>
+    <Link href={backToStepOne} aria-label={tOrder("recapChangeLabel")} className={flowTextLink}>
       {tOrder("recapChange")}
     </Link>
   );

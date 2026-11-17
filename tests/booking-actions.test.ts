@@ -120,8 +120,8 @@ describe("bookService (signed-in customer)", () => {
     expect(message.to).toBe("nadia@example.com");
     expect(message.subject).toBe("Your HomeKlin order has been placed");
     expect(message.text).toContain("Regular Cleaning");
-    expect(message.text).toContain("/en/orders?booked=order-1");
-    expect(redirectMock).toHaveBeenCalledWith({ href: { pathname: "/orders", query: { booked: "order-1" } }, locale: "en" });
+    expect(message.text).toContain("/en/orders/pay?order=order-1");
+    expect(redirectMock).toHaveBeenCalledWith({ href: "/orders/pay?order=order-1", locale: "en" });
   });
 
   it("still opens the order when the email cannot be sent", async () => {
@@ -201,7 +201,7 @@ describe("placeOrder (guest, step 2)", () => {
     expect(rpc).toHaveBeenCalledWith("book_slot", bookArgs);
     expect(verifyOtp.mock.invocationCallOrder[0]).toBeLessThan(rpc.mock.invocationCallOrder[0]);
     expect((sendAppEmail.mock.calls[0] as [{ to: string }])[0].to).toBe("nadia@example.com");
-    expect(redirectMock).toHaveBeenCalledWith({ href: { pathname: "/orders", query: { booked: "order-1" } }, locale: "en" });
+    expect(redirectMock).toHaveBeenCalledWith({ href: "/orders/pay?order=order-1", locale: "en" });
   });
 
   it("books nothing with a missing or wrong code, and stays on the code step", async () => {

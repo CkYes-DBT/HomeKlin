@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { FlowEntryTracker } from "@/components/shell/flow-entry-tracker";
 import { ClientMessages } from "@/i18n/client-messages";
 import { routing } from "@/i18n/routing";
 import { appFontVariables } from "../fonts";
@@ -38,7 +40,13 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   return (
     <html lang={locale} className={`${appFontVariables} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-canvas font-sans text-ink">
-        <ClientMessages>{children}</ClientMessages>
+        <ClientMessages>
+          {children}
+          {/* Remembers where the customer entered the booking flow from, for its "Kembali" (empty). */}
+          <Suspense fallback={null}>
+            <FlowEntryTracker />
+          </Suspense>
+        </ClientMessages>
       </body>
     </html>
   );

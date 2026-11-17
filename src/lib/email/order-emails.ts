@@ -1,5 +1,6 @@
 import type { Locale } from "next-intl";
 import { routing } from "@/i18n/routing";
+import { paymentStepHref } from "@/lib/booking/payment-address";
 import { createOrderLink } from "@/lib/orders/order-link";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { cleanerAssignedEmail, recordingReadyEmail } from "./order-templates";
@@ -99,7 +100,7 @@ export function emailOrderAgain(orderId: string, locale: Locale): Promise<OrderE
         endsAt: facts.ends_at,
         address: facts.address,
         priceIdr: facts.price_idr,
-        orderUrl: (await createOrderLink(orderId, locale)) ?? `${siteUrl()}${localePrefix(locale)}/orders?booked=${orderId}`,
+        orderUrl: (await createOrderLink(orderId, locale)) ?? `${siteUrl()}${localePrefix(locale)}${paymentStepHref(orderId)}`,
       },
       locale,
     );

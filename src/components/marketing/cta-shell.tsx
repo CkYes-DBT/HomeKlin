@@ -4,7 +4,7 @@ import { landingContainer } from "./landing-layout";
 
 // The closing call to action (markdown/design.md, Layout): a contained forest shell with one sentence
 // and the same lime "Pesan sekarang" as the hero (one label per intent). No form: SPEC gives the
-// landing one primary action, and booking itself starts in the app. A darker circle bleeds off the
+// landing one primary action, and booking itself starts in the app, at step 1 (/services). A darker circle bleeds off the
 // lower-left corner for depth; it is decoration only.
 export function CtaShell() {
   const t = useTranslations("CtaShell");
@@ -26,7 +26,7 @@ export function CtaShell() {
             <p className="mt-4 text-body-lg text-on-band-muted">{t("body")}</p>
           </div>
           <div className="lg:col-span-4 lg:flex lg:justify-end">
-            <ButtonLink href="/pesan" variant="accent" size="lg">
+            <ButtonLink href="/services" variant="accent" size="lg">
               {t("cta")}
             </ButtonLink>
           </div>

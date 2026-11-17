@@ -1,5 +1,6 @@
-// What the customer typed on step 2 (address, note, phone, guest email), kept while they go back to
-// step 1 with "Ubah" and restored when step 2 opens again. It lives in the tab's sessionStorage only:
+// What the customer typed on step 2 (address, note, phone, guest email), kept when they leave step 2
+// without sending (back to step 1 with "Ubah" or "Kembali", another language) and restored when step 2
+// opens again. It lives in the tab's sessionStorage only:
 // never on the server and never in the address (an address in the URL ends up in the history and in
 // logs). It is read once and then removed, and the consent is never kept: it is given again on the
 // form. Storage can be missing or throw (a private window), so every call is guarded.

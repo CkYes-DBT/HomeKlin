@@ -100,10 +100,12 @@ test.describe("the customer app in English", () => {
     }
     await expect(nav.getByRole("button", { name: "Account", exact: true })).toBeVisible();
 
+    // Services opens the booking flow at step 1, focused: "Back" instead of the navigation.
     await nav.getByRole("link", { name: "Services", exact: true }).click();
     await expect(page).toHaveURL("/en/services");
     await expect(page.getByRole("heading", { level: 1, name: "Choose a service and a time" })).toBeVisible();
-    await expect(nav.getByRole("link", { name: "Services", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(page.getByRole("banner").getByRole("link", { name: "Back", exact: true })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Main navigation" })).toHaveCount(0);
     await expect(page).toHaveTitle("Services · HomeKlin");
   });
 

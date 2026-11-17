@@ -2074,6 +2074,10 @@
     "progress": "Step {step} of 3",
     "allDone": "All steps done"
   },
+  "BookingHeader": {
+    "back": "Back",
+    "toOrders": "To your orders"
+  },
   "ServiceStep": {
     "areaTitle": "Your area",
     "areaLead": "Free times depend on where your home is.",

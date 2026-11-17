@@ -19,7 +19,7 @@ type StepProps = {
   areaName: string;
 };
 
-// Step 3 of ordering, /orders?booked=<id> while the order waits for payment (T10, restyled in D5 after
+// Step 3 of ordering, /orders/pay?order=<id> while the order waits for payment (T10, restyled in D5 after
 // the Customer-Payment and Phone-Payment mocks): the steps, that it is a simulation, and the payment
 // itself on this page (./payment-checkout.tsx): the customer chooses QRIS, a bank's virtual account or a
 // card, presses "Bayar sekarang", and gets the account number or QR code to pay with right here. The
@@ -140,7 +140,7 @@ export async function PaymentStep({
   );
 }
 
-// The confirmation after a successful payment, /orders?booked=<id> once Midtrans' signed notification
+// The confirmation after a successful payment, /orders/pay?order=<id> once Midtrans' signed notification
 // has marked the order paid (D5, mocks Customer-Confirmed and Phone-Confirmed): the order number, that
 // the details went to the customer's email with "Kirim ulang email" (B9), what happens next, and the
 // summary with how it was paid (B8).

@@ -54,8 +54,8 @@ async function askForCode(page: Page, email: string) {
 /** The order the confirmation shows, read from the address. */
 async function bookedId(page: Page): Promise<string> {
   // Booking and the redirect run on the server; under a full parallel run that can take over 5 s.
-  await expect(page).toHaveURL(/\/orders\?booked=[0-9a-f-]{36}$/, { timeout: 15_000 });
-  return new URL(page.url()).searchParams.get("booked") ?? "";
+  await expect(page).toHaveURL(/\/orders\/pay\?order=[0-9a-f-]{36}$/, { timeout: 15_000 });
+  return new URL(page.url()).searchParams.get("order") ?? "";
 }
 
 test.describe("as a guest", () => {
@@ -70,7 +70,10 @@ test.describe("as a guest", () => {
       .getByRole("region", { name: "Layanan Kebersihan HomeKlin" })
       .getByRole("link", { name: service.name })
       .click();
-    await expect(page).toHaveURL(`/pesan?layanan=${service.id}`);
+    // The card opens step 1 with its service chosen; this test then picks a late window on step 2.
+    await expect(page).toHaveURL(`/services?layanan=${service.id}`);
+    await expect(page.getByRole("radio", { name: service.name, exact: true })).toBeChecked();
+    await page.goto(`/pesan?layanan=${service.id}`);
     await expect(page.getByRole("heading", { level: 1, name: "Detail pemesanan" })).toBeVisible();
     // The service is chosen already, the area is the default one until changed.
     await expect(page.getByLabel("Pilih layanan")).toHaveValue(service.id);
@@ -98,9 +101,15 @@ test.describe("as a guest", () => {
     await expect(confirmation.getByText("Menunggu pembayaran")).toBeVisible();
     await expect(confirmation.getByText(service.name)).toBeVisible();
     await expect(confirmation.getByText(address)).toBeVisible();
-    // Signed in now: no "Masuk" in the header, and the account menu in the navigation is ready.
+    // Signed in now: step 3 is the booking flow's focused page (no navigation); leaving it with
+    // "Ke pesanan Anda", the customer's account menu is in the navigation, with no "Masuk".
+    await expect(page.getByRole("navigation", { name: "Navigasi utama" })).toHaveCount(0);
+    await page.getByRole("banner").getByRole("link", { name: "Ke pesanan Anda" }).click();
+    await expect(page).toHaveURL("/orders");
     await expect(page.getByRole("banner").getByRole("link", { name: "Masuk", exact: true })).toHaveCount(0);
     await expect(page.getByRole("navigation", { name: "Navigasi utama" }).getByRole("button", { name: "Akun" })).toBeEnabled();
+    await page.goBack();
+    await expect(page).toHaveURL(`/orders/pay?order=${orderId}`);
 
     // One brand: no agency wording, name or id in the page or in the HTML the server sends.
     const marks = await agencyMarks();
@@ -232,9 +241,10 @@ test.describe("as a guest", () => {
     await codeField(page).fill(await codeFor(email));
     await placeButton(page).click();
     const orderId = await bookedId(page);
-    const orderPage = `/orders?booked=${orderId}`;
+    const orderPage = `/orders/pay?order=${orderId}`;
 
-    // Sign out from the account menu of the navigation.
+    // Sign out from the account menu of the navigation (on the customer app's pages, not the flow's).
+    await page.goto("/orders");
     await page.getByRole("navigation", { name: "Navigasi utama" }).getByRole("button", { name: "Akun" }).click();
     await page.getByRole("menuitem", { name: "Keluar" }).click();
     await expect(page).toHaveURL("/");
@@ -287,9 +297,9 @@ test.describe("as a guest", () => {
     await expect(page.getByText(`We sent a 6-digit code to ${email}.`)).toBeVisible({ timeout: emailWait });
     await page.getByLabel("6-digit code").fill(await codeFor(email));
     await orderForm(page).getByRole("button", { name: "Continue to payment" }).click();
-    await expect(page).toHaveURL(/\/en\/orders\?booked=[0-9a-f-]{36}$/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/en\/orders\/pay\?order=[0-9a-f-]{36}$/, { timeout: 15_000 });
     await expect(page.getByText("Awaiting payment")).toBeVisible();
-    await cancelOrder(new URL(page.url()).searchParams.get("booked") ?? "");
+    await cancelOrder(new URL(page.url()).searchParams.get("order") ?? "");
   });
 
   test("the old sign-up page leads to the order page", async ({ page }) => {

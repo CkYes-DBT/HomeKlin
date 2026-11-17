@@ -1,6 +1,7 @@
 import { CircleAlert } from "lucide-react";
 import { unstable_rethrow } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
+import { redirect } from "@/i18n/navigation";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { listMyOrders, type CustomerOrder } from "@/lib/booking/orders";
@@ -8,9 +9,9 @@ import { getCatalogServices, getServiceAreas } from "@/lib/catalog/cached";
 import type { Service, ServiceArea } from "@/lib/catalog/catalog";
 import { readPaymentState } from "@/lib/payment/state";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { parseBookedOrderId, parseOpenedOrderId } from "./booking-query";
+import { parseOpenedOrderId, paymentHrefFromOrders } from "./booking-query";
 import { flowOutlineButton } from "./flow-styles";
-import { BackToList, OrderDetails } from "./order-details";
+import { OrderDetails } from "./order-details";
 import { OrdersOverview } from "./orders-overview";
 import { PaymentConfirmed, PaymentStep } from "./payment-step";
 import { cameBackFromPayment } from "./payment-query";
@@ -41,18 +42,19 @@ export async function readCustomerOrders(): Promise<
 }
 
 // The content of /orders for a signed-in customer, inside the page's role check (D5 after the
-// Customer-* mocks). Without an order in the address: "Pesanan Anda" (./orders-overview.tsx). Right
-// after booking (/orders?booked=<order id>, where the order actions send the customer) it is step 3,
-// the payment (./payment-step.tsx), and once Midtrans' signed notification has marked it paid, the
-// confirmation; Midtrans sends the customer back to the same address. An order opened from the list is
-// /orders?order=<order id>, the order's own page (./order-details.tsx). Everything is read with the
-// customer's own session through listMyOrders, which returns only their own orders and never the
-// agency, so another customer's id in the address finds nothing and falls back to the list.
+// Customer-* mocks). Without an order in the address: "Pesanan Anda" (./orders-overview.tsx). An order
+// opened from the list is /orders?order=<order id>, the order's own page (./order-details.tsx). Step 3
+// of booking used to be /orders?booked=<order id>; since the focused booking layout (2026-11-17) it is
+// /orders/pay?order=<order id> (PaymentContent below), and the old address leads there with its
+// fields, for the emails already sent. Everything is read with the customer's own session through
+// listMyOrders, which returns only their own orders and never the agency, so another customer's id in
+// the address finds nothing and falls back to the list.
 export async function OrdersContent({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
   const locale = await getLocale();
-  const bookedId = parseBookedOrderId(params);
-  const wantedId = bookedId ?? parseOpenedOrderId(params);
+  const payment = paymentHrefFromOrders(params);
+  if (payment) redirect({ href: payment, locale });
+  const wantedId = parseOpenedOrderId(params);
 
   const read = await readCustomerOrders();
   if (!read) return <OrdersContentUnavailable />;
@@ -67,20 +69,6 @@ export async function OrdersContent({ searchParams }: { searchParams: Promise<Se
   const order = orders.find((candidate) => candidate.id === wantedId);
   if (order) {
     const areaName = areas.find((candidate) => candidate.id === order.areaId)?.name[locale] ?? order.areaId;
-    if (bookedId) {
-      // The method already charged for a waiting order, so a reload shows the same account number or QR code.
-      const details = order.status === "pending_payment" ? await readPaymentState(await createSupabaseServerClient({ writeCookies: false }), order.id) : null;
-      return (
-        <div className="flex flex-col gap-4">
-          <BackToList />
-          {order.status === "paid" ? (
-            <PaymentConfirmed order={order} serviceName={serviceName(order)} areaName={areaName} />
-          ) : (
-            <PaymentStep order={order} serviceName={serviceName(order)} areaName={areaName} cameBackFromPayment={cameBackFromPayment(params)} details={details} />
-          )}
-        </div>
-      );
-    }
     const service = serviceOf(order);
     return (
       <OrderDetails
@@ -93,6 +81,30 @@ export async function OrdersContent({ searchParams }: { searchParams: Promise<Se
     );
   }
   return <OrdersOverview orders={orders} serviceName={serviceName} account={account} now={now} />;
+}
+
+// Step 3 of booking, /orders/pay?order=<order id> (the booking flow's layout, where the order actions
+// send the customer): the payment (./payment-step.tsx), and once Midtrans' signed notification has
+// marked the order paid, the confirmation; Midtrans sends the customer back to the same address. The
+// header's "Kembali" leads to the orders list, so the page has no link of its own for that. The order
+// is read with the customer's own session (listMyOrders), so another customer's id, or none, finds
+// nothing and leads to the list.
+export async function PaymentContent({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const params = await searchParams;
+  const locale = await getLocale();
+  const orderId = parseOpenedOrderId(params);
+
+  const read = await readCustomerOrders();
+  if (!read) return <OrdersContentUnavailable />;
+  const order = read.orders.find((candidate) => candidate.id === orderId);
+  if (!order) return redirect({ href: "/orders", locale });
+
+  const serviceName = read.services.find((candidate) => candidate.id === order.serviceId)?.name[locale];
+  const areaName = read.areas.find((candidate) => candidate.id === order.areaId)?.name[locale] ?? order.areaId;
+  if (order.status === "paid") return <PaymentConfirmed order={order} serviceName={serviceName} areaName={areaName} />;
+  // The method already charged for a waiting order, so a reload shows the same account number or QR code.
+  const details = order.status === "pending_payment" ? await readPaymentState(await createSupabaseServerClient({ writeCookies: false }), order.id) : null;
+  return <PaymentStep order={order} serviceName={serviceName} areaName={areaName} cameBackFromPayment={cameBackFromPayment(params)} details={details} />;
 }
 
 export async function OrdersContentUnavailable() {

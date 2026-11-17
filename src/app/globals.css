@@ -336,11 +336,6 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Sits a fixed bar right above the bottom navigation and the home indicator (the booking bar). */
-@utility bottom-clear-nav {
-  bottom: calc(var(--spacing-bottom-nav) + env(safe-area-inset-bottom));
-}
-
 /* Keeps page content clear of the fixed bottom navigation. */
 @utility pb-clear-nav {
   padding-bottom: calc(var(--spacing-bottom-nav) + env(safe-area-inset-bottom) + var(--spacing-gutter));
@@ -366,6 +361,26 @@
   @media (width >= 48rem) {
     bottom: calc(env(safe-area-inset-bottom) + 1rem);
   }
+}
+
+/*
+ * The booking flow's place for the floating language switch: there is no bottom bar, so it sits 12 px
+ * above the bottom edge and the home indicator, and while the phone's booking bar shows it sits 12 px
+ * above that bar (booking-bar.tsx sets --booking-bar-height, the bar's height with its inset). From
+ * 768 px, where the booking bar is gone, as float-corner.
+ */
+@utility float-corner-flow {
+  position: fixed;
+  left: max(var(--spacing-gutter), env(safe-area-inset-left));
+  bottom: calc(var(--booking-bar-height, env(safe-area-inset-bottom)) + 0.75rem);
+  @media (width >= 48rem) {
+    bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  }
+}
+
+/* Keeps the booking flow's content clear of the floating language switch (no bottom bar there). */
+@utility pb-clear-switch {
+  padding-bottom: calc(env(safe-area-inset-bottom) + var(--spacing-gutter) + var(--spacing-touch) + 0.75rem);
 }
 
 @media (prefers-reduced-motion: reduce) {

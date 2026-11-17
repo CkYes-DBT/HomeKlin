@@ -6,7 +6,7 @@ import { notification, notify } from "./payment-test-data";
 import { readTestUsers, signedInAs } from "./setup/auth-state";
 
 // T10 on a phone: paying for an order on HomeKlin's own payment step with the Midtrans Sandbox
-// (simulated, no real money). From the step (/orders?booked=<id>) the customer chooses QRIS, a bank's
+// (simulated, no real money). From the step (/orders/pay?order=<id>) the customer chooses QRIS, a bank's
 // virtual account or a card and presses "Bayar sekarang"; the server charges that method at Midtrans and
 // the page shows what to pay with (the QR code, the account number) and keeps showing it after a reload.
 // Changing method opens a new attempt and the old one can no longer cancel the order. The order changes
@@ -82,7 +82,7 @@ test.describe("as a signed-in customer", () => {
       await payButton(page).click();
       await expect(page.getByRole("heading", { name: "Scan kode QR untuk membayar" })).toBeVisible({ timeout: paymentWait });
       await expect(page.getByRole("img", { name: "Kode QRIS untuk membayar pesanan ini" })).toBeVisible();
-      await expect(page).toHaveURL(new RegExp(`/orders\\?booked=${orderId}`));
+      await expect(page).toHaveURL(new RegExp(`/orders/pay\\?order=${orderId}`));
       let state = await payment(orderId);
       expect(state).toMatchObject({ status: "pending_payment", payment_attempt: 1, payment_details: { method: "qris" } });
       await expect(payButton(page)).toHaveCount(0);
@@ -191,7 +191,7 @@ test.describe("as a signed-in customer", () => {
     try {
       await page.setViewportSize({ width: 360, height: 740 });
       for (const prefix of ["", "/en"]) {
-        await page.goto(`${prefix}/orders?booked=${orderId}&status_code=200&transaction_status=settlement`);
+        await page.goto(`${prefix}/orders/pay?order=${orderId}&status_code=200&transaction_status=settlement`);
         await expect(page.getByRole("button", { name: prefix ? "Pay now" : "Bayar sekarang" })).toBeVisible();
         // Every way is open to read at this width, the card's fields included.
         await page.getByRole("radio", { name: /Kartu|card/i }).check();
