@@ -36,8 +36,9 @@ const placeButton = (page: Page) => orderForm(page).getByRole("button", { name: 
 /** The order the confirmation shows, read from the address. */
 async function bookedId(page: Page): Promise<string> {
   // Booking and the redirect run on the server; under a full parallel run that can take over 5 s.
-  await expect(page).toHaveURL(/\/orders\?booked=[0-9a-f-]{36}$/, { timeout: 15_000 });
-  return new URL(page.url()).searchParams.get("booked") ?? "";
+  // Step 3 is /orders/pay?order=<id> since the focused booking layout (2026-11-17).
+  await expect(page).toHaveURL(/\/orders\/pay\?order=[0-9a-f-]{36}$/, { timeout: 15_000 });
+  return new URL(page.url()).searchParams.get("order") ?? "";
 }
 
 test.describe("as a guest", () => {

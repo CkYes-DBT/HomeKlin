@@ -11,9 +11,10 @@ import type { StorageState } from "./setup/auth-state";
 // Since 2026-11-20 they are on two pages: /home lists the orders still to come under "Akan datang"
 // (waiting for payment or for the job, the soonest first), and /orders is "Riwayat pesanan" (finished,
 // failed, cancelled, or a window that has passed; one month at a time, ?bulan=2026-11, the latest job
-// first, with a filter kept in the address as ?filter=selesai or ?filter=tidak-jadi). A row opens the order on /orders?order=<id>, which never says the
-// order was just made; /orders?booked=<id> stays the confirmation and Midtrans' return. An id the
-// customer has no order with falls back to the list and reveals nothing.
+// first, with a filter kept in the address as ?filter=selesai or ?filter=tidak-jadi). A row opens the
+// order on /orders?order=<id>, which never says the order was just made; step 3 of booking,
+// /orders/pay?order=<id>, is the payment, the confirmation and Midtrans' return (its old address
+// /orders?booked=<id> leads there). An id the customer has no order with reveals nothing.
 // The spec makes its own customers, so the list holds exactly what it booked, whatever other specs do
 // with the shared customer at the same time. The tests build on each other (empty first), so they run
 // in order. Paid, failed and cancelled are set with signed notifications (e2e/payment-test-data.ts).
@@ -286,7 +287,7 @@ test.describe("with an order of each status", () => {
     const details = page.getByRole("region", { name: "Detail pesanan" });
     await expect(details.getByText("Menunggu pembayaran")).toBeVisible();
     await details.getByRole("link", { name: "Bayar sekarang" }).click();
-    await expect(page).toHaveURL(`/orders?booked=${ids.waiting}`);
+    await expect(page).toHaveURL(`/orders/pay?order=${ids.waiting}`);
     await expect(page.getByRole("button", { name: "Bayar sekarang" }).first()).toBeVisible();
   });
 
@@ -299,16 +300,20 @@ test.describe("with an order of each status", () => {
   });
 
   test("the confirmation stays as it was, Midtrans' return included, and leads to the list", async ({ page }) => {
+    // The old address (in emails already sent) opens the payment page.
     await page.goto(`/orders?booked=${ids.waiting}`);
+    await expect(page).toHaveURL(`/orders/pay?order=${ids.waiting}`);
     const confirmation = page.getByRole("region", { name: "Pembayaran" });
     await expect(confirmation.getByText("Menunggu pembayaran")).toBeVisible();
     await expect(confirmation.getByRole("button", { name: "Bayar sekarang" }).first()).toBeVisible();
     await expect(page.getByRole("status").filter({ hasText: "Pembayaran sedang dikonfirmasi" })).toHaveCount(0);
 
     await page.goto(`/orders?booked=${ids.waiting}&order_id=${ids.waiting}&status_code=201&transaction_status=pending`);
+    await expect(page).toHaveURL(`/orders/pay?order=${ids.waiting}&order_id=${ids.waiting}&status_code=201&transaction_status=pending`);
     await expect(page.getByRole("status").filter({ hasText: "Pembayaran sedang dikonfirmasi" })).toBeVisible();
 
-    await backHome(page).click();
+    // The booking flow's header leads to the home, where the placed order waits (2026-11-20).
+    await page.getByRole("banner").getByRole("link", { name: "Ke pesanan Anda" }).click();
     await expect(page).toHaveURL("/home");
     await expect(ordersList(page)).toBeVisible();
   });
@@ -321,13 +326,20 @@ test.describe("with an order of each status", () => {
       expect(await page.content()).not.toContain(ids.others);
     }
 
-    for (const param of ["order", "booked"]) {
+    // The order's page shows the list in its place; the payment page (and its old address) leads to it.
+    for (const address of ["/orders?order=", "/orders?booked=", "/orders/pay?order="]) {
       for (const id of [ids.others, randomUUID()]) {
-        await page.goto(`/orders?${param}=${id}`);
-        // It falls back to the history page, on its latest month: the failed and cancelled orders.
-        await expect(page.locator('main a[href^="/orders?order="]')).toHaveCount(2);
+        await page.goto(`${address}${id}`);
+        if (address === "/orders?order=") {
+          // The history page in its place, on its latest month: the failed and cancelled orders.
+          await expect(page.locator('main a[href^="/orders?order="]')).toHaveCount(2);
+        } else {
+          // The payment page (and its old address) leads to the home, with the orders still to come.
+          await expect(page).toHaveURL("/home");
+          await expect(ordersList(page).getByRole("listitem")).toHaveCount(3);
+        }
         await expect(page.getByRole("region", { name: /Detail pesanan|Pembayaran/ })).toHaveCount(0);
-        const html = await (await page.request.get(page.url())).text();
+        const html = await (await page.request.get(`${address}${id}`)).text();
         for (const text of [await page.content(), html]) expect(text).not.toContain("Rahasia Orang Lain");
       }
     }

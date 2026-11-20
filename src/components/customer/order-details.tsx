@@ -6,6 +6,7 @@ import { canReview } from "@/components/reviews/rating";
 import { ClientMessages } from "@/i18n/client-messages";
 import { Link } from "@/i18n/navigation";
 import type { CustomerOrder } from "@/lib/booking/orders";
+import { paymentStepHref } from "@/lib/booking/payment-address";
 import { formatRupiah } from "@/lib/format";
 import { flowCard, flowCardTitle, flowOutlineButton, flowPrimaryButton, flowTextLink } from "./flow-styles";
 import { liveInProgress } from "./live-status";
@@ -125,7 +126,7 @@ export async function OrderDetails({ order, serviceName, duration, areaName, now
             {awaitingPayment ? (
               <div className="mt-4">
                 {/* Paying happens on step 3, where the customer chooses how (QRIS, a bank or a card). */}
-                <Link href={`/orders?booked=${order.id}`} className={flowPrimaryButton}>
+                <Link href={paymentStepHref(order.id)} className={flowPrimaryButton}>
                   {tPayment("submit")}
                 </Link>
               </div>

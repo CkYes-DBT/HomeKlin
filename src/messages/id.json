@@ -2159,6 +2159,10 @@
     "progress": "Langkah {step} dari 3",
     "allDone": "Semua langkah selesai"
   },
+  "BookingHeader": {
+    "back": "Kembali",
+    "toOrders": "Ke pesanan Anda"
+  },
   "ServiceStep": {
     "areaTitle": "Area Anda",
     "areaLead": "Jam kosong menyesuaikan area rumah Anda.",

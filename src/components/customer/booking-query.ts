@@ -1,10 +1,13 @@
 import type { FreeSlot } from "@/lib/catalog/catalog";
 import { groupSlotsByJakartaDay, type SlotDay } from "@/lib/catalog/slots-days";
 
+export { paymentStepHref } from "@/lib/booking/payment-address";
+
 // The addresses of the booking screens (T9, T9b). The old booking address,
 // /book?service=<id>&area=<id>&starts=<ISO start of the window>, now leads to the order page
-// (./order-query.ts, which reads its own address with the same rules); the confirmation is
-// /orders?booked=<order id>, and an order opened from the list is /orders?order=<order id>. Whatever
+// (./order-query.ts, which reads its own address with the same rules); the payment and its
+// confirmation are /orders/pay?order=<order id> (until 2026-11-17 /orders?booked=<order id>, which now
+// leads there), and an order opened from the list is /orders?order=<order id>. Whatever
 // the address says is only a suggestion: the page checks it against the catalog and the free windows,
 // and the booking action checks every field again on the server (src/lib/validation/booking.ts).
 
@@ -68,6 +71,22 @@ function orderId(value: string | string[] | undefined): string | undefined {
 /** The id of the order the confirmation shows (/orders?booked=<id>), or undefined. */
 export function parseBookedOrderId(params: SearchParams): string | undefined {
   return orderId(params.booked);
+}
+
+/**
+ * Step 3's old address, /orders?booked=<id> (in emails sent before the focused booking layout, and
+ * where Midtrans may still send the customer back), as the payment page's address with every other
+ * field kept; null for any other orders address.
+ */
+export function paymentHrefFromOrders(params: SearchParams): string | null {
+  const id = parseBookedOrderId(params);
+  if (!id) return null;
+  const query = new URLSearchParams({ order: id });
+  for (const [name, value] of Object.entries(params)) {
+    if (name === "booked" || name === "order" || value === undefined) continue;
+    for (const item of Array.isArray(value) ? value : [value]) query.append(name, item);
+  }
+  return `/orders/pay?${query.toString()}`;
 }
 
 /** The id of the order opened from the list (/orders?order=<id>), or undefined. */

@@ -79,6 +79,6 @@ export async function bookSignedIn(page: Page, serviceId: string, areaId: string
   await page.getByRole("switch", { name: /Saya setuju/ }).check();
   await page.getByRole("form", { name: "Pesan layanan" }).getByRole("button", { name: "Lanjut ke pembayaran" }).click();
   // Booking and the redirect run on the server; under a full parallel run that can take over 5 s.
-  await expect(page).toHaveURL(/\/orders\?booked=[0-9a-f-]{36}$/, { timeout: 15_000 });
-  return new URL(page.url()).searchParams.get("booked") ?? "";
+  await expect(page).toHaveURL(/\/orders\/pay\?order=[0-9a-f-]{36}$/, { timeout: 15_000 });
+  return new URL(page.url()).searchParams.get("order") ?? "";
 }

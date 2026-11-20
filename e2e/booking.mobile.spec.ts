@@ -146,8 +146,8 @@ test.describe("as a signed-in customer", () => {
     await submitButton(page).click();
 
     // Booking and the redirect run on the server; under a full parallel run that can take over 5 s.
-    await expect(page).toHaveURL(/\/orders\?booked=[0-9a-f-]{36}$/, { timeout: 15_000 });
-    const orderId = new URL(page.url()).searchParams.get("booked") ?? "";
+    await expect(page).toHaveURL(/\/orders\/pay\?order=[0-9a-f-]{36}$/, { timeout: 15_000 });
+    const orderId = new URL(page.url()).searchParams.get("order") ?? "";
     try {
       const confirmation = page.getByRole("region", { name: "Pembayaran" });
       await expect(currentStep).toContainText("Bayar");
@@ -379,7 +379,7 @@ test.describe("as a signed-in customer", () => {
       expect(await page.evaluate(() => window.scrollY)).toBeLessThanOrEqual(before + 200);
     });
 
-    test("keeps the choice, the price and the button in a bar above the menu while the button is out of sight", async ({ page }) => {
+    test("keeps the choice, the price and the button in a bar at the bottom while the button is out of sight", async ({ page }) => {
       const target = await windowFor("10.00", 2);
       for (const path of [`/services?area=${area}&layanan=${service.id}`, orderPath(service.id, area, target.startsAt)]) {
         await page.goto(path);
@@ -390,15 +390,23 @@ test.describe("as a signed-in customer", () => {
         const button = bar.getByRole("button");
         const box = await button.boundingBox();
         expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
-        // It sits right above the bottom navigation, never over it.
-        const navBox = await page.getByRole("navigation", { name: "Navigasi utama" }).boundingBox();
-        // (Polled: the bar slides in.)
+        // The booking flow has no bottom navigation: the bar sits on the bottom edge, and the floating
+        // language switch moves up above it, never over it. (Polled: the bar slides in.)
+        await expect(page.getByRole("navigation", { name: "Navigasi utama" })).toHaveCount(0);
+        const viewport = page.viewportSize()!;
         await expect
           .poll(async () => {
             const barBox = await bar.boundingBox();
-            return (barBox?.y ?? 0) + (barBox?.height ?? 0);
+            return Math.round((barBox?.y ?? 0) + (barBox?.height ?? 0));
           })
-          .toBeLessThanOrEqual((navBox?.y ?? 0) + 1);
+          .toBe(viewport.height);
+        const languages = page.getByRole("group", { name: "Bahasa" });
+        await expect
+          .poll(async () => {
+            const [barBox, switchBox] = [await bar.boundingBox(), await languages.boundingBox()];
+            return (switchBox?.y ?? 0) + (switchBox?.height ?? 0) <= (barBox?.y ?? 0);
+          })
+          .toBe(true);
         // With the step's own button on screen the bar steps aside (and leaves the accessibility tree).
         const own = path.startsWith("/services")
           ? page.getByRole("form", { name: "Ringkasan" }).getByRole("button", { name: "Pesan sekarang" })

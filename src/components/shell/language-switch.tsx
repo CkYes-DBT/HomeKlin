@@ -3,8 +3,8 @@
 import { Languages } from "lucide-react";
 import { useLinkStatus } from "next/link";
 import { useLocale, useTranslations, type Locale } from "next-intl";
-import type { ReactNode } from "react";
-import { Link, usePathname } from "@/i18n/navigation";
+import type { MouseEvent, ReactNode } from "react";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 
 type LanguageSwitchProps = {
@@ -16,6 +16,12 @@ type LanguageSwitchProps = {
   onDark?: boolean;
   /** Only a link to the other language: the landing header on phones, where the toggle does not fit. */
   compact?: boolean;
+  /**
+   * Keeps the page's query on a click (the booking flow: the choice on step 2, the order on step 3).
+   * Read from the address at the click, so the switch still renders on the server; the link itself
+   * keeps the path only, which is where it leads without JavaScript.
+   */
+  keepQuery?: boolean;
 };
 
 // The segmented toggle ID | EN (markdown/design.md, Forms): a track with a 1 px control edge, the
@@ -23,8 +29,9 @@ type LanguageSwitchProps = {
 // link: choosing it again would only reload the page, and leaving it out of the tab order leaves one
 // stop. The other language is a real link to the same page (next-intl's Link with `locale`), so the
 // switch works without JavaScript: next-intl writes the NEXT_LOCALE cookie on click, and without
-// JavaScript the proxy writes it when the linked page loads. Only the path is kept: no page uses query
-// strings yet, and reading them (useSearchParams) would move this component's rendering to the browser.
+// JavaScript the proxy writes it when the linked page loads. The link keeps only the path: reading the
+// query (useSearchParams) would move this component's rendering to the browser. The booking flow's
+// pages carry their state in the query, so there (keepQuery) a click adds it from the address.
 // Every segment is a 44 px target; its pill is drawn inside a transparent border (bg-clip-padding),
 // which gives the 4 px gap to the track without shrinking the target.
 const tones = {
@@ -59,10 +66,23 @@ export function LanguageSwitch({
   palette = "evergreen",
   onDark = false,
   compact = false,
+  keepQuery = false,
 }: LanguageSwitchProps) {
   const t = useTranslations("LanguageSwitch");
   const current = useLocale();
   const pathname = usePathname();
+  const router = useRouter();
+
+  /** With keepQuery: the same page in the other language, with the address's query. */
+  function withQuery(locale: Locale) {
+    return (event: MouseEvent<HTMLAnchorElement>) => {
+      const search = window.location.search;
+      if (!keepQuery || !search) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+      event.preventDefault();
+      router.push({ pathname, query: Object.fromEntries(new URLSearchParams(search)) }, { locale });
+    };
+  }
   const tone = tones[palette === "forest" && onDark ? "forestOnDark" : palette];
   const others = routing.locales.filter((locale) => locale !== current);
 
@@ -77,6 +97,7 @@ export function LanguageSwitch({
             hrefLang={locale}
             lang={locale}
             rel="alternate"
+            onClick={withQuery(locale)}
             className={`inline-flex size-11 items-center justify-center gap-1 rounded-full text-sm font-semibold ${tone.link} ${linkMotion}`}
           >
             <Languages className="size-4 shrink-0" aria-hidden="true" />
@@ -112,6 +133,7 @@ export function LanguageSwitch({
             hrefLang={locale}
             lang={locale}
             rel="alternate"
+            onClick={withQuery(locale)}
             className={`${segmentBase} ${tone.segment} ${tone.link} ${linkMotion}`}
           >
             <Label locale={locale} name={t(locale)} />

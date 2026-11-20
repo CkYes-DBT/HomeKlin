@@ -5,7 +5,8 @@ import { signedInAs } from "./setup/auth-state";
 // the cleaner app (UX audit, 2026-11-18, item 3). Until then it floated at the bottom-left of the
 // viewport and covered content, for example the live card's "Lihat pesanan" on /orders and the payment
 // step. Runs on a phone and a desktop.
-const paths = ["/home", "/services", "/pesan", "/support", "/orders", "/en/home", "/en/orders"];
+// The booking steps (/services, /pesan) have no bar: their switch floats (e2e/language-floating.spec.ts).
+const paths = ["/home", "/support", "/orders", "/en/home", "/en/orders"];
 
 test.use(signedInAs.customer);
 

@@ -1,6 +1,6 @@
 type SearchParams = Record<string, string | string[] | undefined>;
 
-// After paying (or leaving) on Midtrans' payment page, the customer comes back to /orders?booked=<id>
+// After paying (or leaving) on Midtrans' payment page, the customer comes back to /orders/pay?order=<id>
 // with Midtrans' own fields added: order_id, status_code and transaction_status (T10). The confirmation
 // reads only that the customer came back, to say the payment is being confirmed. What the fields claim
 // is never taken as the payment's result: anyone can type them into the address, and the order's

@@ -22,6 +22,7 @@ const photo = {
 // at 64 px in the 637 px column from 1280 px.
 // Phones and tablets read the text and see the button first, then the photo, then the card.
 // Only the text rises in (reading order); the photo is preloaded and never animated.
+// "Pesan sekarang" opens the booking flow at its first step, the service and the time (/services).
 export function Hero() {
   const t = useTranslations("Hero");
   return (
@@ -40,7 +41,7 @@ export function Hero() {
           {t("lead")}
         </p>
         <div className="mt-8 flex animate-rise flex-wrap items-center gap-x-6 gap-y-4 animate-delay-160 lg:mt-10">
-          <ButtonLink href="/pesan" variant="accent" size="lg">
+          <ButtonLink href="/services" variant="accent" size="lg">
             {t("cta")}
           </ButtonLink>
           <a

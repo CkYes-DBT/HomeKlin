@@ -27,15 +27,16 @@ role check (`RoleGate`) and one content component.
 | Address | Page file (under `src/app/[locale]/`) | Components (`src/components/`) |
 |---|---|---|
 | `/` landing | `(marketing)/page.tsx`, `(marketing)/layout.tsx` | `marketing/`: hero, hero-job-card, trust-row, services-grid, how-it-works, safety, faq-teaser, cta-shell, marketing-header, marketing-footer |
-| `/home` app home | `(customer)/home/page.tsx` | `customer/`: area-picker, job-status-card, service-row (uses sample data in `home-preview-data.ts`) |
-| `/services` catalog | `(customer)/services/page.tsx` | `customer/`: service-catalog, service-step (step 1 summary and chips), time-chip, booking-bar (phone bar), booking-trust, booking-stepper, catalog-filters, catalog-form, service-visual, catalog-skeleton; `reviews/service-rating.tsx` |
-| `/pesan` order form (with the emailed code) | `(customer)/pesan/page.tsx` | `customer/`: order-content, order-form, order-where, booking-window-picker, booking-days, time-chip, booking-bar, order-draft (kept for "Ubah"), booking-controls, booking-unavailable; `auth/code-entry` |
+| `/home` app home | `(customer)/(app)/home/page.tsx` | `customer/`: area-picker, job-status-card, service-row (uses sample data in `home-preview-data.ts`) |
+| `/services` booking step 1 (focused flow layout) | `(customer)/(booking)/services/page.tsx`, `(customer)/(booking)/layout.tsx` (`shell/booking-shell`, `shell/booking-header`) | `customer/`: service-catalog, service-step (step 1 summary and chips), time-chip, booking-bar (phone bar), booking-trust, booking-stepper, catalog-filters, catalog-form, service-visual, catalog-skeleton; `reviews/service-rating.tsx` |
+| `/pesan` booking step 2, order form (with the emailed code) | `(customer)/(booking)/pesan/page.tsx` | `customer/`: order-content, order-form, order-where, booking-window-picker, booking-days, time-chip, booking-bar, order-draft (kept for "Ubah"), booking-controls, booking-unavailable; `auth/code-entry` |
 | `/login` | `(auth)/login/page.tsx`, `(auth)/layout.tsx` | `auth/`: auth-card, login-code-form, login-form, switch-link |
-| `/orders` list and `/orders?order=` details | `(customer)/orders/page.tsx` | `customer/`: orders-content, order-list, order-confirmation, order-status, order-job, order-recording, recording-player, recording-countdown, recording-notice, payment-form, order-live; `reviews/`: order-review, review-form, stars |
-| `/orders/live` live view | `(customer)/orders/live/page.tsx` | `customer/`: live-content, live-viewer, live-waiting, order-live |
-| `/support` help, FAQ and chat | `(customer)/support/page.tsx` | `support/`: support-content, faq-search, faq-results, contact-admin, ticket-form, my-tickets, customer-ticket, ticket-chat |
+| `/orders/pay?order=` booking step 3, payment and confirmation | `(customer)/(booking)/orders/pay/page.tsx` | `customer/`: orders-content (PaymentContent), payment-step, payment-checkout, payment-methods, payment-waiting |
+| `/orders` list and `/orders?order=` details (`/orders?booked=` leads to step 3) | `(customer)/(app)/orders/page.tsx` | `customer/`: orders-content, order-list, order-confirmation, order-status, order-job, order-recording, recording-player, recording-countdown, recording-notice, payment-form, order-live; `reviews/`: order-review, review-form, stars |
+| `/orders/live` live view | `(customer)/(app)/orders/live/page.tsx` | `customer/`: live-content, live-viewer, live-waiting, order-live |
+| `/support` help, FAQ and chat | `(customer)/(app)/support/page.tsx` | `support/`: support-content, faq-search, faq-results, contact-admin, ticket-form, my-tickets, customer-ticket, ticket-chat |
 | `/account` | `(customer)/account/page.tsx` | `auth/account-summary` |
-| `/book` | redirects to `/pesan` | |
+| `/book` | `(customer)/(booking)/book/page.tsx`, redirects to `/pesan` | |
 
 ### Cleaner (phone first)
 | Address | Page file | Components |

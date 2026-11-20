@@ -29,6 +29,19 @@ export function orderHref(query: OrderQuery): string {
   return text ? `/pesan?${text}` : "/pesan";
 }
 
+/**
+ * Step 1's address (/services) with what is chosen so far, the area first: "Ubah" and "Kembali" on
+ * step 2, and the landing page's service cards (the service only). Link adds /en.
+ */
+export function serviceStepHref(query: OrderQuery): string {
+  const params = new URLSearchParams();
+  if (query.areaId) params.set("area", query.areaId);
+  if (query.serviceId) params.set("layanan", query.serviceId);
+  if (query.startsAt) params.set("starts", query.startsAt);
+  const text = params.toString();
+  return text ? `/services?${text}` : "/services";
+}
+
 /** The service, area and window in the order page's address; anything unreadable is left out. */
 export function parseOrderQuery(params: SearchParams): OrderQuery {
   // The same rules as the booking address, read from the order page's field names.

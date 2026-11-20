@@ -3,7 +3,9 @@ import { signedInAs } from "./setup/auth-state";
 
 // Customer pages are mobile-first: on a phone the main navigation is a bottom bar.
 // A signed-in customer, because Pesanan (/orders) is theirs only (T5). The fifth item, Akun, is not a
-// page but a menu (e2e/account-menu.spec.ts), so the bar has four links and one button.
+// page but a menu (e2e/account-menu.spec.ts), so the bar has four links and one button. Layanan opens
+// the booking flow at step 1, which has no navigation (e2e/booking-flow.spec.ts), so the loop below
+// checks the other sections and only that Layanan leads there.
 const sections = [
   { label: "Beranda", path: "/home", heading: "Pesanan Anda" },
   { label: "Layanan", path: "/services", heading: "Layanan" },
@@ -39,8 +41,9 @@ test.describe("customer bottom navigation", () => {
   test("navigates to every section and moves the current marker", async ({ page }) => {
     await page.goto("/home");
     const nav = page.getByRole("navigation", { name: "Navigasi utama" });
+    await expect(nav.getByRole("link", { name: "Layanan", exact: true })).toHaveAttribute("href", "/services");
 
-    for (const { label, path, heading } of [...sections.slice(1), sections[0]]) {
+    for (const { label, path, heading } of [...sections.slice(2), sections[0]]) {
       await nav.getByRole("link", { name: label, exact: true }).click();
       await expect(page).toHaveURL(path);
       await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
@@ -63,9 +66,9 @@ test.describe("customer bottom navigation", () => {
     }
   });
 
-  // T4: the brand moved from the home page's own header into the app bar, which every customer page
-  // shares on phones (with the language switch on its right).
-  for (const path of ["/home", "/services"]) {
+  // T4: the brand moved from the home page's own header into the app bar, which every page of the
+  // customer app shares on phones. (The booking flow shows it plain, not as a link.)
+  for (const path of ["/home", "/orders"]) {
     test(`shows the wordmark at the top of ${path}, linking to the booking home`, async ({ page }) => {
       await page.goto(path);
       const wordmark = page.getByRole("banner").getByRole("link", { name: "HomeKlin, ke beranda" });

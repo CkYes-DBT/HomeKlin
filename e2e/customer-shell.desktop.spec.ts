@@ -26,14 +26,18 @@ test.describe("customer navigation on desktop", () => {
     await page.goto("/home");
     const nav = page.getByRole("navigation", { name: "Navigasi utama" });
 
+    await nav.getByRole("link", { name: "Bantuan", exact: true }).click();
+    await expect(page).toHaveURL("/support");
+    await expect(nav.getByRole("link", { name: "Bantuan", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(nav.getByRole("link", { name: "Beranda" })).not.toHaveAttribute("aria-current");
+
+    // Layanan opens the booking flow at step 1, focused: no navigation, "Kembali" leads back here.
     await nav.getByRole("link", { name: "Layanan", exact: true }).click();
     await expect(page).toHaveURL("/services");
     await expect(page.getByRole("heading", { level: 1, name: "Pilih layanan dan jam" })).toBeVisible();
-    await expect(nav.getByRole("link", { name: "Layanan", exact: true })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
-    await expect(nav.getByRole("link", { name: "Beranda" })).not.toHaveAttribute("aria-current");
+    await expect(nav).toHaveCount(0);
+    await page.getByRole("banner").getByRole("link", { name: "Kembali", exact: true }).click();
+    await expect(page).toHaveURL("/support");
 
     await nav.getByRole("link", { name: "Pesanan", exact: true }).click();
     await expect(page).toHaveURL("/orders");
