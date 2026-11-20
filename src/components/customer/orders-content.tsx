@@ -11,7 +11,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { parseBookedOrderId, parseOpenedOrderId } from "./booking-query";
 import { flowOutlineButton } from "./flow-styles";
 import { BackToList, OrderDetails } from "./order-details";
-import { OrdersOverview } from "./orders-overview";
+import { OrdersHistory } from "./orders-history";
+import { parseHistoryFilter, parseHistoryMonth, splitOrders } from "./orders-overview-data";
 import { PaymentConfirmed, PaymentStep } from "./payment-step";
 import { cameBackFromPayment } from "./payment-query";
 import { ServiceDuration } from "./service-duration";
@@ -41,7 +42,8 @@ export async function readCustomerOrders(): Promise<
 }
 
 // The content of /orders for a signed-in customer, inside the page's role check (D5 after the
-// Customer-* mocks). Without an order in the address: "Pesanan Anda" (./orders-overview.tsx). Right
+// Customer-* mocks). Without an order in the address: "Riwayat pesanan" (./orders-history.tsx, since
+// 2026-11-20; the orders still to come are on /home). Right
 // after booking (/orders?booked=<order id>, where the order actions send the customer) it is step 3,
 // the payment (./payment-step.tsx), and once Midtrans' signed notification has marked it paid, the
 // confirmation; Midtrans sends the customer back to the same address. An order opened from the list is
@@ -56,7 +58,7 @@ export async function OrdersContent({ searchParams }: { searchParams: Promise<Se
 
   const read = await readCustomerOrders();
   if (!read) return <OrdersContentUnavailable />;
-  const { orders, services, areas, account } = read;
+  const { orders, services, areas } = read;
 
   // One clock for the whole page: whether a recording is still kept, and its countdown (T15).
   const now = new Date();
@@ -72,7 +74,7 @@ export async function OrdersContent({ searchParams }: { searchParams: Promise<Se
       const details = order.status === "pending_payment" ? await readPaymentState(await createSupabaseServerClient({ writeCookies: false }), order.id) : null;
       return (
         <div className="flex flex-col gap-4">
-          <BackToList />
+          <BackToList toHome />
           {order.status === "paid" ? (
             <PaymentConfirmed order={order} serviceName={serviceName(order)} areaName={areaName} />
           ) : (
@@ -89,10 +91,19 @@ export async function OrdersContent({ searchParams }: { searchParams: Promise<Se
         duration={service ? <ServiceDuration minutes={service.durationMinutes} /> : undefined}
         areaName={areaName}
         now={now}
+        fromHome={splitOrders([order], now).history.length === 0}
       />
     );
   }
-  return <OrdersOverview orders={orders} serviceName={serviceName} account={account} now={now} />;
+  return (
+    <OrdersHistory
+      orders={orders}
+      serviceName={serviceName}
+      now={now}
+      filter={parseHistoryFilter(params.filter)}
+      month={parseHistoryMonth(params.bulan)}
+    />
+  );
 }
 
 export async function OrdersContentUnavailable() {
